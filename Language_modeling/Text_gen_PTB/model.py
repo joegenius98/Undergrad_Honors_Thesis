@@ -24,7 +24,8 @@ class VAE(nn.Module):
         super().__init__()
         # Model architecture
         self._config = config_model
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
         self.encoder_w_embedder = tx.modules.WordEmbedder(
             vocab_size=vocab_size, hparams=config_model.enc_emb_hparams)
 
@@ -173,4 +174,3 @@ class VAE(nn.Module):
                 helper=helper,
                 max_decoding_length=max_decoding_length)
         return outputs
-    

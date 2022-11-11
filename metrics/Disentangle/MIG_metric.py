@@ -37,11 +37,13 @@ time_start = time.time()
 file_path = sys.argv[2]
 print("checkpoint file_path:>> ", file_path)
 
-model_map = {'betavae_h': BetaVAE_H, 'betavae_b': BetaVAE_B, 'factvae': FactorVAE1}
+model_map = {'betavae_h': BetaVAE_H,
+             'betavae_b': BetaVAE_B, 'factvae': FactorVAE1}
 # model_map = {'betavae_h': BetaVAE_H, 'betavae_b': BetaVAE_B}
 model_name = sys.argv[1]
 
 # In[2]:
+
 
 def logsumexp(value, dim=None, keepdim=False):
     """Numerically stable implementation of the operation
@@ -121,12 +123,14 @@ class Normal(nn.Module):
         """
         mu, logsigma = self._check_inputs(None, params)
         if sample_params is not None:
-            sample_mu, sample_logsigma = self._check_inputs(None, sample_params)
+            sample_mu, sample_logsigma = self._check_inputs(
+                None, sample_params)
         else:
             sample_mu, sample_logsigma = mu, logsigma
 
         c = self.normalization.type_as(sample_mu.data)
-        nll = logsigma.mul(-2).exp() * (sample_mu - mu).pow(2)             + torch.exp(sample_logsigma.mul(2) - logsigma.mul(2)) + 2 * logsigma + c
+        nll = logsigma.mul(-2).exp() * (sample_mu - mu).pow(2) + torch.exp(
+            sample_logsigma.mul(2) - logsigma.mul(2)) + 2 * logsigma + c
         return nll.mul(0.5)
 
     def kld(self, params):
@@ -185,7 +189,8 @@ def estimate_entropies(qz_samples, qz_params, q_dist=Normal(), n_samples=10000, 
 
     # Only take a sample subset of the samples
     if weights is None:
-        qz_samples = qz_samples.index_select(1, Variable(torch.randperm(qz_samples.size(1))[:n_samples].cuda()))
+        qz_samples = qz_samples.index_select(1, Variable(
+            torch.randperm(qz_samples.size(1))[:n_samples].cuda()))
     else:
         sample_inds = torch.multinomial(weights, n_samples, replacement=True)
         qz_samples = qz_samples.index_select(1, sample_inds)
@@ -212,7 +217,8 @@ def estimate_entropies(qz_samples, qz_params, q_dist=Normal(), n_samples=10000, 
         k += batch_size
 
         # computes - log q(z_i) summed over minibatch
-        entropies += - logsumexp(logqz_i + weights, dim=0, keepdim=False).data.sum(1)
+        entropies += - logsumexp(logqz_i + weights,
+                                 dim=0, keepdim=False).data.sum(1)
         pbar.update(batch_size)
     pbar.close()
 
@@ -227,19 +233,22 @@ def estimate_entropies(qz_samples, qz_params, q_dist=Normal(), n_samples=10000, 
 def MIG(mi_normed):
     return torch.mean(mi_normed[:, 0] - mi_normed[:, 1])
 
+
 def compute_metric_shapes(marginal_entropies, cond_entropies):
     factor_entropies = [6, 40, 32, 32]
     mutual_infos = marginal_entropies[None] - cond_entropies
-    mutual_infos = torch.sort(mutual_infos, dim=1, descending=True)[0].clamp(min=0)
+    mutual_infos = torch.sort(mutual_infos, dim=1, descending=True)[
+        0].clamp(min=0)
     mi_normed = mutual_infos / torch.Tensor(factor_entropies).log()[:, None]
     metric = MIG(mi_normed)
     return metric
-    
+
 
 # In[6]:
 
 
-root = os.path.join('data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+root = os.path.join(
+    'data', 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
 data = np.load(root, encoding='bytes')
 data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
 train_kwargs = {'data_tensor': data}
@@ -249,7 +258,8 @@ shapes_dataset = CustomTensorDataset(**train_kwargs)
 
 # In[7]:
 
-dataset_loader = DataLoader(shapes_dataset, batch_size=1000, shuffle=False, num_workers=0)
+dataset_loader = DataLoader(
+    shapes_dataset, batch_size=1000, shuffle=False, num_workers=0)
 # In[8]:
 
 
@@ -264,7 +274,7 @@ vae.cuda()
 
 if os.path.isfile(file_path):
     print('Checkpoint loaded')
-    checkpoint = torch.load(file_path)#, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path)  # , map_location=torch.device('cpu'))
     if model_name.lower() == 'factvae':
         vae.load_state_dict(checkpoint['model_states']['VAE'])
     else:
@@ -293,9 +303,11 @@ for i, xs in enumerate(dataset_loader):
     batch_size = xs.size(0)
     # xs = Variable(xs.view(batch_size, 1, 64, 64), volatile=True)
     if model_name == 'factvae':
-        qz_params[n:n + batch_size] = vae.encode.forward(xs.cuda()).view(batch_size, nparams, vae.z_dim).transpose(1, 2).data
+        qz_params[n:n + batch_size] = vae.encode.forward(xs.cuda()).view(
+            batch_size, nparams, vae.z_dim).transpose(1, 2).data
     else:
-        qz_params[n:n + batch_size] = vae.encoder.forward(xs.cuda()).view(batch_size, nparams, vae.z_dim).transpose(1, 2).data
+        qz_params[n:n + batch_size] = vae.encoder.forward(xs.cuda()).view(
+            batch_size, nparams, vae.z_dim).transpose(1, 2).data
 
     n += batch_size
 
@@ -306,7 +318,8 @@ for i, xs in enumerate(dataset_loader):
 qz_params = Variable(qz_params.view(3, 6, 40, 32, 32, K, nparams).cuda())
 
 # if model_name.lower() != 'factvae':
-qz_params[:,:,:,:,:,:,1] = qz_params[:,:,:,:,:,:,1]/2 ## added by shao
+qz_params[:, :, :, :, :, :, 1] = qz_params[:,
+                                           :, :, :, :, :, 1]/2  # added by shao
 
 qz_samples = q_dist.sample(params=qz_params)
 
@@ -386,11 +399,10 @@ direct = os.path.dirname(file_path)
 out_file = os.path.join(direct, "MIG.txt")
 print("save to path >>: ", out_file)
 
-with open(out_file,"a") as fout:
+with open(out_file, "a") as fout:
     fout.write(file_path + ": ")
     fout.write(str(metric.cpu().numpy()) + "\n")
 
 time_end = time.time()
 
 print("running time: ", (time_end-time_start)/60, "mins")
-

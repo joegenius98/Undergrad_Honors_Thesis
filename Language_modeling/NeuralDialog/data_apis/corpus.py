@@ -48,18 +48,23 @@ class SWDADialogCorpus(object):
             b_age = float(l["B"]["age"])/100.0
             a_edu = float(l["A"]["education"])/3.0
             b_edu = float(l["B"]["education"])/3.0
-            vec_a_meta = [a_age, a_edu] + ([0, 1] if l["A"]["sex"] == "FEMALE" else [1, 0])
-            vec_b_meta = [b_age, b_edu] + ([0, 1] if l["B"]["sex"] == "FEMALE" else [1, 0])
+            vec_a_meta = [a_age, a_edu] + \
+                ([0, 1] if l["A"]["sex"] == "FEMALE" else [1, 0])
+            vec_b_meta = [b_age, b_edu] + \
+                ([0, 1] if l["B"]["sex"] == "FEMALE" else [1, 0])
 
             # for joint model we mode two side of speakers together. if A then its 0 other wise 1
             meta = (vec_a_meta, vec_b_meta, l["topic"])
-            dialog = [(bod_utt, 0, None)] + [(utt, int(caller=="B"), feat) for caller, utt, feat in lower_utts]
+            dialog = [(bod_utt, 0, None)] + [(utt, int(caller == "B"), feat)
+                                             for caller, utt, feat in lower_utts]
 
-            new_utts.extend([bod_utt] + [utt for caller, utt, feat in lower_utts])
+            new_utts.extend(
+                [bod_utt] + [utt for caller, utt, feat in lower_utts])
             new_dialog.append(dialog)
             new_meta.append(meta)
 
-        print("Max utt len %d, mean utt len %.2f" % (np.max(all_lenes), float(np.mean(all_lenes))))
+        print("Max utt len %d, mean utt len %.2f" %
+              (np.max(all_lenes), float(np.mean(all_lenes))))
         return new_dialog, new_meta, new_utts
 
     def build_vocab(self, max_vocab_cnt):
@@ -88,15 +93,19 @@ class SWDADialogCorpus(object):
         for a, b, topic in self.train_corpus[self.meta_id]:
             all_topics.append(topic)
         self.topic_vocab = [t for t, cnt in Counter(all_topics).most_common()]
-        self.rev_topic_vocab = {t: idx for idx, t in enumerate(self.topic_vocab)}
+        self.rev_topic_vocab = {t: idx for idx,
+                                t in enumerate(self.topic_vocab)}
         print("%d topics in train data" % len(self.topic_vocab))
 
         # get dialog act labels
         all_dialog_acts = []
         for dialog in self.train_corpus[self.dialog_id]:
-            all_dialog_acts.extend([feat[self.dialog_act_id] for caller, utt, feat in dialog if feat is not None])
-        self.dialog_act_vocab = [t for t, cnt in Counter(all_dialog_acts).most_common()]
-        self.rev_dialog_act_vocab = {t: idx for idx, t in enumerate(self.dialog_act_vocab)}
+            all_dialog_acts.extend([feat[self.dialog_act_id]
+                                   for caller, utt, feat in dialog if feat is not None])
+        self.dialog_act_vocab = [
+            t for t, cnt in Counter(all_dialog_acts).most_common()]
+        self.rev_dialog_act_vocab = {
+            t: idx for idx, t in enumerate(self.dialog_act_vocab)}
         print(self.dialog_act_vocab)
         print("%d dialog acts in train data" % len(self.dialog_act_vocab))
 
@@ -120,13 +129,15 @@ class SWDADialogCorpus(object):
             else:
                 vec = np.fromstring(str_vec, sep=" ")
             self.word2vec.append(vec)
-        print("word2vec cannot cover %f vocab" % (float(oov_cnt)/len(self.vocab)))
+        print("word2vec cannot cover %f vocab" %
+              (float(oov_cnt)/len(self.vocab)))
 
     def get_utt_corpus(self):
         def _to_id_corpus(data):
             results = []
             for line in data:
-                results.append([self.rev_vocab.get(t, self.unk_id) for t in line])
+                results.append([self.rev_vocab.get(t, self.unk_id)
+                               for t in line])
             return results
         # convert the corpus into ID
         id_train = _to_id_corpus(self.train_corpus[self.utt_id])
@@ -146,7 +157,8 @@ class SWDADialogCorpus(object):
                         id_feat[self.dialog_act_id] = self.rev_dialog_act_vocab[feat[self.dialog_act_id]]
                     else:
                         id_feat = None
-                    temp.append(([self.rev_vocab.get(t, self.unk_id) for t in utt], floor, id_feat))
+                    temp.append(([self.rev_vocab.get(t, self.unk_id)
+                                for t in utt], floor, id_feat))
                 results.append(temp)
             return results
         id_train = _to_id_corpus(self.train_corpus[self.dialog_id])
@@ -165,4 +177,3 @@ class SWDADialogCorpus(object):
         id_valid = _to_id_corpus(self.valid_corpus[self.meta_id])
         id_test = _to_id_corpus(self.test_corpus[self.meta_id])
         return {'train': id_train, 'valid': id_valid, 'test': id_test}
-        

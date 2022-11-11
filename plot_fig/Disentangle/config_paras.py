@@ -15,12 +15,12 @@
 """
 
 
-path_list = ['dsprites_B_gamma4_z10_c15_v',\
-			'dsprites_B_gamma100_z10_c15_v',\
-			'dsprites_Dynamic_pid_c15_step015-v']
-## label
-label_lst =['beta-VAE-gamma4', 'beta-VAE-gamma100','ControlVAE']
+path_list = ['dsprites_B_gamma4_z10_c15_v',
+             'dsprites_B_gamma100_z10_c15_v',
+             'dsprites_Dynamic_pid_c15_step015-v']
+# label
+label_lst = ['beta-VAE-gamma4', 'beta-VAE-gamma100', 'ControlVAE']
 
-## line colors
-colors = ['blue', 'orange','darkgreen','black','darkgreen','magenta', 'lime',\
-				'fuchsia','blue','grey','pink','grey','coral','magenta']
+# line colors
+colors = ['blue', 'orange', 'darkgreen', 'black', 'darkgreen', 'magenta', 'lime',
+          'fuchsia', 'blue', 'grey', 'pink', 'grey', 'coral', 'magenta']

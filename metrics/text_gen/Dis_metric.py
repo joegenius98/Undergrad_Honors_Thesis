@@ -5,7 +5,7 @@ Fun: compute metrics:bleu1, bleu2, bleu3
 
 from nltk.translate.bleu_score import corpus_bleu
 from nltk.translate.bleu_score import sentence_bleu
-from nltk.translate.meteor_score import meteor_score,single_meteor_score
+from nltk.translate.meteor_score import meteor_score, single_meteor_score
 from rouge import Rouge
 from rouge import FilesRouge
 from nltk import ngrams
@@ -15,25 +15,24 @@ import os
 import numpy as np
 
 
-
-def _compute_corpus_bleu(reference,predict):
+def _compute_corpus_bleu(reference, predict):
 	"""compute corpus bleu
 	input:list_of_references = [[ref1a, ref1b, ref1c], [ref2a]]
 	"""
 	# reference = [[ref.split()] for ref in reference]
 	# predict = [pr.split() for pr in predict]
 	# assert len(reference) == len(predict)
-	bleu1 = corpus_bleu(reference, predict,weights=[1,0])
+	bleu1 = corpus_bleu(reference, predict, weights=[1, 0])
 	print("**compute bleu2 now...")
-	bleu2 = corpus_bleu(reference, predict,weights=[0.5,0.5])
+	bleu2 = corpus_bleu(reference, predict, weights=[0.5, 0.5])
 	# bleu3 = corpus_bleu(reference, predict,weights=[1/3.0, 1/3.0, 1.0/3])
 	# print("**compute bleu4 now...")
 	# bleu4 = corpus_bleu(reference, predict)
-	
-	return bleu1,bleu2,bleu3,bleu4
+
+	return bleu1, bleu2, bleu3, bleu4
 
 
-def _compute_sentence_bleu(reference,predict):
+def _compute_sentence_bleu(reference, predict):
 	"""compute corpus bleu
 	input:list_of_references = [[ref1a, ref1b, ref1c], [ref2a]]
 	"""
@@ -42,31 +41,30 @@ def _compute_sentence_bleu(reference,predict):
 	# assert len(reference) == len(predict)
 	print(reference)
 	print(predict)
-	bleu1 = sentence_bleu(reference, predict,weights=[1,0])
+	bleu1 = sentence_bleu(reference, predict, weights=[1, 0])
 	print("**compute bleu2 now...")
-	bleu2 = sentence_bleu(reference, predict,weights=[0.5,0.5])
-	bleu3 = sentence_bleu(reference, predict,weights=[1/3.0, 1/3.0, 1.0/3])
+	bleu2 = sentence_bleu(reference, predict, weights=[0.5, 0.5])
+	bleu3 = sentence_bleu(reference, predict, weights=[1/3.0, 1/3.0, 1.0/3])
 	print("**compute bleu4 now...")
 	bleu4 = sentence_bleu(reference, predict)
-	
-	return bleu1,bleu2,bleu3,bleu4
-    
 
-def _compute_meteor(reference,predict):
+	return bleu1, bleu2, bleu3, bleu4
+
+
+def _compute_meteor(reference, predict):
 	"""Fun:compute meteor score
 		Input: sentence with string, e.g: reference= "I have a car"
 		For meteor_score: [reference1, reference2, reference3]
 		input: predict is the string of sentence
 	"""
 
-	meteor = meteor_score(reference,predict)
-	#### single mean one to one
+	meteor = meteor_score(reference, predict)
+	# single mean one to one
 	# meteor = single_meteor_score(reference,predict)
 	return meteor
 
 
-
-def _compute_rouge(reference,predict):
+def _compute_rouge(reference, predict):
 	"""compute rouge metric
 	Input: a sentence of string, for example:reference="I have a car"
 	"""
@@ -83,11 +81,11 @@ def _token_count(predict):
 	words_list = []
 	for sen in predict:
 		words_list.extend(sen)
-		
+
 	return len(words_list)
 
 
-def _distinct_n_gram(predict,n=2):
+def _distinct_n_gram(predict, n=2):
 	"""
 	Fun:compute the distinct number of unigrams, bigrams and trigrams
 	input: n-gram
@@ -100,7 +98,7 @@ def _distinct_n_gram(predict,n=2):
 
 	n_dis = ngrams(predict_list, n)
 	n_dis = set(n_dis)
-	
+
 	return len(n_dis)
 
 
@@ -109,7 +107,7 @@ def _read_text_file(fileName):
 	target_list = []
 	predict_sent = []
 	with open(fileName) as f:
-		for num,line in enumerate(f):
+		for num, line in enumerate(f):
 			if (num+1) % 14 == 3:
 				target = line.split('>>')[1]
 			if 4 <= (num+1) % 14 <= 13:
@@ -121,7 +119,7 @@ def _read_text_file(fileName):
 				target_list.append(target)
 
 	assert len(predict_sent) == len(target_list)
-	## write ground truth and predict to files[
+	# write ground truth and predict to files[
 	folder = fileName.split('/')[0]
 	with open(folder+"/ground.txt", "w") as f_ground:
 		with open(folder+"/generated.txt", "w") as f_predict:
@@ -132,14 +130,14 @@ def _read_text_file(fileName):
 				f_predict.write(predict)
 
 	return predict_list
-	
+
 
 def main():
 	if not os.path.exists('result'):
 		os.makedirs('result')
 
      N = 6
-	## read the PID-KL loss
+	# read the PID-KL loss
 	fw = open('result/Dis_mean_var.txt' , "w")
 	path_list = ['cost_anneal_20000-v', 'cyclical_4-v', 'pid17-v', 'pid25-v','pid35-v']
 	for path in path_list:

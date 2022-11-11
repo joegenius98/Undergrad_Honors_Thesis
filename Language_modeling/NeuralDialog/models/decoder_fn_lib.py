@@ -43,7 +43,8 @@ def context_decoder_fn_inference(output_fn, encoder_state, embeddings,
                         [output_fn, encoder_state, embeddings,
                          start_of_sequence_id, end_of_sequence_id,
                          maximum_length, num_decoder_symbols, dtype]):
-        start_of_sequence_id = ops.convert_to_tensor(start_of_sequence_id, dtype)
+        start_of_sequence_id = ops.convert_to_tensor(
+            start_of_sequence_id, dtype)
         end_of_sequence_id = ops.convert_to_tensor(end_of_sequence_id, dtype)
         maxium_length_int = maximum_length + 1
         maximum_length = ops.convert_to_tensor(maximum_length, dtype)
@@ -51,7 +52,7 @@ def context_decoder_fn_inference(output_fn, encoder_state, embeddings,
         encoder_info = nest.flatten(encoder_state)[0]
         batch_size = encoder_info.get_shape()[0].value
         if output_fn is None:
-            output_fn = lambda x: x
+            def output_fn(x): return x
         if batch_size is None:
             batch_size = array_ops.shape(encoder_info)[0]
 
@@ -110,7 +111,8 @@ def context_decoder_fn_inference(output_fn, encoder_state, embeddings,
                 cell_state = encoder_state
                 cell_output = array_ops.zeros([num_decoder_symbols],
                                               dtype=dtypes.float32)
-                context_state = tf.zeros((batch_size, maxium_length_int), dtype=tf.int32)
+                context_state = tf.zeros(
+                    (batch_size, maxium_length_int), dtype=tf.int32)
             else:
                 cell_output = output_fn(cell_output)
 
@@ -128,16 +130,20 @@ def context_decoder_fn_inference(output_fn, encoder_state, embeddings,
                 done = math_ops.equal(next_input_id, end_of_sequence_id)
                 # save the results into context state
                 expanded_next_input = tf.expand_dims(next_input_id, axis=1)
-                sliced_context_state = tf.slice(context_state, [0, 0], [-1, maxium_length_int - 1])
-                context_state = tf.concat([expanded_next_input, sliced_context_state], axis=1)
-                context_state = tf.reshape(context_state, [batch_size, maxium_length_int])
+                sliced_context_state = tf.slice(
+                    context_state, [0, 0], [-1, maxium_length_int - 1])
+                context_state = tf.concat(
+                    [expanded_next_input, sliced_context_state], axis=1)
+                context_state = tf.reshape(
+                    context_state, [batch_size, maxium_length_int])
 
             next_input = array_ops.gather(embeddings, next_input_id)
             if context_vector is not None:
                 next_input = tf.concat([next_input, context_vector], axis=1)
             # if time > maxlen, return all true vector
             done = control_flow_ops.cond(math_ops.greater(time, maximum_length),
-                                         lambda: array_ops.ones([batch_size, ], dtype=dtypes.bool),
+                                         lambda: array_ops.ones(
+                                             [batch_size, ], dtype=dtypes.bool),
                                          lambda: done)
             return (done, cell_state, next_input, cell_output, context_state)
 

@@ -49,20 +49,21 @@ def return_data(args):
         root = os.path.join(dset_dir, '3DChairs')
         transform = transforms.Compose([
             transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(),])
-        train_kwargs = {'root':root, 'transform':transform}
+            transforms.ToTensor(), ])
+        train_kwargs = {'root': root, 'transform': transform}
         dset = CustomImageFolder
 
     elif name.lower() == 'celeba':
         root = os.path.join(dset_dir, 'CelebA')
         transform = transforms.Compose([
             transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(),])
-        train_kwargs = {'root':root, 'transform':transform}
+            transforms.ToTensor(), ])
+        train_kwargs = {'root': root, 'transform': transform}
         dset = CustomImageFolder
 
     elif name.lower() == 'dsprites':
-        root = os.path.join(dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
+        root = os.path.join(
+            dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
         if not os.path.exists(root):
             import subprocess
             print('Now download dsprites-dataset')
@@ -70,12 +71,11 @@ def return_data(args):
             print('Finished')
         data = np.load(root, encoding='bytes')
         data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
-        train_kwargs = {'data_tensor':data}
+        train_kwargs = {'data_tensor': data}
         dset = CustomTensorDataset
 
     else:
         raise NotImplementedError
-
 
     train_data = dset(**train_kwargs)
     train_loader = DataLoader(train_data,
@@ -89,20 +89,20 @@ def return_data(args):
 
     return data_loader
 
+
 if __name__ == '__main__':
     transform = transforms.Compose([
         transforms.Resize((64, 64)),
-        transforms.ToTensor(),])
+        transforms.ToTensor(), ])
 
     dset = CustomImageFolder('data/CelebA', transform)
     loader = DataLoader(dset,
-                       batch_size=32,
-                       shuffle=True,
-                       num_workers=1,
-                       pin_memory=False,
-                       drop_last=True)
+                        batch_size=32,
+                        shuffle=True,
+                        num_workers=1,
+                        pin_memory=False,
+                        drop_last=True)
 
     images1 = iter(loader).next()
-    import ipdb; ipdb.set_trace()
-    
-    
+    import ipdb
+    ipdb.set_trace()

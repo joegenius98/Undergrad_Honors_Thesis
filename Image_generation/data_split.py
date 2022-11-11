@@ -4,7 +4,8 @@ Fun: divide the data into training and testing data
 
 import glob
 import shutil
-import os,random
+import os
+import random
 
 
 def _split_data(file_path, test_path):
@@ -20,11 +21,10 @@ def main():
     test_path = './data/test/'
     if not os.path.exists(test_path):
         os.makedirs(test_path)
-    
-    ## randomly choose the images to test data
+
+    # randomly choose the images to test data
     _split_data(file_path, test_path)
 
 
 if __name__ == "__main__":
     main()
-    

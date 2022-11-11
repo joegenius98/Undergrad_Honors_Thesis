@@ -46,21 +46,29 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter()
 
-## assign gpu
+# assign gpu
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=1, help="cuda id.")
-parser.add_argument('--config', type=str, default=None, help="The config to use.")
-parser.add_argument('--mode', type=str, default='train', help="Train or predict.")
-parser.add_argument('--model', type=str, default=None, help="Model path for generating sentences.")
-parser.add_argument('--out', type=str, default=None, help="Generation output path.")
-parser.add_argument('--model_name', type=str, default='cost_anneal', help="Generation output path.")
-parser.add_argument('--exp_kl', type=float, default=0, help="desired KL divergence.")
+parser.add_argument('--config', type=str, default=None,
+                    help="The config to use.")
+parser.add_argument('--mode', type=str, default='train',
+                    help="Train or predict.")
+parser.add_argument('--model', type=str, default=None,
+                    help="Model path for generating sentences.")
+parser.add_argument('--out', type=str, default=None,
+                    help="Generation output path.")
+parser.add_argument('--model_name', type=str,
+                    default='cost_anneal', help="Generation output path.")
+parser.add_argument('--exp_kl', type=float, default=0,
+                    help="desired KL divergence.")
 parser.add_argument('--Kp', type=float, default=0.01, help="Kp for pid.")
 parser.add_argument('--Ki', type=float, default=-0.0001, help="Kp for pid.")
 parser.add_argument('--cycle', type=float, default=4, help="Kp for pid.")
-parser.add_argument('--anneal_steps', type=float, default=10000, help="steps for anneal.")
-parser.add_argument('--max_steps', type=int, default=80000, help="steps for anneal.")
+parser.add_argument('--anneal_steps', type=float,
+                    default=10000, help="steps for anneal.")
+parser.add_argument('--max_steps', type=int, default=80000,
+                    help="steps for anneal.")
 
 
 args = parser.parse_args()
@@ -78,10 +86,13 @@ def main():
     # val_data = tx.data.MonoTextData(config.val_data_hparams, device=device)
     # test_data = tx.data.MonoTextData(config.test_data_hparams, device=device)
 
-    train_data = tx.data.MonoTextData(config.train_data_hparams, device=torch.device("cpu"))
-    val_data = tx.data.MonoTextData(config.val_data_hparams, device=torch.device("cpu"))
-    test_data = tx.data.MonoTextData(config.test_data_hparams, device=torch.device("cpu"))
-    
+    train_data = tx.data.MonoTextData(
+        config.train_data_hparams, device=torch.device("cpu"))
+    val_data = tx.data.MonoTextData(
+        config.val_data_hparams, device=torch.device("cpu"))
+    test_data = tx.data.MonoTextData(
+        config.test_data_hparams, device=torch.device("cpu"))
+
     iterator = tx.data.DataIterator(
         {"train": train_data, "valid": val_data, "test": test_data})
 
@@ -98,21 +109,24 @@ def main():
     decay_ts = config.lr_decay_hparams["threshold"]
 
     if 'pid' in args.model_name:
-        save_dir = args.model_name + '_'+ str(config.dataset) + '_KL' + str(args.exp_kl)
+        save_dir = args.model_name + '_' + \
+            str(config.dataset) + '_KL' + str(args.exp_kl)
     elif 'cost' in args.model_name:
-         save_dir = args.model_name + '_'+ str(config.dataset) + '_step' + str(args.anneal_steps)
+        save_dir = args.model_name + '_' + \
+            str(config.dataset) + '_step' + str(args.anneal_steps)
     elif 'cyclical' in args.model_name:
-         save_dir = args.model_name + '_'+ str(config.dataset) + '_cyc_' + str(args.cycle)
-    
+        save_dir = args.model_name + '_' + \
+            str(config.dataset) + '_cyc_' + str(args.cycle)
+
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
     suffix = f"{config.dataset}_{config.decoder_type}Decoder.ckpt"
 
     save_path = os.path.join(save_dir, suffix)
-    
+
     # KL term annealing rate warm_up=10
-    ## replace it with sigmoid function
+    # replace it with sigmoid function
     anneal_r = 1.0 / (config.kl_anneal_hparams["warm_up"] *
                       (len(train_data) / config.batch_size))
 
@@ -130,16 +144,16 @@ def main():
         hparams=config.opt_hparams)
     scheduler = ExponentialLR(optimizer, decay_factor)
 
-    ## max iteration
+    # max iteration
     max_iter = config.num_epochs*len(train_data)/config.batch_size
     max_iter = min(max_iter, args.max_steps)
     print('max steps:', max_iter)
-    pbar = tqdm(total = int(max_iter))
-    
+    pbar = tqdm(total=int(max_iter))
+
     if args.mode == "train":
         outFile = os.path.join(save_dir, 'train.log')
         fw_log = open(outFile, "w")
-    
+
     global_steps = {}
     global_steps['step'] = 0
     pid = PIDControl()
@@ -148,7 +162,7 @@ def main():
     Ki = args.Ki
     exp_kl = args.exp_kl
 
-    ## train model
+    # train model
     def _run_epoch(epoch: int, mode: str, display: int = 10) \
             -> Tuple[Tensor, float]:
         iterator.switch_to_dataset(mode)
@@ -160,15 +174,15 @@ def main():
             model.eval()
             kl_weight = 1.0
             # kl_weight = opt_vars["kl_weight"]
-            
+
         start_time = time.time()
         num_words = 0
         nll_total = 0.
 
         avg_rec = tx.utils.AverageRecorder()
         for batch in iterator:
-            ## run model to get loss function
-            if global_steps['step']>= args.max_steps:
+            # run model to get loss function
+            if global_steps['step'] >= args.max_steps:
                 break
             ret = model(batch, kl_weight, start_tokens, end_token)
             if mode == "train":
@@ -178,20 +192,22 @@ def main():
                 rec_loss = ret['rc_loss'].item()
                 total_loss = ret["nll"].item()
                 if 'cost' in args.model_name:
-                    kl_weight = _cost_annealing(global_steps['step'], 1.0, args.anneal_steps)
+                    kl_weight = _cost_annealing(
+                        global_steps['step'], 1.0, args.anneal_steps)
                 elif 'pid' in args.model_name:
                     kl_weight = pid.pid(exp_kl, kl_loss, Kp, Ki)
                 elif 'cyclical' in args.model_name:
-                    kl_weight = _cyclical_annealing(global_steps['step'], max_iter/args.cycle)
+                    kl_weight = _cyclical_annealing(
+                        global_steps['step'], max_iter/args.cycle)
 
                 opt_vars["kl_weight"] = kl_weight
-                
-                ## total loss
+
+                # total loss
                 ret["nll"].backward()
                 optimizer.step()
                 optimizer.zero_grad()
-                fw_log.write('epoch:{0} global_step:{1} total_loss:{2:.3f} kl_loss:{3:.3f} rec_loss:{4:.3f} kl_weight:{5:.4f}\n'\
-                            .format(epoch, global_steps['step'], total_loss, kl_loss, rec_loss, kl_weight))
+                fw_log.write('epoch:{0} global_step:{1} total_loss:{2:.3f} kl_loss:{3:.3f} rec_loss:{4:.3f} kl_weight:{5:.4f}\n'
+                             .format(epoch, global_steps['step'], total_loss, kl_loss, rec_loss, kl_weight))
                 fw_log.flush()
 
             batch_size = len(ret["lengths"])
@@ -202,16 +218,19 @@ def main():
                  ret["kl_loss"].item(),
                  ret["rc_loss"].item()],
                 batch_size)
-                
+
             if global_steps['step'] % display == 1 and mode == 'train':
                 nll = avg_rec.avg(0)
                 klw = opt_vars["kl_weight"]
                 KL = avg_rec.avg(1)
                 rc = avg_rec.avg(2)
-                writer.add_scalar(f'Loss/Rec_loss_{args.model_name}', rc, global_steps['step'])
-                writer.add_scalar(f'Loss/KL_diverg_{args.model_name}', KL, global_steps['step'])
-                writer.add_scalar(f'Loss/KL_weight_{args.model_name}', klw, global_steps['step'])
-                
+                writer.add_scalar(
+                    f'Loss/Rec_loss_{args.model_name}', rc, global_steps['step'])
+                writer.add_scalar(
+                    f'Loss/KL_diverg_{args.model_name}', KL, global_steps['step'])
+                writer.add_scalar(
+                    f'Loss/KL_weight_{args.model_name}', klw, global_steps['step'])
+
         nll = avg_rec.avg(0)
         KL = avg_rec.avg(1)
         rc = avg_rec.avg(2)
@@ -223,12 +242,13 @@ def main():
             ppl = math.exp(log_ppl)
             nll = 1000
             KL = args.exp_kl
-        
+
         print(f"\n{mode}: epoch {epoch}, nll {nll:.4f}, KL {KL:.4f}, "
               f"rc {rc:.4f}, log_ppl {log_ppl:.4f}, ppl {ppl:.4f}")
         return nll, ppl  # type: ignore
-        
+
     args.model = save_path
+
     @torch.no_grad()
     def _generate(start_tokens: torch.LongTensor,
                   end_token: int,
@@ -244,7 +264,8 @@ def main():
             scale_diag=torch.ones(batch_size, config.latent_dims))
 
         # latent_z = dst.rsample().to(device)
-        latent_z = torch.FloatTensor(batch_size, config.latent_dims).uniform_(-1, 1).to(device)
+        latent_z = torch.FloatTensor(
+            batch_size, config.latent_dims).uniform_(-1, 1).to(device)
         # latent_z = torch.randn(batch_size, config.latent_dims).to(device)
 
         helper = model.decoder.create_helper(
@@ -277,7 +298,7 @@ def main():
         fh.close()
 
     if args.mode == "predict":
-        out_path = os.path.join(save_dir,'results.txt')
+        out_path = os.path.join(save_dir, 'results.txt')
         for _ in range(10):
             _generate(start_tokens, end_token, out_path)
         return
@@ -285,10 +306,10 @@ def main():
     # Counts trainable parameters
     total_parameters = sum(param.numel() for param in model.parameters())
     print(f"{total_parameters} total parameters")
-    
+
     best_nll = best_ppl = 0.
 
-    ## start running model
+    # start running model
     for epoch in range(config.num_epochs):
         _, _ = _run_epoch(epoch, 'train', display=200)
         val_nll, _ = _run_epoch(epoch, 'valid')
@@ -329,17 +350,13 @@ def main():
 
     print(f"\nbest testing nll: {best_nll:.4f},"
           f"best testing ppl {best_ppl:.4f}\n")
-    
+
     if args.mode == "train":
         fw_log.write(f"\nbest testing nll: {best_nll:.4f},"
-          f"best testing ppl {best_ppl:.4f}\n")
+                     f"best testing ppl {best_ppl:.4f}\n")
         fw_log.close()
-        
+
 
 if __name__ == '__main__':
     main()
     print("well done!!!!!")
-    
-
-
-    

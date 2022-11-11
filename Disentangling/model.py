@@ -49,11 +49,11 @@ class BetaVAE_H(nn.Module):
             nn.ReLU(True),
             nn.ConvTranspose2d(256, 64, 4),      # B,  64,  4,  4
             nn.ReLU(True),
-            nn.ConvTranspose2d(64, 64, 4, 2, 1), # B,  64,  8,  8
+            nn.ConvTranspose2d(64, 64, 4, 2, 1),  # B,  64,  8,  8
             nn.ReLU(True),
-            nn.ConvTranspose2d(64, 32, 4, 2, 1), # B,  32, 16, 16
+            nn.ConvTranspose2d(64, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 32, 32
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
             nn.ConvTranspose2d(32, nc, 4, 2, 1),  # B, nc, 64, 64
         )
@@ -114,13 +114,13 @@ class BetaVAE_B(BetaVAE_H):
             nn.Linear(256, 32*4*4),              # B, 512
             nn.ReLU(True),
             View((-1, 32, 4, 4)),                # B,  32,  4,  4
-            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32,  8,  8
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 16, 16
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B,  32, 32, 32
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, nc, 4, 2, 1), # B,  nc, 64, 64
+            nn.ConvTranspose2d(32, nc, 4, 2, 1),  # B,  nc, 64, 64
         )
         self.weight_init()
 
@@ -165,8 +165,7 @@ def normal_init(m, mean, std):
         m.weight.data.fill_(1)
         if m.bias.data is not None:
             m.bias.data.zero_()
-    
+
 
 if __name__ == '__main__':
     pass
-    

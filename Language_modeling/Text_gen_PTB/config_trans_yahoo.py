@@ -105,7 +105,7 @@ trans_hparams = {
     },
     'poswise_feedforward': {
         'name': 'fnn',
-       'layers': [
+        'layers': [
             {
                 'type': 'Linear',
                 'kwargs': {

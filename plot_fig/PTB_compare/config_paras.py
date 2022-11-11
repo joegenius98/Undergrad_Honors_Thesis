@@ -15,13 +15,13 @@
 """
 
 
-path_list = ['pid_ptb_KL1.5','pid_ptb_KL3.0',\
-				'cost_anneal_b32_ptb_step10000.0', 'cost_anneal_b32_ptb_step20000.0',\
-				'cyclical_b32_ptb_cyc_4.0', 'cyclical_b32_ptb_cyc_8.0']
-## label
-label_lst =['ControlVAE-KL-1.5', 'ControlVAE-KL-3',\
-			'KL-anneal-10K','KL-anneal-20K','cyclical-4','cyclical-8']
+path_list = ['pid_ptb_KL1.5', 'pid_ptb_KL3.0',
+             'cost_anneal_b32_ptb_step10000.0', 'cost_anneal_b32_ptb_step20000.0',
+             'cyclical_b32_ptb_cyc_4.0', 'cyclical_b32_ptb_cyc_8.0']
+# label
+label_lst = ['ControlVAE-KL-1.5', 'ControlVAE-KL-3',
+             'KL-anneal-10K', 'KL-anneal-20K', 'cyclical-4', 'cyclical-8']
 
-## line colors
-colors = ['blue', 'red','lime','black','darkgreen','magenta', 'lime',\
-				'fuchsia','blue','grey','pink','grey','coral','magenta']
+# line colors
+colors = ['blue', 'red', 'lime', 'black', 'darkgreen', 'magenta', 'lime',
+          'fuchsia', 'blue', 'grey', 'pink', 'grey', 'coral', 'magenta']

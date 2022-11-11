@@ -28,4 +28,3 @@ def _active_unit(model, test_data_batch, start_tokens, end_token, delta=0.01):
     au_var = var_sum / (cnt - 1)
 
     return (au_var >= delta).sum().item()
-    

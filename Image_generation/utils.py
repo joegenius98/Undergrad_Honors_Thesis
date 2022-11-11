@@ -39,5 +39,6 @@ def grid2gif(image_str, output_gif, delay=100):
     code from:
         https://stackoverflow.com/questions/
     """
-    str1 = 'convert -delay '+str(delay)+' -loop 0 ' + image_str  + ' ' + output_gif
+    str1 = 'convert -delay '+str(delay)+' -loop 0 ' + \
+        image_str + ' ' + output_gif
     subprocess.call(str1, shell=True)

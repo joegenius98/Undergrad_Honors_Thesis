@@ -17,24 +17,24 @@ import os
 import numpy as np
 
 
-def _compute_corpus_bleu(reference,predict):
+def _compute_corpus_bleu(reference, predict):
     """compute corpus bleu
     input:list_of_references = [[ref1a, ref1b, ref1c], [ref2a]]
     """
     # reference = [[ref.split()] for ref in reference]
     # predict = [pr.split() for pr in predict]
     # assert len(reference) == len(predict)
-    bleu1 = corpus_bleu(reference, predict,weights=[1,0])
+    bleu1 = corpus_bleu(reference, predict, weights=[1, 0])
     print("**compute bleu2 now...")
-    bleu2 = corpus_bleu(reference, predict,weights=[0.5,0.5])
+    bleu2 = corpus_bleu(reference, predict, weights=[0.5, 0.5])
     # bleu3 = corpus_bleu(reference, predict,weights=[1/3.0, 1/3.0, 1.0/3])
     # print("**compute bleu4 now...")
     # bleu4 = corpus_bleu(reference, predict)
-    
-    return bleu1,bleu2,bleu3,bleu4
+
+    return bleu1, bleu2, bleu3, bleu4
 
 
-def _compute_sentence_bleu(reference,predict):
+def _compute_sentence_bleu(reference, predict):
     """compute corpus bleu
     input:list_of_references = [[ref1a, ref1b, ref1c], [ref2a]]
     """
@@ -43,17 +43,17 @@ def _compute_sentence_bleu(reference,predict):
     # assert len(reference) == len(predict)
     print(reference)
     print(predict)
-    bleu1 = sentence_bleu(reference, predict,weights=[1,0])
+    bleu1 = sentence_bleu(reference, predict, weights=[1, 0])
     print("**compute bleu2 now...")
-    bleu2 = sentence_bleu(reference, predict,weights=[0.5,0.5])
-    bleu3 = sentence_bleu(reference, predict,weights=[1/3.0, 1/3.0, 1.0/3])
+    bleu2 = sentence_bleu(reference, predict, weights=[0.5, 0.5])
+    bleu3 = sentence_bleu(reference, predict, weights=[1/3.0, 1/3.0, 1.0/3])
     print("**compute bleu4 now...")
     bleu4 = sentence_bleu(reference, predict)
-    
-    return bleu1,bleu2,bleu3,bleu4
+
+    return bleu1, bleu2, bleu3, bleu4
 
 
-def _compute_sent_rouge(reference,predict):
+def _compute_sent_rouge(reference, predict):
     """compute rouge metric
     Input: a sentence of string, for example:reference="I have a car"
     """
@@ -63,14 +63,14 @@ def _compute_sent_rouge(reference,predict):
     return scores
 
 
-def _compute_file_rouge(ref_path,hyp_path):
+def _compute_file_rouge(ref_path, hyp_path):
     """hyp_path:predict file"""
-    files_rouge = FilesRouge(hyp_path,ref_path)
+    files_rouge = FilesRouge(hyp_path, ref_path)
     scores = files_rouge.get_scores(avg=True)
     return scores
 
 
-def _distinct_n_gram(predict,n=2):
+def _distinct_n_gram(predict, n=2):
     """
     Fun:compute the distinct number of unigrams, bigrams and trigrams
     input: n-gram
@@ -90,21 +90,21 @@ def _distinct_n_gram(predict,n=2):
 def _read_text_file(fileName):
     text = []
     with open(fileName) as f:
-        for num,line in enumerate(f):
-            line = line.replace('<unk> ',"")
+        for num, line in enumerate(f):
+            line = line.replace('<unk> ', "")
             arr = line.split()
             text.append(arr)
     return text
 
 
 def main():
-    path_list = ['cost_anneal_20000-v', 'cyclical_4-v', 'pid25-v','pid35-v']
-    with open('./result/rouge.txt' , "w") as fout:
+    path_list = ['cost_anneal_20000-v', 'cyclical_4-v', 'pid25-v', 'pid35-v']
+    with open('./result/rouge.txt', "w") as fout:
         for path in path_list:
             pre_list = []
             recall_list = []
             print(path)
-            for i in [1,2,3,4]:
+            for i in [1, 2, 3, 4]:
                 path_name = path+str(i)
                 file_ground = os.path.join(path_name, 'ground.txt')
                 file_predict = os.path.join(path_name, 'generated.txt')
@@ -114,15 +114,14 @@ def main():
                 rouge_recall = Rouge_L['r']
                 pre_list.append(rouge_precision)
                 recall_list.append(rouge_recall)
-            ## write result to file
+            # write result to file
             pre_avg = np.mean(pre_list)
             pre_std = np.std(pre_list)
             recall_avg = np.mean(recall_list)
             recall_std = np.std(recall_list)
-            fout.write(path + "\t" + "precistion mean : {:.4f} var: {:.4f} recall mean: {:.4f} var: {:.4f}\n".\
-                format(pre_avg, pre_std, recall_avg, recall_std))
+            fout.write(path + "\t" + "precistion mean : {:.4f} var: {:.4f} recall mean: {:.4f} var: {:.4f}\n".
+                       format(pre_avg, pre_std, recall_avg, recall_std))
             fout.flush()
-            
 
 
 if __name__ == '__main__':
@@ -130,8 +129,3 @@ if __name__ == '__main__':
     main()
     time_end = time.time()
     print("running time: ", time_end - time_start)
-    
-
-
-
-
