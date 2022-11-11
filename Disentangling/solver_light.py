@@ -2,7 +2,7 @@
 
 
 import matplotlib.pyplot as plt
-from P_PID import PIDControl
+# from P_PID import PIDControl
 from dataset import return_data
 from model import BetaVAE_H, BetaVAE_B
 from utils import cuda, grid2gif
@@ -46,7 +46,11 @@ def kl_divergence(mu, logvar):
     if logvar.data.ndimension() == 4:
         logvar = logvar.view(logvar.size(0), logvar.size(1))
 
+    # klds is approximation of KL divergence, found in original paper
+    # https://arxiv.org/pdf/1312.6114.pdf section 3 "Example: Variational Auto-Encoder"
+
     klds = -0.5*(1 + logvar - mu.pow(2) - logvar.exp())
+
     total_kld = klds.sum(1).mean(0, True)
     dimension_wise_kld = klds.mean(0)
     mean_kld = klds.mean(1).mean(0, True)
@@ -94,8 +98,8 @@ class Solver(object):
         self.beta1 = args.beta1
         self.beta2 = args.beta2
         # self.KL_loss = args.KL_loss
-        self.pid_fixed = args.pid_fixed
-        self.is_PID = args.is_PID
+        # self.pid_fixed = args.pid_fixed
+        # self.is_PID = args.is_PID
         self.step_value = args.step_val
         self.C_start = args.C_start
 
@@ -157,6 +161,8 @@ class Solver(object):
         self.gather = DataGather()
         self.gather2 = DataGather()
 
+    # nopep8
+
     def train(self):
         self.net_mode(train=True)
         self.C_max = Variable(
@@ -165,6 +171,7 @@ class Solver(object):
 
         pbar = tqdm(total=self.max_iter)
         pbar.update(self.global_iter)
+
         # write log to log file
         outfile = os.path.join(self.ckpt_dir, "train.log")
         kl_file = os.path.join(self.ckpt_dir, "train.kl")
@@ -173,10 +180,11 @@ class Solver(object):
         # fw_kl.write('total KL\tz_dim' + '\n')
 
         # init PID control
-        PID = PIDControl()
+        # PID = PIDControl()
+
         Kp = 0.01
         Ki = -0.001
-        Kd = 0.0
+        # Kd = 0.0
         C = 0.5
         period = 5000
         fw_log.write("Kp:{0:.5f} Ki: {1:.6f} C_iter:{2:.1f} period:{3} step_val:{4:.4f}\n"
@@ -192,13 +200,15 @@ class Solver(object):
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
-                if self.is_PID and self.objective == 'H':
-                    if self.global_iter % period == 0:
-                        C += self.step_value
-                    if C > self.C_max_org:
-                        C = self.C_max_org
-                    # dynamic pid
-                    self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
+                # not focused on ControlVAE
+
+                # if self.is_PID and self.objective == 'H':
+                #     if self.global_iter % period == 0:
+                #         C += self.step_value
+                #     if C > self.C_max_org:
+                #         C = self.C_max_org
+                #     # dynamic pid
+                #     self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
 
                 if self.objective == 'H':
                     beta_vae_loss = recon_loss + self.beta * total_kld
@@ -208,8 +218,15 @@ class Solver(object):
                         self.C_max/self.C_stop_iter*self.global_iter, self.C_start, self.C_max.data[0])
                     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
 
+                # re-initialize gradients to zero
                 self.optim.zero_grad()
+                # compute the gradient (i.e. partial derivs. w.r.t to neural net parameters)
+                """
+                note: beta_vae_loss has x_recon, which is from a forward pass of net, which is
+                why calling .backward() has access to all the neural net parameters
+                """
                 beta_vae_loss.backward()
+                # update neural net params. based on gradient
                 self.optim.step()
 
                 if self.viz_on and self.global_iter % self.gather_step == 0:
@@ -509,6 +526,8 @@ class Solver(object):
 
         self.net_mode(train=True)
 
+    # nopep8
+
     def net_mode(self, train):
         if not isinstance(train, bool):
             raise('Only bool type is supported. True or False')
@@ -517,6 +536,8 @@ class Solver(object):
             self.net.train()
         else:
             self.net.eval()
+
+    # nopep8
 
     def save_checkpoint(self, filename, silent=True):
         model_states = {'net': self.net.state_dict(), }

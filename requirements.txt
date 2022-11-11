@@ -2,7 +2,13 @@ Please install dependencies below before running code
 
 ## For Disentangling and Image Generation Applications, please install
 python 3.6.4
+
+"""
+from https://pytorch.org/get-started/previous-versions/#commands-for-versions--100-1
+I did conda install pytorch=0.4.0 cuda92 -c pytorch on a CS lab machine (namely, th121-21)
+"""
 pytorch 0.4.0
+
 visdom
 tqdm
 matplotlib
