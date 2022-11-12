@@ -41,6 +41,8 @@ def reconstruction_loss(x, x_recon, distribution):
 def kl_divergence(mu, logvar):
     batch_size = mu.size(0)
     assert batch_size != 0
+    # hypothetical; in practice for VAEs since they deal with images in 2 dimensions, we have just 2 dimensions
+    # 4 could represent video data
     if mu.data.ndimension() == 4:
         mu = mu.view(mu.size(0), mu.size(1))
     if logvar.data.ndimension() == 4:
@@ -230,6 +232,7 @@ class Solver(object):
                 self.optim.step()
 
                 if self.viz_on and self.global_iter % self.gather_step == 0:
+                    # store lots of training stats.
                     self.gather.insert(iter=self.global_iter,
                                        mu=mu.mean(0).data, var=logvar.exp().mean(
                                            0).data,
@@ -252,6 +255,7 @@ class Solver(object):
                         fw_log.flush()
                         fw_kl.flush()
 
+                # visualization (like Tensorboard)
                 if self.viz_on and self.global_iter % self.gather_step == 0:
                     self.gather.insert(images=x.data)
                     self.gather.insert(images=F.sigmoid(x_recon).data)
@@ -262,6 +266,7 @@ class Solver(object):
                 if (self.viz_on or self.save_output) and self.global_iter % 20000 == 0:
                     self.viz_traverse()
 
+                # regarding checkpoints
                 if self.global_iter % self.save_step == 0:
                     self.save_checkpoint('last')
                     pbar.write('Saved checkpoint(iter:{})'.format(
@@ -270,6 +275,7 @@ class Solver(object):
                 if self.global_iter % 50000 == 0:
                     self.save_checkpoint(str(self.global_iter))
 
+                # when to stop
                 if self.global_iter >= self.max_iter:
                     out = True
                     break
