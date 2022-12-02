@@ -30,10 +30,15 @@ class BetaVAE_H(nn.Module):
         self.z_dim = z_dim
         self.nc = nc
         self.encoder = nn.Sequential(
+            # Conv2d param. format
+            # in_channels, out_channels, kernel_size, stride, padding
             nn.Conv2d(nc, 32, 4, 2, 1),          # B,  32, 32, 32
             nn.ReLU(True),
+            # output dimensions formula:
+            # [(W−K+2P)/S]+1, e.g. [(32-4+2)/2]+1 = (32/2 - 1) + 1 = 16
             nn.Conv2d(32, 32, 4, 2, 1),          # B,  32, 16, 16
             nn.ReLU(True),
+            # [(16-4+2)/2] + 1 = 16/2 = 8
             nn.Conv2d(32, 64, 4, 2, 1),          # B,  64,  8,  8
             nn.ReLU(True),
             nn.Conv2d(64, 64, 4, 2, 1),          # B,  64,  4,  4

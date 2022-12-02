@@ -41,7 +41,7 @@ def reconstruction_loss(x, x_recon, distribution):
 def kl_divergence(mu, logvar):
     batch_size = mu.size(0)
     assert batch_size != 0
-    # hypothetical; in practice for VAEs since they deal with images in 2 dimensions, we have just 2 dimensions
+    # 4 dimensions is hypothetical; in practice for VAEs since they deal with images in 2 dimensions, we have just 2 dimensions
     # 4 could represent video data
     if mu.data.ndimension() == 4:
         mu = mu.view(mu.size(0), mu.size(1))
@@ -60,6 +60,7 @@ def kl_divergence(mu, logvar):
     return total_kld, dimension_wise_kld, mean_kld
 
 
+# gathers info. about model during training loop
 class DataGather(object):
     def __init__(self):
         self.data = self.get_empty_data_dict()
