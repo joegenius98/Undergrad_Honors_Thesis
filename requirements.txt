@@ -6,12 +6,18 @@ python 3.6.4
 """
 from https://pytorch.org/get-started/previous-versions/#commands-for-versions--100-1
 I did conda install pytorch=0.4.0 cuda92 -c pytorch on a CS lab machine (namely, th121-21)
+
+no CUDA: conda install pytorch=0.4.1 -c pytorch
 """
 pytorch 0.4.0
 
+# conda install -c conda-forge visdom
 visdom
+# conda install -c conda-forge tqdm
 tqdm
+# conda install -c conda-forge matplotlib
 matplotlib
+# conda install -c conda-forge tensorboard
 tensorboard
 
 ## For Text Generation, please install the Texas pytorch on the website https://github.com/asyml/texar-pytorch.git
