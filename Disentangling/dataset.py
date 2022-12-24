@@ -70,6 +70,9 @@ def return_data(args):
             subprocess.call(['./download_dsprites.sh'])
             print('Finished')
         data = np.load(root, encoding='bytes')
+
+        # .unsqueeze(1) allows us to have a channel size of 1
+        # data.shape goes from (737280, 64, 64) to (737280, 1, 64, 64)
         data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
         train_kwargs = {'data_tensor': data}
         dset = CustomTensorDataset

@@ -39,20 +39,41 @@ def reconstruction_loss(x, x_recon, distribution):
 
 
 def kl_divergence(mu, logvar):
+    """
+    Calculates the Kullback-Leibler (KL) divergence between two Gaussian distributions,
+    one with mean `mu` and variance `inverse_log(logvar)`, and one with mean `0` and variance `1`. (by ChatGPT)
+
+    Parameters
+    ----------
+    mu: shape (batch_size, z_dim)
+        Tensor of means for each dimension of the Gaussian distribution.
+    logvar: shape (batch_size, z_dim)
+        Tensor of log variances for each dimension of the Gaussian distribution.
+
+    Returns
+    -------
+    total_kld: (1,)-shape Tensor
+        summed across latent dimensions, then averaged by minibatch size
+    dimension_wise_kld: (z_dim,)-shape Tensor
+        the KL divergence listed for each latent dimension
+    mean_kld: (1,)-shape Tensor
+        averaged across minibatch size and latent dimensions 
+    """
     batch_size = mu.size(0)
     assert batch_size != 0
-    # 4 dimensions is hypothetical; in practice for VAEs since they deal with images in 2 dimensions, we have just 2 dimensions
-    # 4 could represent video data
-    if mu.data.ndimension() == 4:
-        mu = mu.view(mu.size(0), mu.size(1))
-    if logvar.data.ndimension() == 4:
-        logvar = logvar.view(logvar.size(0), logvar.size(1))
 
-    # klds is approximation of KL divergence, found in original paper
-    # https://arxiv.org/pdf/1312.6114.pdf section 3 "Example: Variational Auto-Encoder"
+    """
+    klds is approximation of KL divergence, found in original paper
+    https://arxiv.org/pdf/1312.6114.pdf section 3 "Example: Variational Auto-Encoder"
+
+    It makes the approximation that the posterior distribution of a VAE involves
+    a diagonal covariance matrix, where the variance of each dimension is independent
+    of the others (info. from ChatGPT)
+    """
 
     klds = -0.5*(1 + logvar - mu.pow(2) - logvar.exp())
 
+    # .sum(axis_num_1).mean(axis_num_2, keep_dim = True or False)
     total_kld = klds.sum(1).mean(0, True)
     dimension_wise_kld = klds.mean(0)
     mean_kld = klds.mean(1).mean(0, True)
@@ -168,8 +189,7 @@ class Solver(object):
 
     def train(self):
         self.net_mode(train=True)
-        self.C_max = Variable(
-            cuda(torch.FloatTensor([self.C_max]), self.use_cuda))
+        self.C_max = Variable(cuda(torch.FloatTensor([self.C_max]), self.use_cuda))
         out = False
 
         pbar = tqdm(total=self.max_iter)
@@ -218,7 +238,7 @@ class Solver(object):
                 elif self.objective == 'B':
                     # tricks for C
                     C = torch.clamp(
-                        self.C_max/self.C_stop_iter*self.global_iter, self.C_start, self.C_max.data[0])
+                        self.C_max/self.C_stop_iter * self.global_iter, self.C_start, self.C_max.data[0])
                     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
 
                 # re-initialize gradients to zero
@@ -235,10 +255,12 @@ class Solver(object):
                 if self.viz_on and self.global_iter % self.gather_step == 0:
                     # store lots of training stats.
                     self.gather.insert(iter=self.global_iter,
-                                       mu=mu.mean(0).data, var=logvar.exp().mean(
-                                           0).data,
-                                       recon_loss=recon_loss.data, total_kld=total_kld.data,
-                                       dim_wise_kld=dim_wise_kld.data, mean_kld=mean_kld.data, beta=self.beta)
+                                       mu=mu.mean(0).data, 
+                                       var=logvar.exp().mean(0).data,
+                                       recon_loss=recon_loss.data, 
+                                       total_kld=total_kld.data,
+                                       dim_wise_kld=dim_wise_kld.data, mean_kld=mean_kld.data, 
+                                       beta=self.beta)
 
                 if self.global_iter % 20 == 0:
                     # write log to file
@@ -258,10 +280,13 @@ class Solver(object):
 
                 # visualization (like Tensorboard)
                 if self.viz_on and self.global_iter % self.gather_step == 0:
+                    # gather current mini-batch image input and output, then visualize
                     self.gather.insert(images=x.data)
                     self.gather.insert(images=F.sigmoid(x_recon).data)
                     self.viz_reconstruction()
+                    # visualize training stats. over time
                     self.viz_lines()
+                    # restart for the next set of gathering steps
                     self.gather.flush()
 
                 if (self.viz_on or self.save_output) and self.global_iter % 20000 == 0:
@@ -285,40 +310,50 @@ class Solver(object):
         pbar.close()
         fw_log.close()
 
+
     def viz_reconstruction(self):
         self.net_mode(train=False)
+
+        # Obtain mini-batch input and output
         x = self.gather.data['images'][0][:100]
-        x = make_grid(x, normalize=True)
+        x = make_grid(x, normalize=True) # min-max rescaling
         x_recon = self.gather.data['images'][1][:100]
         x_recon = make_grid(x_recon, normalize=True)
         images = torch.stack([x, x_recon], dim=0).cpu()
+
+        # display grid of images on Visdom server
         self.viz.images(images, env=self.viz_name+'_reconstruction',
                         opts=dict(title=str(self.global_iter)), nrow=10)
+
         if self.save_output:
             output_dir = os.path.join(self.output_dir, str(self.global_iter))
             os.makedirs(output_dir, exist_ok=True)
             save_image(tensor=images, filename=os.path.join(
                 output_dir, 'recon.jpg'), pad_value=1)
+
         self.net_mode(train=True)
+
 
     def viz_lines(self):
         self.net_mode(train=False)
+
+        """
+        Diff. between `stack` and `cat`: 
+        `stack` concatenates sequence of tensors along a **new** dimension.
+        `cat` ||-------------------------------- in the **given** dimension.
+        """
+
         recon_losses = torch.stack(self.gather.data['recon_loss']).cpu()
         betas = torch.Tensor(self.gather.data['beta'])
-
-        # mus = torch.stack(self.gather.data['mu']).cpu()
-        # vars = torch.stack(self.gather.data['var']).cpu()
-
         dim_wise_klds = torch.stack(self.gather.data['dim_wise_kld'])
-        # mean_klds = torch.stack(self.gather.data['mean_kld'])
         total_klds = torch.stack(self.gather.data['total_kld'])
         klds = torch.cat([dim_wise_klds, total_klds], 1).cpu()
         iters = torch.Tensor(self.gather.data['iter'])
 
         # legend
         legend = []
-        for z_j in range(self.z_dim):
-            legend.append('z_{}'.format(z_j))
+        for j in range(self.z_dim):
+            legend.append('z_{}'.format(j))
         # legend.append('mean')
         legend.append('total')
 
@@ -444,55 +479,80 @@ class Solver(object):
         #                                     title='posterior variance',))
         self.net_mode(train=True)
 
+
     def viz_traverse(self, limit=3, inter=2/3, loc=-1):
+        """
+        Create visualization(s) for seeing the effect of traversing
+        one latent variable's value, across a range, on reconstruction, for various selected images
+        from a dataset, or from a randomly sampled latent vector.
+
+        Parameters
+        ----------
+        limit: absolute value limit for latent variable range
+        inter: traversal rate of latent variable value
+        loc: if non-zero, the latent dimension/index to look at. If -1, we look at all the latent dimensions.
+
+
+        Output (also, see visualization comments I made below)
+        ------
+        - Visdom image grids (one grid per selected img.) showcasing the effects of latent traversal on reconstruction
+        -  Image grid GIFs (one GIF per selected img.) animating the traversals
+        """
+
         self.net_mode(train=False)
         import random
 
         decoder = self.net.decoder
         encoder = self.net.encoder
+
+        # interpolation range for each latent var.
         interpolation = torch.arange(-limit, limit+0.1, inter)
 
         n_dsets = len(self.data_loader.dataset)
         rand_idx = random.randint(1, n_dsets-1)
 
-        random_img = self.data_loader.dataset.__getitem__(rand_idx)
-        random_img = Variable(
-            cuda(random_img, self.use_cuda), volatile=True).unsqueeze(0)
+        # random_img = self.data_loader.dataset.__getitem__(rand_idx)
+        # I index at 0 b/c otherwise it's a tuple w/ one element (according to toy testing)
+        random_img = self.data_loader.dataset[rand_idx][0]
+
+        # .unsqueeze(0) allows us to have a batch size of one: 
+        # e.g. shape (# channels, 64, 64) --> (1, # channels, 64, 64)
+        with torch.no_grad(): random_img = Variable(cuda(random_img, self.use_cuda)).unsqueeze(0)
         random_img_z = encoder(random_img)[:, :self.z_dim]
 
-        random_z = Variable(cuda(torch.rand(1, self.z_dim),
-                            self.use_cuda), volatile=True)
+        with torch.no_grad(): random_z = Variable(cuda(torch.rand(1, self.z_dim), self.use_cuda))
 
         if self.dataset == 'dsprites':
             fixed_idx1 = 87040  # square
             fixed_idx2 = 332800  # ellipse
             fixed_idx3 = 578560  # heart
 
-            fixed_img1 = self.data_loader.dataset.__getitem__(fixed_idx1)
-            fixed_img1 = Variable(
-                cuda(fixed_img1, self.use_cuda), volatile=True).unsqueeze(0)
+            # fixed_img1 = self.data_loader.dataset.__getitem__(fixed_idx1)
+            fixed_img1 = self.data_loader.dataset[fixed_idx1][0]
+            with torch.no_grad(): fixed_img1 = Variable(cuda(fixed_img1, self.use_cuda)).unsqueeze(0)
             fixed_img_z1 = encoder(fixed_img1)[:, :self.z_dim]
 
-            fixed_img2 = self.data_loader.dataset.__getitem__(fixed_idx2)
-            fixed_img2 = Variable(
-                cuda(fixed_img2, self.use_cuda), volatile=True).unsqueeze(0)
+            fixed_img2 = self.data_loader.dataset[fixed_idx2][0]
+            with torch.no_grad(): fixed_img2 = Variable(cuda(fixed_img2, self.use_cuda)).unsqueeze(0)
             fixed_img_z2 = encoder(fixed_img2)[:, :self.z_dim]
 
-            fixed_img3 = self.data_loader.dataset.__getitem__(fixed_idx3)
-            fixed_img3 = Variable(
-                cuda(fixed_img3, self.use_cuda), volatile=True).unsqueeze(0)
+            fixed_img3 = self.data_loader.dataset[fixed_idx3][0]
+            with torch.no_grad(): fixed_img3 = Variable(cuda(fixed_img3, self.use_cuda)).unsqueeze(0)
             fixed_img_z3 = encoder(fixed_img3)[:, :self.z_dim]
 
             Z = {'fixed_square': fixed_img_z1, 'fixed_ellipse': fixed_img_z2,
                  'fixed_heart': fixed_img_z3, 'random_img': random_img_z}
         else:
             fixed_idx = 0
-            fixed_img = self.data_loader.dataset.__getitem__(fixed_idx)
-            fixed_img = Variable(
-                cuda(fixed_img, self.use_cuda), volatile=True).unsqueeze(0)
+            fixed_img = self.data_loader.dataset[fixed_idx]
+            with torch.no_grad(): fixed_img = Variable(cuda(fixed_img, self.use_cuda).unsqueeze(0)
             fixed_img_z = encoder(fixed_img)[:, :self.z_dim]
+
             Z = {'fixed_img': fixed_img_z,
                  'random_img': random_img_z, 'random_z': random_z}
+        
+        # samples --> Visdom image grid visualization (across interpolation range for all latent dimensions)
+        # gifs --> creation of GIFs (each image on image grid animates through its singular latent value traversal)
 
         gifs = []
         for key in Z.keys():
@@ -501,15 +561,37 @@ class Solver(object):
             for row in range(self.z_dim):
                 if loc != -1 and row != loc:
                     continue
+
                 z = z_ori.clone()
                 for val in interpolation:
                     z[:, row] = val  # row is the z latent variable
                     sample = F.sigmoid(decoder(z)).data
                     samples.append(sample)
                     gifs.append(sample)
+            
+            """
+            Visualization of `samples`. Each rectangular cell represents a reconstructed image
+            from a latent representation modified with a specified latent variable value 
+            (format: z_{dimension_number} = {value}):
+
+             ----------       ---------
+            |z_1 = -1.5| ... |z_1 = 1.5|
+             ----------       ---------
+             ----------       ---------
+            |z_2 = -1.5| ... |z_2 = 1.5|
+             ----------       ---------
+                  .               .   
+                  .               .
+                  .               .
+             ----------       ---------
+            |z_n = -1.5| ... |z_n = 1.5|
+             ----------       ---------
+
+            Each row shows the traversal of one latent variable across the range.
+            """
+
             samples = torch.cat(samples, dim=0).cpu()
-            title = '{}_latent_traversal(iter:{})'.format(
-                key, self.global_iter)
+            title = '{}_latent_traversal(iter:{})'.format(key, self.global_iter)
 
             if self.viz_on:
                 self.viz.images(samples, env=self.viz_name+'_traverse',
@@ -518,14 +600,46 @@ class Solver(object):
         if self.save_output:
             output_dir = os.path.join(self.output_dir, str(self.global_iter))
             os.makedirs(output_dir, exist_ok=True)
+
             gifs = torch.cat(gifs)
-            gifs = gifs.view(len(Z), self.z_dim, len(
-                interpolation), self.nc, 64, 64).transpose(1, 2)
+
+            # I was tempted to do
+            # gifs.view(len(Z), len(interpolation), self.z_dim, self.nc, 64, 64) instead.
+            # but with toy testing, I saw that .view and .transpose work differently!
+            gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, 64, 64).transpose(1, 2)
+
+            """
+            GIF generation:
+
+            For every chosen image's (mean) latent representation, save every image grid of 
+            reconstructed images for a fixed latent value across every dimension.
+
+            Then, combine these image grids to a GIF.
+
+            Visualization of one slice of `gifs` (tranpose of the 1st 2nd dims. of `samples`):
+            (format: z_{dimension_number} = {value}):
+
+             ----------       ---------
+            |z_1 = -1.5| ... |z_n = -1.5|
+             ----------       ---------
+             ----------       ---------
+            |z_1 = -1.0| ... |z_n = -1.0|
+             ----------       ---------
+                  .               .   
+                  .               .
+                  .               .
+             ----------       ---------
+            |z_1 = 1.5| ... |z_n = 1.5|
+             ----------       ---------
+
+            For the actual GIF, imagine each row as an image grid, and stacking together
+            the image grids, where each grid is a time snapshot.
+            """
+
             for i, key in enumerate(Z.keys()):
                 for j, val in enumerate(interpolation):
                     save_image(tensor=gifs[i][j].cpu(),
-                               filename=os.path.join(
-                                   output_dir, '{}_{}.jpg'.format(key, j)),
+                               filename=os.path.join(output_dir, '{}_{}.jpg'.format(key, j)),
                                nrow=self.z_dim, pad_value=1)
 
                 grid2gif(os.path.join(output_dir, key+'*.jpg'),
