@@ -372,7 +372,6 @@ class Solver(object):
                 xlabel='iteration',
                 title='reconsturction loss',))
 
-
         self.win_beta = self.viz.line(
             X=iters,
             Y=betas,
