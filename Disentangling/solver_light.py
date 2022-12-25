@@ -64,7 +64,7 @@ def kl_divergence(mu, logvar):
 
     """
     klds is approximation of KL divergence, found in original paper
-    https://arxiv.org/pdf/1312.6114.pdf section 3 "Example: Variational Auto-Encoder"
+    https://arxiv.org/pdf/1312.6114.pdf appendix B in "Example: Variational Auto-Encoder"
 
     It makes the approximation that the posterior distribution of a VAE involves
     a diagonal covariance matrix, where the variance of each dimension is independent

@@ -8,9 +8,10 @@ from torch.autograd import Variable
 
 
 def reparametrize(mu, logvar):
-    std = logvar.div(2).exp()
+    # std = logvar.div(2).exp()
+    std_dev = logvar.exp() ** 0.5
     eps = Variable(std.data.new(std.size()).normal_())
-    return mu + std*eps
+    return mu + std_dev*eps
 
 
 class View(nn.Module):
