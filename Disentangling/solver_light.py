@@ -153,11 +153,14 @@ class Solver(object):
         self.viz_name = args.viz_name
         self.viz_port = args.viz_port
         self.viz_on = args.viz_on
+
+        # `win`` is short for "window"
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
         self.win_mu = None
         self.win_var = None
+
         if self.viz_on:
             self.viz = visdom.Visdom(port=self.viz_port)
 
@@ -295,8 +298,7 @@ class Solver(object):
                 # regarding checkpoints
                 if self.global_iter % self.save_step == 0:
                     self.save_checkpoint('last')
-                    pbar.write('Saved checkpoint(iter:{})'.format(
-                        self.global_iter))
+                    pbar.write(f'Saved checkpoint(iter:{self.global_iter})')
 
                 if self.global_iter % 50000 == 0:
                     self.save_checkpoint(str(self.global_iter))
@@ -353,80 +355,48 @@ class Solver(object):
         # legend
         legend = []
         for j in range(self.z_dim):
-            legend.append('z_{}'.format(j))
+            legend.append(f'z_{j}')
         # legend.append('mean')
         legend.append('total')
 
-        if self.win_recon is None:
-            self.win_recon = self.viz.line(
-                X=iters,
-                Y=recon_losses,
-                env=self.viz_name+'_lines',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    xlabel='iteration',
-                    title='reconsturction loss',))
-        else:
-            self.win_recon = self.viz.line(
-                X=iters,
-                Y=recon_losses,
-                env=self.viz_name+'_lines',
-                win=self.win_recon,
-                update='append',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    xlabel='iteration',
-                    title='reconsturction loss',))
+        # "win" is short for "window"
+        self.win_recon = self.viz.line(
+            X=iters,
+            Y=recon_losses,
+            env=self.viz_name+'_lines',
+            win=self.win_recon,
+            update=None if self.win_recon is None else 'append'
+            opts=dict(
+                width=400,
+                height=400,
+                xlabel='iteration',
+                title='reconsturction loss',))
 
-        if self.win_beta is None:
-            self.win_beta = self.viz.line(
-                X=iters,
-                Y=betas,
-                env=self.viz_name+'_lines',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    xlabel='iteration',
-                    title='beta',))
-        else:
-            self.win_beta = self.viz.line(
-                X=iters,
-                Y=betas,
-                env=self.viz_name+'_lines',
-                win=self.win_beta,
-                update='append',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    xlabel='iteration',
-                    title='beta',))
 
-        if self.win_kld is None:
-            self.win_kld = self.viz.line(
-                X=iters,
-                Y=klds,
-                env=self.viz_name+'_lines',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    legend=legend,
-                    xlabel='iteration',
-                    title='kl divergence',))
-        else:
-            self.win_kld = self.viz.line(
-                X=iters,
-                Y=klds,
-                env=self.viz_name+'_lines',
-                win=self.win_kld,
-                update='append',
-                opts=dict(
-                    width=400,
-                    height=400,
-                    legend=legend,
-                    xlabel='iteration',
-                    title='kl divergence',))
+        self.win_beta = self.viz.line(
+            X=iters,
+            Y=betas,
+            env=self.viz_name+'_lines',
+            win=self.win_beta,
+            update=None if self.win_beta is None else 'append'
+            opts=dict(
+                width=400,
+                height=400,
+                xlabel='iteration',
+                title='beta',))
+
+        self.win_kld = self.viz.line(
+            X=iters,
+            Y=klds,
+            env=self.viz_name+'_lines',
+            win=self.win_kld,
+            update=None if self.win_kld is None else 'append',
+            opts=dict(
+                width=400,
+                height=400,
+                legend=legend,
+                xlabel='iteration',
+                title='kl divergence',))
 
         # if self.win_mu is None:
         #     self.win_mu = self.viz.line(
@@ -557,6 +527,7 @@ class Solver(object):
         gifs = []
         for key in Z.keys():
             z_ori = Z[key]
+
             samples = []
             for row in range(self.z_dim):
                 if loc != -1 and row != loc:
@@ -591,7 +562,7 @@ class Solver(object):
             """
 
             samples = torch.cat(samples, dim=0).cpu()
-            title = '{}_latent_traversal(iter:{})'.format(key, self.global_iter)
+            title = f'{key}_latent_traversal(iter:{self.global_iter})'
 
             if self.viz_on:
                 self.viz.images(samples, env=self.viz_name+'_traverse',
@@ -639,7 +610,7 @@ class Solver(object):
             for i, key in enumerate(Z.keys()):
                 for j, val in enumerate(interpolation):
                     save_image(tensor=gifs[i][j].cpu(),
-                               filename=os.path.join(output_dir, '{}_{}.jpg'.format(key, j)),
+                               filename=os.path.join(output_dir, f'{key}_{j}.jpg'),
                                nrow=self.z_dim, pad_value=1)
 
                 grid2gif(os.path.join(output_dir, key+'*.jpg'),
@@ -675,11 +646,13 @@ class Solver(object):
                   'optim_states': optim_states}
 
         file_path = os.path.join(self.ckpt_dir, filename)
+
         with open(file_path, mode='wb+') as f:
             torch.save(states, f)
+
         if not silent:
-            print("=> saved checkpoint '{}' (iter {})".format(
-                file_path, self.global_iter))
+            print(f"=> saved checkpoint {file_path} (iter {self.global_iter})")
+
 
     def load_checkpoint(self, filename):
         file_path = os.path.join(self.ckpt_dir, filename)
@@ -692,7 +665,6 @@ class Solver(object):
             # self.win_mu = checkpoint['win_states']['mu']
             self.net.load_state_dict(checkpoint['model_states']['net'])
             self.optim.load_state_dict(checkpoint['optim_states']['optim'])
-            print("=> loaded checkpoint '{} (iter {})'".format(
-                file_path, self.global_iter))
+            print(f"=> loaded checkpoint {file_path} (iter {self.global_iter})")
         else:
-            print("=> no checkpoint found at '{}'".format(file_path))
+            print(f"=> no checkpoint found at {file_path}")
