@@ -7,7 +7,7 @@ from dataset import return_data
 from model import BetaVAE_H, BetaVAE_B
 from utils import cuda, grid2gif
 from torchvision.utils import make_grid, save_image
-from torch.autograd import Variable
+# from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.optim as optim
 import visdom
@@ -192,7 +192,7 @@ class Solver(object):
 
     def train(self):
         self.net_mode(train=True)
-        self.C_max = Variable(cuda(torch.FloatTensor([self.C_max]), self.use_cuda))
+        self.C_max = cuda(torch.FloatTensor([self.C_max]), self.use_cuda)
         out = False
 
         pbar = tqdm(total=self.max_iter)
@@ -221,7 +221,7 @@ class Solver(object):
                 self.global_iter += 1
                 pbar.update(1)
 
-                x = Variable(cuda(x, self.use_cuda))
+                x = cuda(x, self.use_cuda)
                 x_recon, mu, logvar = self.net(x)
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
@@ -365,24 +365,26 @@ class Solver(object):
             Y=recon_losses,
             env=self.viz_name+'_lines',
             win=self.win_recon,
-            update=None if self.win_recon is None else 'append'
+            update=None if self.win_recon is None else 'append',
             opts=dict(
                 width=400,
                 height=400,
                 xlabel='iteration',
-                title='reconsturction loss',))
+                title='reconsturction loss')
+            )
 
         self.win_beta = self.viz.line(
             X=iters,
             Y=betas,
             env=self.viz_name+'_lines',
             win=self.win_beta,
-            update=None if self.win_beta is None else 'append'
+            update=None if self.win_beta is None else 'append',
             opts=dict(
                 width=400,
                 height=400,
                 xlabel='iteration',
-                title='beta',))
+                title='beta')
+            )
 
         self.win_kld = self.viz.line(
             X=iters,
@@ -395,7 +397,8 @@ class Solver(object):
                 height=400,
                 legend=legend,
                 xlabel='iteration',
-                title='kl divergence',))
+                title='kl divergence')
+            )
 
         # if self.win_mu is None:
         #     self.win_mu = self.viz.line(
@@ -486,10 +489,10 @@ class Solver(object):
 
         # .unsqueeze(0) allows us to have a batch size of one: 
         # e.g. shape (# channels, 64, 64) --> (1, # channels, 64, 64)
-        with torch.no_grad(): random_img = Variable(cuda(random_img, self.use_cuda)).unsqueeze(0)
+        random_img = cuda(random_img, self.use_cuda).unsqueeze(0)
         random_img_z = encoder(random_img)[:, :self.z_dim]
 
-        with torch.no_grad(): random_z = Variable(cuda(torch.rand(1, self.z_dim), self.use_cuda))
+        random_z = cuda(torch.rand(1, self.z_dim), self.use_cuda)
 
         if self.dataset == 'dsprites':
             fixed_idx1 = 87040  # square
@@ -498,15 +501,15 @@ class Solver(object):
 
             # fixed_img1 = self.data_loader.dataset.__getitem__(fixed_idx1)
             fixed_img1 = self.data_loader.dataset[fixed_idx1][0]
-            with torch.no_grad(): fixed_img1 = Variable(cuda(fixed_img1, self.use_cuda)).unsqueeze(0)
+            fixed_img1 = cuda(fixed_img1, self.use_cuda).unsqueeze(0)
             fixed_img_z1 = encoder(fixed_img1)[:, :self.z_dim]
 
             fixed_img2 = self.data_loader.dataset[fixed_idx2][0]
-            with torch.no_grad(): fixed_img2 = Variable(cuda(fixed_img2, self.use_cuda)).unsqueeze(0)
+            fixed_img2 = cuda(fixed_img2, self.use_cuda).unsqueeze(0)
             fixed_img_z2 = encoder(fixed_img2)[:, :self.z_dim]
 
             fixed_img3 = self.data_loader.dataset[fixed_idx3][0]
-            with torch.no_grad(): fixed_img3 = Variable(cuda(fixed_img3, self.use_cuda)).unsqueeze(0)
+            fixed_img3 = cuda(fixed_img3, self.use_cuda).unsqueeze(0)
             fixed_img_z3 = encoder(fixed_img3)[:, :self.z_dim]
 
             Z = {'fixed_square': fixed_img_z1, 'fixed_ellipse': fixed_img_z2,
@@ -514,7 +517,7 @@ class Solver(object):
         else:
             fixed_idx = 0
             fixed_img = self.data_loader.dataset[fixed_idx]
-            with torch.no_grad(): fixed_img = Variable(cuda(fixed_img, self.use_cuda).unsqueeze(0)
+            fixed_img = cuda(fixed_img, self.use_cuda).unsqueeze(0)
             fixed_img_z = encoder(fixed_img)[:, :self.z_dim]
 
             Z = {'fixed_img': fixed_img_z,

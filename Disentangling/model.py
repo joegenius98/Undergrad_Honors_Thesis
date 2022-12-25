@@ -4,13 +4,14 @@ import torch
 import torch.nn as nn
 #import torch.nn.functional as F
 import torch.nn.init as init
-from torch.autograd import Variable
+# from torch.autograd import Variable
 
 
 def reparametrize(mu, logvar):
     # std = logvar.div(2).exp()
     std_dev = logvar.exp() ** 0.5
-    eps = Variable(std.data.new(std.size()).normal_())
+    # eps = Variable(std_dev.data.new(std_dev.size()).normal_())
+    eps = torch.randn_like(std_dev)
     return mu + std_dev*eps
 
 
@@ -130,8 +131,11 @@ class BetaVAE_B(BetaVAE_H):
         )
         self.weight_init()
 
+    # self._modules --> OrderedDict {'encoder': Sequential(...), 'decoder': Sequential(...)}
     def weight_init(self):
+        # for block in ['encoder', 'decoder']
         for block in self._modules:
+            # m could Conv2d, RELU, etc.
             for m in self._modules[block]:
                 kaiming_init(m)
 

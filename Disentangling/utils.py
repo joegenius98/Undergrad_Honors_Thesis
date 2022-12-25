@@ -3,13 +3,14 @@
 import argparse
 import subprocess
 
-import torch
-import torch.nn as nn
-from torch.autograd import Variable
+# import torch
+# import torch.nn as nn
+# from torch.autograd import Variable
 
 
-def cuda(tensor, uses_cuda):
-    return tensor.cuda() if uses_cuda else tensor
+def cuda(pytorch_obj, uses_cuda):
+    """pytorch_obj could be a Tensor or a neural net from nn.Module, for ex."""
+    return pytorch_obj.cuda() if uses_cuda else pytorch_obj
 
 
 def str2bool(v):
