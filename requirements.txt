@@ -15,6 +15,11 @@ pytorch 0.4.0
 
 # conda install -c conda-forge visdom
 visdom
+
+# You MAY need to install `jsonpatch` in case the Visdom server does not work
+# conda install -c conda-forge jsonpatch
+jsonpatch 
+
 # conda install -c conda-forge tqdm
 tqdm
 # conda install -c conda-forge matplotlib
