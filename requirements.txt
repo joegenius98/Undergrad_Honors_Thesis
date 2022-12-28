@@ -8,7 +8,8 @@ from https://pytorch.org/get-started/previous-versions/#commands-for-versions--1
 I did conda install pytorch=0.4.0 cuda92 -c pytorch on a CS lab machine (namely, th121-21)
 
 no CUDA: conda install pytorch=0.4.0 -c pytorch
-then do:
+
+Also get `torchvision`:
 conda install torchvision -c pytorch
 """
 pytorch 0.4.0

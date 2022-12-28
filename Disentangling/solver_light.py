@@ -177,7 +177,7 @@ class Solver(object):
             os.makedirs(self.output_dir, exist_ok=True)
 
         self.gather_step = args.gather_step
-        self.display_step = args.display_step
+        # self.display_step = args.display_step
         self.save_step = args.save_step
 
         self.dset_dir = args.dset_dir
@@ -191,6 +191,9 @@ class Solver(object):
     # nopep8
 
     def train(self):
+        """Runs training loop and provides Visdom server visualizations of images and training stats. These stats.
+        include loss quanitities and beta"""
+
         self.net_mode(train=True)
         self.C_max = cuda(torch.FloatTensor([self.C_max]), self.use_cuda)
         out = False
@@ -208,18 +211,20 @@ class Solver(object):
         # init PID control
         # PID = PIDControl()
 
-        Kp = 0.01
-        Ki = -0.001
-        # Kd = 0.0
-        C = 0.5
-        period = 5000
-        fw_log.write("Kp:{0:.5f} Ki: {1:.6f} C_iter:{2:.1f} period:{3} step_val:{4:.4f}\n"
-                     .format(Kp, Ki, self.C_stop_iter, period, self.step_value))
+        # Kp = 0.01
+        # Ki = -0.001
+        # # Kd = 0.0
+        # C = 0.5
+        # period = 5000
+        # fw_log.write("Kp:{0:.5f} Ki: {1:.6f} C_iter:{2:.1f} period:{3} step_val:{4:.4f}\n"
+        #              .format(Kp, Ki, self.C_stop_iter, period, self.step_value))
 
         while not out:
             for x in self.data_loader:
                 self.global_iter += 1
                 pbar.update(1)
+
+                """Feedforward and calculating quantities for loss"""
 
                 x = cuda(x, self.use_cuda)
                 x_recon, mu, logvar = self.net(x)
@@ -236,13 +241,20 @@ class Solver(object):
                 #     # dynamic pid
                 #     self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
 
+                """Calculating loss"""
+
                 if self.objective == 'H':
                     beta_vae_loss = recon_loss + self.beta * total_kld
+
                 elif self.objective == 'B':
                     # tricks for C
-                    C = torch.clamp(
-                        self.C_max/self.C_stop_iter * self.global_iter, self.C_start, self.C_max.data[0])
+                    C = torch.clamp(self.C_max/self.C_stop_iter * self.global_iter, 
+                                    self.C_start, self.C_max.data[0])
+
                     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
+                
+
+                """Backpropagation"""
 
                 # re-initialize gradients to zero
                 self.optim.zero_grad()
@@ -255,8 +267,9 @@ class Solver(object):
                 # update neural net params. based on gradient
                 self.optim.step()
 
+                """Store lots of training stats."""
+
                 if self.viz_on and self.global_iter % self.gather_step == 0:
-                    # store lots of training stats.
                     self.gather.insert(iter=self.global_iter,
                                        mu=mu.mean(0).data, 
                                        var=logvar.exp().mean(0).data,
@@ -264,6 +277,8 @@ class Solver(object):
                                        total_kld=total_kld.data,
                                        dim_wise_kld=dim_wise_kld.data, mean_kld=mean_kld.data, 
                                        beta=self.beta)
+                
+                """Log lots of training stats."""
 
                 if self.global_iter % 20 == 0:
                     # write log to file
@@ -314,6 +329,9 @@ class Solver(object):
 
 
     def viz_reconstruction(self):
+        """See, at a maximum, the first 100 image inputs and their respective
+        reconstructions for a certain mini-batch."""
+
         self.net_mode(train=False)
 
         # Obtain mini-batch input and output

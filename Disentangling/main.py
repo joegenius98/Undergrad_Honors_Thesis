@@ -13,7 +13,8 @@ torch.backends.cudnn.benchmark = True
 
 
 def main(args):
-    torch.cuda.set_device(args.gpu)
+    if args.cuda: torch.cuda.set_device(args.gpu)
+
     seed = args.seed
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -32,23 +33,26 @@ if __name__ == "__main__":
 
     parser.add_argument('--train', default=True,
                         type=str2bool, help='train or traverse')
+
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True,
                         type=str2bool, help='enable cuda')
     parser.add_argument('--gpu', default=0, type=int, help='gpu id')
+
     parser.add_argument('--C_start', default=0, type=float,
-                        help='start value of C')
+                        help='start value of C for Burgess et al.\'s VAE')
 
     parser.add_argument('--max_iter', default=1e6, type=float,
                         help='maximum training iteration')
     parser.add_argument('--batch_size', default=64,
                         type=int, help='batch size')
+
     parser.add_argument('--limit', default=3, type=float,
                         help='traverse limits')
-    parser.add_argument('--KL_loss', default=25,
-                        type=float, help='KL_divergence')
+    # parser.add_argument('--KL_loss', default=25,
+    #                     type=float, help='KL_divergence')
     parser.add_argument('--step_val', default=0.15,
-                        type=float, help='step_val')
+                        type=float, help='step value to increment C by in PID algorithm')
     parser.add_argument('--pid_fixed', default=False,
                         type=str2bool, help='if fixed PID or dynamic')
     parser.add_argument('--is_PID', default=True,
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     parser.add_argument('--dset_dir', default='data',
                         type=str, help='dataset directory')
     parser.add_argument('--dataset', default='CelebA',
-                        type=str, help='dataset name')
+                        type=str, help='dataset name (choose among `dsprites`, `celeba`, or `3dchairs`)')
     parser.add_argument('--image_size', default=64, type=int,
                         help='image size. now only (64,64) is supported')
     parser.add_argument('--num_workers', default=4,
@@ -90,21 +94,21 @@ if __name__ == "__main__":
     parser.add_argument('--viz_port', default=8097,
                         type=str, help='visdom port number')
     parser.add_argument('--save_output', default=True,
-                        type=str2bool, help='save traverse images and gif')
+                        type=str2bool, help='whether to save traverse images and gif')
     parser.add_argument('--output_dir', default='outputs',
                         type=str, help='output directory')
 
     parser.add_argument('--gather_step', default=10000, type=int,
-                        help='numer of iterations after which data is gathered for visdom')
-    parser.add_argument('--display_step', default=10000, type=int,
-                        help='number of iterations after which loss data is printed and visdom is updated')
+                        help='number of iterations after which data is gathered and displayed for visdom')
+    # parser.add_argument('--display_step', default=10000, type=int,
+    #                     help='number of iterations after which loss data is printed and visdom is updated')
     parser.add_argument('--save_step', default=10000, type=int,
                         help='number of iterations after which a checkpoint is saved')
 
     parser.add_argument('--ckpt_dir', default='checkpoints',
                         type=str, help='checkpoint directory')
     parser.add_argument('--ckpt_name', default='last', type=str,
-                        help='load previous checkpoint. insert checkpoint filename')
+                        help='checkpoint filename under `ckpt_dir` to load previous checkpoint')
 
     args = parser.parse_args()
 
