@@ -1,7 +1,7 @@
 Please install dependencies below before running code
 
 ## For Disentangling and Image Generation Applications, please install
-python 3.6.4
+python 3.6.6
 
 """
 from https://pytorch.org/get-started/previous-versions/#commands-for-versions--100-1
