@@ -240,6 +240,7 @@ class Solver(object):
                 #         C = self.C_max_org
                 #     # dynamic pid
                 #     self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
+                C = 'ignored'
 
                 """Calculating loss"""
 
