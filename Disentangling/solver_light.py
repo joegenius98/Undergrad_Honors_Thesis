@@ -154,7 +154,7 @@ class Solver(object):
         self.viz_port = args.viz_port
         self.viz_on = args.viz_on
 
-        # `win`` is short for "window"
+        # `win` is short for "window"
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
