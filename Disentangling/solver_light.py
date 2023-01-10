@@ -598,8 +598,8 @@ class Solver(object):
             # I was tempted to do
             # gifs.view(len(Z), len(interpolation), self.z_dim, self.nc, 64, 64) instead.
             # but with toy testing, I saw that .view and .transpose work differently!
-	    """Specifically, .view preserves sequential order, and .transpose switches the analog
-	    of rows and columns in upper dimensions"""
+            """Specifically, .view preserves sequential order, and .transpose switches the analog
+            of rows and columns in upper dimensions"""
             gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, 64, 64).transpose(1, 2)
 
             """
