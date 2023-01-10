@@ -1,7 +1,7 @@
 """solver.py"""
 
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 # from P_PID import PIDControl
 from dataset import return_data
 from model import BetaVAE_H, BetaVAE_B
@@ -30,7 +30,7 @@ def reconstruction_loss(x, x_recon, distribution):
         recon_loss = F.binary_cross_entropy_with_logits(
             x_recon, x, size_average=False).div(batch_size)
     elif distribution == 'gaussian':
-        x_recon = F.sigmoid(x_recon)
+        x_recon = torch.sigmoid(x_recon)
         recon_loss = F.mse_loss(x_recon, x, size_average=False).div(batch_size)
     else:
         recon_loss = None
@@ -154,7 +154,7 @@ class Solver(object):
         self.viz_port = args.viz_port
         self.viz_on = args.viz_on
 
-        # `win`` is short for "window"
+        # `win` is short for "window"
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
@@ -219,6 +219,8 @@ class Solver(object):
         # fw_log.write("Kp:{0:.5f} Ki: {1:.6f} C_iter:{2:.1f} period:{3} step_val:{4:.4f}\n"
         #              .format(Kp, Ki, self.C_stop_iter, period, self.step_value))
 
+        C = 0.5
+
         while not out:
             for x in self.data_loader:
                 self.global_iter += 1
@@ -240,7 +242,6 @@ class Solver(object):
                 #         C = self.C_max_org
                 #     # dynamic pid
                 #     self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
-                C = 'ignored'
 
                 """Calculating loss"""
 
@@ -349,8 +350,8 @@ class Solver(object):
         if self.save_output:
             output_dir = os.path.join(self.output_dir, str(self.global_iter))
             os.makedirs(output_dir, exist_ok=True)
-            save_image(tensor=images, filename=os.path.join(
-                output_dir, 'recon.jpg'), pad_value=1)
+            save_image(tensor=images, fp=os.path.join(output_dir, 'recon.jpg'), 
+                       pad_value=1)
 
         self.net_mode(train=True)
 
@@ -503,8 +504,7 @@ class Solver(object):
         rand_idx = random.randint(1, n_dsets-1)
 
         # random_img = self.data_loader.dataset.__getitem__(rand_idx)
-        # I index at 0 b/c otherwise it's a tuple w/ one element (according to toy testing)
-        random_img = self.data_loader.dataset[rand_idx][0]
+        random_img = self.data_loader.dataset[rand_idx]
 
         # .unsqueeze(0) allows us to have a batch size of one: 
         # e.g. shape (# channels, 64, 64) --> (1, # channels, 64, 64)
@@ -519,15 +519,15 @@ class Solver(object):
             fixed_idx3 = 578560  # heart
 
             # fixed_img1 = self.data_loader.dataset.__getitem__(fixed_idx1)
-            fixed_img1 = self.data_loader.dataset[fixed_idx1][0]
+            fixed_img1 = self.data_loader.dataset[fixed_idx1]
             fixed_img1 = cuda(fixed_img1, self.use_cuda).unsqueeze(0)
             fixed_img_z1 = encoder(fixed_img1)[:, :self.z_dim]
 
-            fixed_img2 = self.data_loader.dataset[fixed_idx2][0]
+            fixed_img2 = self.data_loader.dataset[fixed_idx2]
             fixed_img2 = cuda(fixed_img2, self.use_cuda).unsqueeze(0)
             fixed_img_z2 = encoder(fixed_img2)[:, :self.z_dim]
 
-            fixed_img3 = self.data_loader.dataset[fixed_idx3][0]
+            fixed_img3 = self.data_loader.dataset[fixed_idx3]
             fixed_img3 = cuda(fixed_img3, self.use_cuda).unsqueeze(0)
             fixed_img_z3 = encoder(fixed_img3)[:, :self.z_dim]
 
@@ -557,7 +557,7 @@ class Solver(object):
                 z = z_ori.clone()
                 for val in interpolation:
                     z[:, row] = val  # row is the z latent variable
-                    sample = F.sigmoid(decoder(z)).data
+                    sample = torch.sigmoid(decoder(z)).data
                     samples.append(sample)
                     gifs.append(sample)
             
@@ -598,6 +598,8 @@ class Solver(object):
             # I was tempted to do
             # gifs.view(len(Z), len(interpolation), self.z_dim, self.nc, 64, 64) instead.
             # but with toy testing, I saw that .view and .transpose work differently!
+            """Specifically, .view preserves sequential order, and .transpose switches the analog
+            of rows and columns in upper dimensions"""
             gifs = gifs.view(len(Z), self.z_dim, len(interpolation), self.nc, 64, 64).transpose(1, 2)
 
             """
@@ -608,7 +610,7 @@ class Solver(object):
 
             Then, combine these image grids to a GIF.
 
-            Visualization of one slice of `gifs` (tranpose of the 1st 2nd dims. of `samples`):
+            Visualization of `gifs` (tranpose of the 1st 2nd dims. of `samples`):
             (format: z_{dimension_number} = {value}):
 
              ----------       ---------
@@ -631,7 +633,7 @@ class Solver(object):
             for i, key in enumerate(Z.keys()):
                 for j, val in enumerate(interpolation):
                     save_image(tensor=gifs[i][j].cpu(),
-                               filename=os.path.join(output_dir, f'{key}_{j}.jpg'),
+                               fp=os.path.join(output_dir, f'{key}_{j}.jpg'),
                                nrow=self.z_dim, pad_value=1)
 
                 grid2gif(os.path.join(output_dir, key+'*.jpg'),
