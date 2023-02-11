@@ -39,6 +39,8 @@ and work with that private clone to not risk my honors thesis work being shown p
 - It's sill switching "rows" and "columns." aka $a_{ij} = a_{ji}$
 - But each element $a$ of the "matrix" you are transposing might something other than a singular number. An element could now be an entire matrix, an actual row/column, or a tensor. 
 
+Why I needed to learn this was to understand how Prof. Shao implemented the latent variable traversal (`viz_traverse`) and displayed the results to the `visdom` server.
+
 
 (3) How to Search Within a Highlighted Text Section within Vim
 
