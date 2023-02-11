@@ -1,0 +1,13 @@
+name: honors_thesis2
+channels:
+    - pytorch
+    - defaults
+    - conda-forge
+dependencies:
+    - python=3.8
+    - pytorch=1.13.1
+    - torchvision
+    - visdom
+    - jsonpatch
+    - tqdm
+    - matplotlib

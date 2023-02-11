@@ -29,6 +29,9 @@ rm -rf [folder to repo. fork]
 
 ```
 
+Why I needed to do this was that I wanted to make a private clone of Professor Shao's ControlVAE
+and work with that private clone to not risk my honors thesis work being shown publically.
+
 
 
 (2) How the Transpose method works for higher dimensions
@@ -37,3 +40,8 @@ rm -rf [folder to repo. fork]
 - But each element $a$ of the "matrix" you are transposing might something other than a singular number. An element could now be an entire matrix, an actual row/column, or a tensor. 
 
 
+(3) How to Search Within a Highlighted Text Section within Vim
+
+1. Shift + V and select all that you want
+2. You can yank or just press `esc` twice
+3. `/\%V[your_search_string]` 
