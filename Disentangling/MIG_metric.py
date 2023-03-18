@@ -460,7 +460,7 @@ for i in range(32):
 
     cond_entropies[2] += cond_entropies_i.cpu() / 32
 
-print('Estimating conditional entropies for pox y.')
+print('Estimating conditional entropies for pos y.')
 for i in range(32):
     qz_samples_scale = qz_samples[:, :, :, :, i, :].contiguous()
     qz_params_scale = qz_params[:, :, :, :, i, :].contiguous()

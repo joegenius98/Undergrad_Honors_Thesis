@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         type=str2bool, help='if use pid or not')
 
     parser.add_argument('--z_dim', default=10, type=int,
-                        help='dimension of the representation z')
+                        help='# of dimensions of the representation z')
     parser.add_argument('--beta', default=4, type=float,
                         help='beta parameter for KL-term in original beta-VAE')
     parser.add_argument('--objective', default='H', type=str,
