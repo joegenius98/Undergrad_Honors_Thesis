@@ -85,7 +85,7 @@ def triplet_batch_dSprites(batch):
         images_batch[0, 0, :, :, :] = batch[0]
         images_batch[0, 1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
         
-    return images_batch
+    return images_batch.view((batch_size * 3, nc, h, w))
 
 
 
