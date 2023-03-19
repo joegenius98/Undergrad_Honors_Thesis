@@ -2,12 +2,14 @@
 
 import os
 import numpy as np
+import random
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
+from augmentations import DSPRITE_AUGMENTATIONS
 
 class CustomImageFolder(ImageFolder):
     def __init__(self, root, transform=None):
@@ -31,6 +33,60 @@ class CustomTensorDataset(Dataset):
 
     def __len__(self):
         return self.data_tensor.size(0)
+
+
+def triplet_batch_dSprites(batch):
+    """"
+    Translates Joseph Lee's honors thesis idea with data augmentation --> dataloader implementation 
+
+    Proccesses a batch of data sequentially (in the form) of a list
+    to return a batch of triplets (one image, its augmentation, and another image)
+    or a (one image, its augmentation) pair 
+    
+    Keyword arguments:
+    batch -- a list of images, its length is batch_size
+    Return: Tensor with shape (batch_size, 3 or 2, num_channels, height, width)
+    """
+
+    # get image dimensions, assuming all images are the same size
+    # and it is number-of-channels (nc) first
+    nc, h, w = batch[0].shape[-3], batch[0].shape[-2], batch[0].shape[-1]
+    batch_size = len(batch)
+
+    """to return batches of 3 (original image, augmented original, and another image)
+    implies we need at least two separate images to work off of""" 
+    if batch_size >= 2:
+        print(f"Batch size: {batch_size}")
+        # format: (batch_size, 3 for (original, augmented, another), num_channels, height, width)
+        images_batch = torch.zeros((batch_size, 3, nc, h, w))
+        
+        for i in range(batch_size - 1):         
+            first_image_index = i
+            second_image_index = i + 1 # can be i and i + 1 if we toggle shuffle = True, so that it's random
+            first_image = batch[first_image_index]
+            second_image = batch[second_image_index]
+            first_image_augmented = random.choice(DSPRITE_AUGMENTATIONS)(first_image)
+
+            images_batch[i, 0, :, :, :] = first_image
+            images_batch[i, 1, :, :, :] = first_image_augmented
+            images_batch[i, 2, :, :, :] = second_image
+        
+        # the "second_image" here is the starting image of the batch
+        # This is to address the out of bounds error
+        images_batch[batch_size-1, 0, :, :, :] = batch[batch_size-1]
+        images_batch[batch_size-1, 1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        images_batch[batch_size-1, 2, :, :, :] = batch[0] 
+
+
+    # otherwise, just create an (original image, augmented original) pair
+    else:
+        assert batch_size == 1
+        images_batch = torch.zeros((batch_size, 2, nc, h, w))
+        images_batch[0, 0, :, :, :] = batch[0]
+        images_batch[0, 1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        
+    return images_batch
+
 
 
 def return_data(args):
@@ -79,6 +135,7 @@ def return_data(args):
     train_data = dset(**train_kwargs)
     train_loader = DataLoader(train_data,
                               batch_size=batch_size,
+                              collate_fn=triplet_batch_dSprites,
                               shuffle=True,
                               num_workers=num_workers,
                               pin_memory=True,
