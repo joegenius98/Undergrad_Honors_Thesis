@@ -1,12 +1,12 @@
 """solver.py"""
 
-
 # import matplotlib.pyplot as plt
 # from P_PID import PIDControl
 from dataset import return_data
 from model import BetaVAE_H, BetaVAE_B
 from utils import cuda, grid2gif
 from torchvision.utils import make_grid, save_image
+import torch.distributions as dist
 # from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.optim as optim
@@ -36,6 +36,67 @@ def reconstruction_loss(x, x_recon, distribution):
         recon_loss = None
 
     return recon_loss
+
+
+# mutual info. and total correlations provided by ChatGPT
+import torch.distributions as dist
+
+def total_corr(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
+    """
+    Computes the total correlation for VAEs, which encourages independence between latent variables.
+    
+    Args:
+        mu (torch.Tensor): The mean tensor of the latent variables' Gaussian distribution.
+        logvar (torch.Tensor): The log variance tensor of the latent variables' Gaussian distribution.
+    
+    Returns:
+        torch.Tensor: The total correlation loss.
+    """
+    batch_size = mu.size(0)
+    assert batch_size != 0
+
+    # Create the q(z) and q(z_i) distributions
+    q_z = dist.Normal(mu, logvar.mul(0.5).exp())
+    q_z_product = dist.Normal(torch.zeros_like(mu), torch.ones_like(logvar))
+
+    # Calculate the KL divergence between q(z) and q(z_i)
+    tc = dist.kl_divergence(q_z, q_z_product).sum(dim=-1).mean()
+
+    return tc
+
+def mutual_information(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
+    """
+    Computes the mutual information between input data and latent variables for VAEs.
+    
+    Args:
+        mu (torch.Tensor): The mean tensor of the latent variables' Gaussian distribution.
+        logvar (torch.Tensor): The log variance tensor of the latent variables' Gaussian distribution.
+    
+    Returns:
+        torch.Tensor: The mutual information between input data and latent variables.
+    """
+    batch_size = mu.size(0)
+    assert batch_size != 0
+
+    # Create the q(z) and q(z_i) distributions
+    q_z = dist.Normal(mu, logvar.mul(0.5).exp())
+    q_z_product = dist.Normal(torch.zeros_like(mu), torch.ones_like(logvar))
+
+    # Sample from q(z) using the reparameterization trick
+    epsilon = torch.randn_like(mu)  # Random noise
+    z = mu + epsilon * torch.exp(0.5 * logvar)
+
+    # Compute the joint entropy of input data and latent variables
+    joint_entropy = -q_z.log_prob(z).sum(dim=-1)
+
+    # Compute the marginal entropy of the latent variables
+    marginal_entropies = -q_z_product.log_prob(epsilon).sum(dim=-1)
+
+    # Calculate the mutual information
+    mi = (joint_entropy - marginal_entropies).mean()
+
+    return mi
+
 
 
 def kl_divergence(mu, logvar):
