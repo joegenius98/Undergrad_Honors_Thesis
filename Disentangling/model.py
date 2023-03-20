@@ -93,6 +93,16 @@ class ContrastiveVAE_L(BetaVAE_H):
     def __init__(self, z_dim=10, nc=3):
         super().__init__(z_dim, nc)
 
+    def forward(self, x):
+        distributions = self._encode(x)
+        mu = distributions[:, :self.z_dim]
+        logvar = distributions[:, self.z_dim:]
+        z = reparametrize(mu, logvar)
+        x_recon = self._decode(z)
+
+        return z, x_recon, mu, logvar
+
+
 
 class BetaVAE_B(BetaVAE_H):
     """Model proposed in understanding beta-VAE paper(Burgess et al, arxiv:1804.03599, 2018)."""
