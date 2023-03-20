@@ -88,6 +88,12 @@ class BetaVAE_H(nn.Module):
         return self.decoder(z)
 
 
+class ContrastiveVAE_L(BetaVAE_H):
+    """Model jointly proposed by Joseph Lee and Huajie Shao"""
+    def __init__(self, z_dim=10, nc=3):
+        super().__init__(z_dim, nc)
+
+
 class BetaVAE_B(BetaVAE_H):
     """Model proposed in understanding beta-VAE paper(Burgess et al, arxiv:1804.03599, 2018)."""
 
