@@ -30,7 +30,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='toy Beta-VAE')
+    parser = argparse.ArgumentParser(description='Honors Thesis Beta-VAE')
 
     # purpose
     parser.add_argument('--train', default=True,
@@ -72,23 +72,34 @@ if __name__ == "__main__":
                         help='model proposed in Higgins et al. or Burgess et al. H/B')
     ## objective hyperparameters
     parser.add_argument('--objective', default='H', type=str,
-                        help='beta-vae objective proposed in Higgins et al. or Burgess et al. H/B or honors thesis by Joseph')
+                        help='beta-vae objective proposed in Higgins et al. or Burgess et al. H/B or honors thesis by Joseph Lee & Huajie Shao')
 
-    ### original beta-vae by Higgins et al.
+    ### honors thesis by Joseph Lee and Huajie Shao
+
+    #### original beta-vae by Higgins et al.
     parser.add_argument('--beta', default=4, type=float,
                         help='beta parameter for KL-term in original beta-VAE')
 
-    ### beta-TCVAE
-    parser.add_argument('--beta_TC', default=4, type=float,
+    #### beta-TCVAE/total correlation
+    parser.add_argument('--beta_TC', default=6, type=float,
                         help='beta parameter for total correlation term in beta-TCVAE paper')
-    #### total correlation 
+    ##### enforcing soft constraint on total correlation
     parser.add_argument('--C_tc_start', default=0, type=float,
                         help='start value of constraint term to subtract from total correlation')
     parser.add_argument('--C_tc_max', default=5, type=float,
                         help='upper bound of constraint term to subtract from total correlation')
     parser.add_argument('--C_tc_step_val', default=0.02, type=float,
-                        help='increment value per 5000 iterations')
+                        help='increment value per 5000 iterations; default assumes 1.5*10^6 total iterations, C_tc going from 0 to 5')
+    parser.add_argument('--lambda_tc', default=1, type=float,
+                        help='starting factor of constrained total correlation by (gets dynamically updated throughout training based on constrained total corr.)')
 
+    #### contrastive loss hyperparameters
+    parser.add_argument('--num_sim_factors', default=1, type=float,
+                        help='number of factors to encourage to similar in value in image representation and its augmentation representation')
+    parser.add_argument('--augment_factor', default=1, type=float,
+                        help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')
+
+    
     ### understanding beta-vae by Burgess et al.
     parser.add_argument('--C_start', default=0, type=float,
                         help='start value of C for Burgess et al.\'s VAE')
