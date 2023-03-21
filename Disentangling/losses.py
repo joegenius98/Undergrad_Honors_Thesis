@@ -46,7 +46,7 @@ def total_corr(z, z_mean, z_logvar):
     # log(sum_i(prod_l q(z(x_j)_l|x_i))) + constant.
     log_qz = log_qz_prob.sum(dim=2, keepdim=False).exp().sum(dim=1, keepdim=False).log()
 
-    return (log_qz - log_qz_product).mean()
+    return torch.abs((log_qz - log_qz_product).mean())
 
 
 def _gaussian_log_density(samples, mean, log_var):
@@ -103,15 +103,16 @@ def contrastive_losses(latent_vectors: torch.Tensor, k):
     # contrastive loss
     # dot product tensors, each mapping a relationship between one group to another
     # note that the entire representation vector is considered; maybe could change to just k factors later
-    img_aug_scores = torch.sum(image_reprs * aug_reprs, dim=1) # shape (batch_size,)
+    img_aug_scores = torch.sum(image_reprs * aug_reprs, dim=1) # shape (batch_size // 3,)
     img_other_scores = torch.sum(image_reprs * other_reprs, dim=1)
     aug_other_scores = torch.sum(aug_reprs * other_reprs, dim=1)
 
     # img, aug, other altogether
     logsumexp_scores_per_triplet = torch.logsumexp(torch.stack([img_aug_scores, img_other_scores, aug_other_scores]), dim=0)
     # img, aug pair
-    log_scores_per_pair = torch.log(img_aug_scores)
-    contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(log_scores_per_pair)
+    # 1e-8 prevents -inf or inf from logarithm of 0
+    logexp_scores_per_pair = torch.log(torch.exp(img_aug_scores))
+    contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(logexp_scores_per_pair)
 
     return k_factor_consistency_loss, contrastive_loss
 
