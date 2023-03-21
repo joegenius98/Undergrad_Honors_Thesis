@@ -56,15 +56,6 @@ if __name__ == "__main__":
                         type=float, help='Adam optimizer beta2')
 
 
-    # parser.add_argument('--KL_loss', default=25,
-    #                     type=float, help='KL_divergence')
-    parser.add_argument('--step_val', default=0.15,
-                        type=float, help='step value to increment C by in PID algorithm')
-    parser.add_argument('--pid_fixed', default=False,
-                        type=str2bool, help='if fixed PID or dynamic')
-    parser.add_argument('--is_PID', default=True,
-                        type=str2bool, help='if use pid or not')
-
     ## model
     parser.add_argument('--z_dim', default=10, type=int,
                         help='# of dimensions of the representation z')
@@ -151,6 +142,15 @@ if __name__ == "__main__":
                         type=str, help='checkpoint directory')
     parser.add_argument('--ckpt_name', default='last', type=str,
                         help='checkpoint filename under `ckpt_dir` to load previous checkpoint')
+
+    # parser.add_argument('--KL_loss', default=25,
+    #                     type=float, help='KL_divergence')
+    # parser.add_argument('--step_val', default=0.15,
+    #                     type=float, help='step value to increment C by in PID algorithm')
+    # parser.add_argument('--pid_fixed', default=False,
+    #                     type=str2bool, help='if fixed PID or dynamic')
+    # parser.add_argument('--is_PID', default=True,
+    #                     type=str2bool, help='if use pid or not')
 
     args = parser.parse_args()
 
