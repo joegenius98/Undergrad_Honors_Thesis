@@ -5,12 +5,14 @@
 from dataset import return_data
 from model import BetaVAE_H, BetaVAE_B, ContrastiveVAE_L
 from utils import cuda, grid2gif
+import csv
+
 from torchvision.utils import make_grid, save_image
-import torch.distributions as dist
-# from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.optim as optim
+
 import visdom
+
 from tqdm import tqdm
 import os
 import torch
@@ -162,22 +164,29 @@ class Solver(object):
         pbar.update(self.global_iter)
 
         # write log to log file
-        outfile = os.path.join(self.ckpt_dir, "train.log")
-        kl_file = os.path.join(self.ckpt_dir, "train.kl")
-        fw_log = open(outfile, "w")
-        fw_kl = open(kl_file, "w")
+        # outfile = os.path.join(self.ckpt_dir, "train.log")
+        # kl_file = os.path.join(self.ckpt_dir, "train.kl")
+        # fw_log = open(outfile, "w")
+        # # fw_log
+        # fw_kl = open(kl_file, "w")
+
+        # newline='' prevents a blank line between every row
+        log_file = open(os.path.join(self.ckpt_dir, "train_log.csv"), 'w', newline='')
+        log_file_writer = csv.writer(log_file, delimiter=',')
+
+        # header row construction 
+        iter = ['iteration']
+        z_dim_kld_names = [f'kld_dim{i}' for i in range(len(self.z_dim))]
+        loss_names = ['total_loss', 'recon_loss', 'total_corr', 'betaVAE_kld']
+        dynamic_hyperparam_names = ['beta_TC']
+
+        csv_row_names = iter + z_dim_kld_names + loss_names + dynamic_hyperparam_names
+        log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
-        # init PID control
-        # PID = PIDControl()
-
-        # Kp = 0.01
-        # Ki = -0.001
-        # # Kd = 0.0
-        # C = 0.5
-        # period = 5000
-        # fw_log.write("Kp:{0:.5f} Ki: {1:.6f} C_iter:{2:.1f} period:{3} step_val:{4:.4f}\n"
-        #              .format(Kp, Ki, self.C_stop_iter, period, self.step_value))
+        lbd_step = 100
+        alpha = 0.99
+        period = 5000
 
         C = 0.5
 
@@ -192,16 +201,6 @@ class Solver(object):
                 x_recon, mu, logvar = self.net(x)
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
-
-                # not focused on ControlVAE
-
-                # if self.is_PID and self.objective == 'H':
-                #     if self.global_iter % period == 0:
-                #         C += self.step_value
-                #     if C > self.C_max_org:
-                #         C = self.C_max_org
-                #     # dynamic pid
-                #     self.beta, _ = PID.pid(C, total_kld.item(), Kp, Ki, Kd)
 
                 """Calculating loss"""
 
@@ -244,19 +243,24 @@ class Solver(object):
 
                 if self.global_iter % 20 == 0:
                     # write log to file
-                    if self.objective == 'B':
-                        C = C.item()
-                    fw_log.write('[{}] recon_loss:{:.3f} total_kld:{:.3f} exp_kld:{:.3f} beta:{:.4f}\n'.format(
-                        self.global_iter, recon_loss.item(), total_kld.item(), C, self.beta))
-                    # write KL to file
-                    dim_kl = dim_wise_kld.data.cpu().numpy()
-                    dim_kl = [str(k) for k in dim_kl]
-                    fw_kl.write('total_kld:{0:.3f}\t'.format(total_kld.item()))
-                    fw_kl.write('z_dim:' + ','.join(dim_kl) + '\n')
+                    # if self.objective == 'B':
+                    #     C = C.item()
+                    # fw_log.write('[{}] recon_loss:{:.3f} total_kld:{:.3f} exp_kld:{:.3f} beta:{:.4f}\n'.format(
+                    #     self.global_iter, recon_loss.item(), total_kld.item(), C, self.beta))
+                    # # write KL to file
+                    # dim_kl = dim_wise_kld.data.cpu().numpy()
+                    # dim_kl = [str(k) for k in dim_kl]
+                    # fw_kl.write('total_kld:{0:.3f}\t'.format(total_kld.item()))
+                    # fw_kl.write('z_dim:' + ','.join(dim_kl) + '\n')
+                    row_data = [0] * len(csv_row_names)
+                    # TODO: fill in row_data
+                    ####
+                    log_file_writer.writerow(row_data)
 
                     if self.global_iter % 500 == 0:
-                        fw_log.flush()
-                        fw_kl.flush()
+                        log_file.flush()
+                        # fw_log.flush()
+                        # fw_kl.flush()
 
                 # visualization (like Tensorboard)
                 if self.viz_on and self.global_iter % self.gather_step == 0:
@@ -287,7 +291,9 @@ class Solver(object):
 
         pbar.write("[Training Finished]")
         pbar.close()
-        fw_log.close()
+        log_file.close()
+        # fw_log.close()
+        # fw_kl.close()
 
 
     def viz_reconstruction(self):
