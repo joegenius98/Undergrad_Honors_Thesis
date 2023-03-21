@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import math
 
 def reconstruction_loss(x, x_recon, distribution):
     batch_size = x.size(0)
@@ -60,7 +61,6 @@ def _gaussian_log_density(samples, mean, log_var):
     :param log_var: batches means of log_vars
     :return:
     """
-    import math
     pi = torch.tensor(math.pi, requires_grad=False)
     normalization = torch.log(2. * pi)
     inv_sigma = torch.exp(-log_var)
