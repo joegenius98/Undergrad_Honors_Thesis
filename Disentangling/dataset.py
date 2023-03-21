@@ -58,7 +58,8 @@ def triplet_batch_dSprites(batch):
     if batch_size >= 2:
         print(f"Batch size: {batch_size}")
         # format: (batch_size, 3 for (original, augmented, another), num_channels, height, width)
-        images_batch = torch.zeros((batch_size, 3, nc, h, w))
+        # images_batch = torch.zeros((batch_size, 3, nc, h, w))
+        images_batch = torch.zeros((batch_size * 3, nc, h, w))
         
         for i in range(batch_size - 1):         
             first_image_index = i
@@ -67,25 +68,32 @@ def triplet_batch_dSprites(batch):
             second_image = batch[second_image_index]
             first_image_augmented = random.choice(DSPRITE_AUGMENTATIONS)(first_image)
 
-            images_batch[i, 0, :, :, :] = first_image
-            images_batch[i, 1, :, :, :] = first_image_augmented
-            images_batch[i, 2, :, :, :] = second_image
+            images_batch[3*i, :, :, :] = first_image
+            images_batch[3*i+1, :, :, :] = first_image_augmented
+            images_batch[3*i+2, :, :, :] = second_image
+
+            # images_batch[i, 0, :, :, :] = first_image
+            # images_batch[i, 1, :, :, :] = first_image_augmented
+            # images_batch[i, 2, :, :, :] = second_image
         
         # the "second_image" here is the starting image of the batch
         # This is to address the out of bounds error
-        images_batch[batch_size-1, 0, :, :, :] = batch[batch_size-1]
-        images_batch[batch_size-1, 1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
-        images_batch[batch_size-1, 2, :, :, :] = batch[0] 
+        last_idx = batch_size-1
+        images_batch[3*last_idx, :, :, :] = batch[batch_size-1]
+        images_batch[3*last_idx+1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        images_batch[3*last_idx+2, :, :, :] = batch[0] 
 
 
     # otherwise, just create an (original image, augmented original) pair
     else:
         assert batch_size == 1
-        images_batch = torch.zeros((batch_size, 2, nc, h, w))
-        images_batch[0, 0, :, :, :] = batch[0]
-        images_batch[0, 1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        # images_batch = torch.zeros((batch_size, 2, nc, h, w))
+        images_batch = torch.zeros((batch_size * 2, nc, h, w))
+        images_batch[0, :, :, :] = batch[0]
+        images_batch[1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
         
-    return images_batch.view((batch_size * 3, nc, h, w))
+    return images_batch
+    # return images_batch.view((batch_size * 3, nc, h, w))
 
 
 
@@ -97,23 +105,26 @@ def return_data(args):
     image_size = args.image_size
     assert image_size == 64, 'currently only image size of 64 is supported'
 
-    if name.lower() == '3dchairs':
-        root = os.path.join(dset_dir, '3DChairs')
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(), ])
-        train_kwargs = {'root': root, 'transform': transform}
-        dset = CustomImageFolder
+    ### TODO: implement AUGMENTATIONS for 3dchairs/celeba
 
-    elif name.lower() == 'celeba':
-        root = os.path.join(dset_dir, 'CelebA')
-        transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.ToTensor(), ])
-        train_kwargs = {'root': root, 'transform': transform}
-        dset = CustomImageFolder
+    # if name.lower() == '3dchairs':
+    #     root = os.path.join(dset_dir, '3DChairs')
+    #     transform = transforms.Compose([
+    #         transforms.Resize((image_size, image_size)),
+    #         transforms.ToTensor(), ])
+    #     train_kwargs = {'root': root, 'transform': transform}
+    #     dset = CustomImageFolder
 
-    elif name.lower() == 'dsprites':
+    # elif name.lower() == 'celeba':
+    #     root = os.path.join(dset_dir, 'CelebA')
+    #     transform = transforms.Compose([
+    #         transforms.Resize((image_size, image_size)),
+    #         transforms.ToTensor(), ])
+    #     train_kwargs = {'root': root, 'transform': transform}
+    #     dset = CustomImageFolder
+
+    # elif
+    if name.lower() == 'dsprites':
         root = os.path.join(
             dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
         if not os.path.exists(root):
