@@ -80,8 +80,9 @@ def contrastive_losses(latent_vectors: torch.Tensor, k):
         latent_vectors (torch.Tensor): A PyTorch Tensor of shape (batch_size, number_of_latent_dimensions),
                                        containing the latent vectors for images, their augmentations, 
                                        and other randomly selected images.
-        batch_size (int): The size of the batch of latent vectors.
-    
+        k: how many factors to encourage to be similar for an image's representation and the representation
+        of an image's augmentation
+
     Returns:
         tuple: A tuple containing two elements:
             - k_factor_consistency_loss (torch.Tensor): The mean of the sum of 2nd norms for

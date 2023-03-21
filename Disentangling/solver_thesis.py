@@ -49,26 +49,42 @@ class DataGather(object):
 
 class Solver(object):
     def __init__(self, args):
+        # hardware
         self.use_cuda = args.cuda and torch.cuda.is_available()
-        self.max_iter = args.max_iter
-        self.global_iter = 0
 
-        self.z_dim = args.z_dim
-        self.beta = args.beta
-        self.gamma = args.gamma
-        self.C_max = args.C_max
-        self.C_max_org = args.C_max
-        self.C_stop_iter = args.C_stop_iter
-        self.objective = args.objective
-        self.model = args.model
+        # training hyperparams.
+        self.max_iter = args.max_iter
+        self.global_iter = 0 # counter
+        self.batch_size = args.batch_size
         self.lr = args.lr
         self.beta1 = args.beta1
         self.beta2 = args.beta2
-        # self.KL_loss = args.KL_loss
-        # self.pid_fixed = args.pid_fixed
-        # self.is_PID = args.is_PID
-        self.step_value = args.step_val
-        self.C_start = args.C_start
+
+        ## model
+        self.z_dim = args.z_dim
+        self.model = args.model
+        self.objective = args.objective
+
+        ### honors thesis by Joseph Lee and Huajie Shao
+
+        #### original beta-vae by Higgins et al.
+        self.beta = args.beta
+        #### beta-TCVAE/total correlation
+        self.beta_TC = args.beta_TC
+        #### enforcing soft constraint on total correlation
+        self.C_tc_start = args.C_tc_start
+        self.C_tc_max = args.C_tc_max
+        self.C_tc_step_val = args.C_tc_step_val
+        self.lambda_tc = args.lambda_tc
+
+        #### contrastive loss hyparams.
+        self.num_sim_factors = args.num_sim_factors
+        self.augment_factor = args.augment_factor
+
+        ## dataset
+        self.dset_dir = args.dset_dir
+        self.dataset = args.dataset
+        self.data_loader = return_data(args)
 
         if args.dataset.lower() == 'dsprites':
             self.nc = 1
@@ -93,43 +109,39 @@ class Solver(object):
         self.optim = optim.Adam(self.net.parameters(), lr=self.lr,
                                 betas=(self.beta1, self.beta2))
 
+        ## visualization
+        self.viz_on = args.viz_on
         self.viz_name = args.viz_name
         self.viz_port = args.viz_port
-        self.viz_on = args.viz_on
-
+        self.gather_step = args.gather_step
+        self.save_output = args.save_output
+        self.output_dir = os.path.join(args.output_dir, args.viz_name)
+        self.save_step = args.save_step
         # `win` is short for "window"
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
-        self.win_mu = None
-        self.win_var = None
+        # self.win_mu = None
+        # self.win_var = None
+
+        # checkpoints
+        self.ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name)
+        self.ckpt_name = args.ckpt_name
 
         if self.viz_on:
             self.viz = visdom.Visdom(port=self.viz_port)
 
-        self.ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name)
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir, exist_ok=True)
-        self.ckpt_name = args.ckpt_name
         if self.ckpt_name is not None:
             self.load_checkpoint(self.ckpt_name)
 
-        self.save_output = args.save_output
-        self.output_dir = os.path.join(args.output_dir, args.viz_name)
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir, exist_ok=True)
 
-        self.gather_step = args.gather_step
         # self.display_step = args.display_step
-        self.save_step = args.save_step
-
-        self.dset_dir = args.dset_dir
-        self.dataset = args.dataset
-        self.batch_size = args.batch_size
-        self.data_loader = return_data(args)
 
         self.gather = DataGather()
-        self.gather2 = DataGather()
 
     # nopep8
 
@@ -363,55 +375,32 @@ class Solver(object):
                 title='kl divergence')
             )
 
-        # if self.win_mu is None:
-        #     self.win_mu = self.viz.line(
-        #                                 X=iters,
-        #                                 Y=mus,
-        #                                 env=self.viz_name+'_lines',
-        #                                 opts=dict(
-        #                                     width=400,
-        #                                     height=400,
-        #                                     legend=legend[:self.z_dim],
-        #                                     xlabel='iteration',
-        #                                     title='posterior mean',))
-        # else:
-        #     self.win_mu = self.viz.line(
-        #                                 X=iters,
-        #                                 Y=vars,
-        #                                 env=self.viz_name+'_lines',
-        #                                 win=self.win_mu,
-        #                                 update='append',
-        #                                 opts=dict(
-        #                                     width=400,
-        #                                     height=400,
-        #                                     legend=legend[:self.z_dim],
-        #                                     xlabel='iteration',
-        #                                     title='posterior mean',))
+        # self.win_mu = self.viz.line(
+        #     X=iters,
+        #     Y=mus,
+        #     env=self.viz_name+'_lines',
+        #     win=self.win_mu,
+        #     update=None if self.win_mu is None else 'append',
+        #     opts=dict(
+        #         width=400,
+        #         height=400,
+        #         legend=legend[:self.z_dim],
+        #         xlabel='iteration',
+        #         title='posterior mean',))
 
-        # if self.win_var is None:
-        #     self.win_var = self.viz.line(
-        #                                 X=iters,
-        #                                 Y=vars,
-        #                                 env=self.viz_name+'_lines',
-        #                                 opts=dict(
-        #                                     width=400,
-        #                                     height=400,
-        #                                     legend=legend[:self.z_dim],
-        #                                     xlabel='iteration',
-        #                                     title='posterior variance',))
-        # else:
-        #     self.win_var = self.viz.line(
-        #                                 X=iters,
-        #                                 Y=vars,
-        #                                 env=self.viz_name+'_lines',
-        #                                 win=self.win_var,
-        #                                 update='append',
-        #                                 opts=dict(
-        #                                     width=400,
-        #                                     height=400,
-        #                                     legend=legend[:self.z_dim],
-        #                                     xlabel='iteration',
-        #                                     title='posterior variance',))
+        # self.win_var = self.viz.line(
+        #     X=iters,
+        #     Y=vars,
+        #     env=self.viz_name+'_lines',
+        #     win=self.win_var,
+        #     update=None if self.win_var is None else 'append',
+        #     opts=dict(
+        #         width=400,
+        #         height=400,
+        #         legend=legend[:self.z_dim],
+        #         xlabel='iteration',
+        #         title='posterior variance',))
+
         self.net_mode(train=True)
 
 
