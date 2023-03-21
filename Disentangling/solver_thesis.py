@@ -3,7 +3,7 @@
 # import matplotlib.pyplot as plt
 # from P_PID import PIDControl
 from dataset import return_data
-from model import BetaVAE_H, BetaVAE_B
+from model import BetaVAE_H, BetaVAE_B, ContrastiveVAE_L
 from utils import cuda, grid2gif
 from torchvision.utils import make_grid, save_image
 import torch.distributions as dist
@@ -102,6 +102,8 @@ class Solver(object):
             net = BetaVAE_H
         elif args.model == 'B':
             net = BetaVAE_B
+        elif args.model == 'L':
+            net = ContrastiveVAE_L
         else:
             raise NotImplementedError('only support model H or B')
 
@@ -129,7 +131,7 @@ class Solver(object):
         self.ckpt_name = args.ckpt_name
 
         if self.viz_on:
-            self.viz = visdom.Visdom(port=self.viz_port)
+            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename="./vis_logs/thesis_init_ks")
 
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir, exist_ok=True)
