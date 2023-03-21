@@ -33,10 +33,13 @@ class DataGather(object):
 
     def get_empty_data_dict(self):
         return dict(iter=[],
+                    total_loss=[],
                     recon_loss=[],
+                    total_corr=[],
                     total_kld=[],
                     dim_wise_kld=[],
                     mean_kld=[],
+                    lambda_TC=[],
                     mu=[],
                     var=[],
                     images=[], beta=[])
@@ -104,8 +107,8 @@ class Solver(object):
 
         if args.model == 'H':
             net = BetaVAE_H
-        elif args.model == 'B':
-            net = BetaVAE_B
+        # elif args.model == 'B':
+        #     net = BetaVAE_B
         elif args.model == 'L':
             net = ContrastiveVAE_L
         else:
@@ -128,6 +131,8 @@ class Solver(object):
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
+        self.win_total_loss = None
+        self.win_tc = None
         # self.win_mu = None
         # self.win_var = None
 
@@ -136,7 +141,7 @@ class Solver(object):
         self.ckpt_name = args.ckpt_name
 
         if self.viz_on:
-            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename="./vis_logs/thesis_init_ks")
+            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/thesis_init_k={self.num_sim_factors}")
 
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir, exist_ok=True)
@@ -171,16 +176,16 @@ class Solver(object):
         # fw_kl = open(kl_file, "w")
 
         # newline='' prevents a blank line between every row
-        log_file = open(os.path.join(self.ckpt_dir, "train_log.csv"), 'w', newline='')
+        log_file = open(os.path.join(f"./train_logs/train_log{self.num_sim_factors}.csv"), 'w', newline='')
         log_file_writer = csv.writer(log_file, delimiter=',')
 
         # header row construction 
         iter = ['iteration']
-        z_dim_kld_names = [f'kld_dim{i}' for i in range(len(self.z_dim))]
         loss_names = ['total_loss', 'recon_loss', 'total_corr', 'betaVAE_kld']
-        dynamic_hyperparam_names = ['beta_TC']
+        dynamic_hyperparam_names = ['lambda_TC']
+        z_dim_kld_names = [f'kld_dim{i+1}' for i in range(len(self.z_dim))]
 
-        csv_row_names = iter + z_dim_kld_names + loss_names + dynamic_hyperparam_names
+        csv_row_names = iter + loss_names + dynamic_hyperparam_names + z_dim_kld_names
         log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
@@ -188,7 +193,7 @@ class Solver(object):
         alpha = 0.99
         period = 5000
 
-        C = 0.5
+        C_tc = self.C_tc_start
 
         while not out:
             for x in self.data_loader:
@@ -198,21 +203,40 @@ class Solver(object):
                 """Feedforward and calculating quantities for loss"""
 
                 x = cuda(x, self.use_cuda)
-                x_recon, mu, logvar = self.net(x)
+                z_samples, x_recon, mu, logvar = self.net(x)
+
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
+                if self.global_iter % period == 0:
+                    C_tc += self.C_tc_step_val
+                if C > self.C_max:
+                    C = self.C_tc_max
+
+                tc = total_corr(z_samples, mu, logvar)
+                C_tc = cuda(torch.Tensor([C_tc]), self.use_cuda)
+                constrained_tc = tc - C_tc
+
                 """Calculating loss"""
 
-                if self.objective == 'H':
-                    beta_vae_loss = recon_loss + self.beta * total_kld
+                # honors thesis loss
+                total_loss = None
+                if self.objective == 'L':
+                    total_loss = recon_loss + \
+                        self.beta_TC * self.lambda_tc * constrained_tc + constrained_tc ** 2 + \
+                        self.beta * total_kld + \
+                        sum(contrastive_losses(z_samples, self.num_sim_factors))
+
+                elif self.objective == 'H':
+                    total_loss = recon_loss + self.beta * total_kld
+                
 
                 # elif self.objective == 'B':
                 #     # tricks for C
                 #     C = torch.clamp(self.C_max/self.C_stop_iter * self.global_iter, 
                 #                     self.C_start, self.C_max.data[0])
 
-                #     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
+                #     total_loss = recon_loss + self.gamma*(total_kld-C).abs()
                 
 
                 """Backpropagation"""
@@ -221,22 +245,38 @@ class Solver(object):
                 self.optim.zero_grad()
                 # compute the gradient (i.e. partial derivs. w.r.t to neural net parameters)
                 """
-                note: beta_vae_loss has x_recon, which is from a forward pass of net, which is
+                note: total_loss has x_recon, which is from a forward pass of net, which is
                 why calling .backward() has access to all the neural net parameters
                 """
-                beta_vae_loss.backward()
+                total_loss.backward()
                 # update neural net params. based on gradient
                 self.optim.step()
+
+                with torch.no_grad():
+                    if self.global_iter == 1:
+                        constrain_ma = constrained_tc
+                    else:
+                        constrain_ma = alpha * constrain_ma.detach_() + (1 - alpha) * constrain_ma
+
+                    if self.global_iter % lbd_step == 0 and self.global_iter > 500:
+                        self.lambda_tc *= torch.clamp(torch.exp(constrain_ma), 0.9, 1.05)
+                        self.lambda_tc = self.lambda_tc.item()
 
                 """Store lots of training stats."""
 
                 if self.viz_on and self.global_iter % self.gather_step == 0:
+                    #  ['iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
+                    # 'mean_kld', 'lambda_TC', 'mu', 'var', 'images', 'beta']
                     self.gather.insert(iter=self.global_iter,
+                                       total_loss=total_loss,
+                                       recon_loss=recon_loss.data, 
+                                       total_corr=tc,
+                                       total_kld=total_kld.data,
+                                       dim_wise_kld=dim_wise_kld.data, 
+                                       mean_kld=mean_kld.data, 
+                                       lambda_TC=self.lambda_tc.data,
                                        mu=mu.mean(0).data, 
                                        var=logvar.exp().mean(0).data,
-                                       recon_loss=recon_loss.data, 
-                                       total_kld=total_kld.data,
-                                       dim_wise_kld=dim_wise_kld.data, mean_kld=mean_kld.data, 
                                        beta=self.beta)
                 
                 """Log lots of training stats."""
@@ -252,9 +292,14 @@ class Solver(object):
                     # dim_kl = [str(k) for k in dim_kl]
                     # fw_kl.write('total_kld:{0:.3f}\t'.format(total_kld.item()))
                     # fw_kl.write('z_dim:' + ','.join(dim_kl) + '\n')
+                    
+                    # row names format:
+                    # iteration, total_loss, recon_loss, total_corr, betaVAE_kld, lambda_TC, kld_dim0, kld_dim1, kld_dim2, ..., kld_dimn
                     row_data = [0] * len(csv_row_names)
-                    # TODO: fill in row_data
-                    ####
+                    row_data[0] = self.global_iter
+                    row_data[1:6] = [l.item() for l in (total_loss, recon_loss, tc, total_kld)] + [self.lambda_tc]
+                    row_data[7:] = list(dim_wise_kld.cpu().numpy())
+
                     log_file_writer.writerow(row_data)
 
                     if self.global_iter % 500 == 0:
@@ -330,11 +375,19 @@ class Solver(object):
         `stack` concatenates sequence of tensors along a **new** dimension.
         `cat` ||-------------------------------- in the **given** dimension.
         """
-
+        # 'iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
+        # 'mean_kld', 'lambda_TC', 'mu', 'var', 'images', 'beta'
+        total_losses = torch.stack(self.gather.data['total_loss']).cpu()
         recon_losses = torch.stack(self.gather.data['recon_loss']).cpu()
+        total_corrs = torch.stack(self.gather.data['total_corr']).cpu()
+
+        total_klds = torch.stack(self.gather.data['total_kld']).cpu()
+        dim_wise_klds = torch.stack(self.gather.data['dim_wise_kld']).cpu()
+        mean_klds = torch.stack(self.gather.data['mean_kld']).cpu()
+
+        lambdas_TC = torch.stack(self.gather.data['lambda_TC']).cpu()
+
         betas = torch.Tensor(self.gather.data['beta'])
-        dim_wise_klds = torch.stack(self.gather.data['dim_wise_kld'])
-        total_klds = torch.stack(self.gather.data['total_kld'])
         klds = torch.cat([dim_wise_klds, total_klds], 1).cpu()
         iters = torch.Tensor(self.gather.data['iter'])
 
@@ -346,44 +399,45 @@ class Solver(object):
         legend.append('total')
 
         # "win" is short for "window"
-        self.win_recon = self.viz.line(
-            X=iters,
-            Y=recon_losses,
-            env=self.viz_name+'_lines',
-            win=self.win_recon,
-            update=None if self.win_recon is None else 'append',
-            opts=dict(
-                width=400,
-                height=400,
-                xlabel='iteration',
-                title='reconsturction loss')
+        self.win_total_loss = self.viz.line(
+            X=iters, Y=total_losses, env=self.viz_name+'_lines', win=self.win_total_loss,
+            update=None if self.win_total_loss is None else 'append',
+            opts=dict(width=400, height=400, xlabel='iteration', title='VAE total loss')
             )
 
+        self.win_recon = self.viz.line(
+            X=iters, Y=recon_losses, env=self.viz_name+'_lines', win=self.win_recon,
+            update=None if self.win_recon is None else 'append',
+            opts=dict(width=400, height=400, xlabel='iteration', title='reconsturction loss')
+            )
+        
+
+        # TODO: finish creating the whole set of instance variables for mean_klds, lambda_TC
+        # then check that every one has been initialized in the beginning and is saved/loaded
+        # as s checkpoint
+        self.win_tc = self.viz.line(
+            X=iters, Y=total_corrs, env=self.viz_name+'_lines', win=self.win_tc,
+            update=None if self.win_tc is None else 'append',
+            opts=dict(width=400, height=400, xlabel='iteration', title='total correlation')
+            )
+
+        self.win_tc = self.viz.line(
+            X=iters, Y=total_corrs, env=self.viz_name+'_lines', win=self.win_tc,
+            update=None if self.win_tc is None else 'append',
+            opts=dict(width=400, height=400, xlabel='iteration', title='total correlation')
+            )
+
+
         self.win_beta = self.viz.line(
-            X=iters,
-            Y=betas,
-            env=self.viz_name+'_lines',
-            win=self.win_beta,
+            X=iters, Y=betas, env=self.viz_name+'_lines', win=self.win_beta,
             update=None if self.win_beta is None else 'append',
-            opts=dict(
-                width=400,
-                height=400,
-                xlabel='iteration',
-                title='beta')
+            opts=dict(width=400, height=400, xlabel='iteration', title='beta')
             )
 
         self.win_kld = self.viz.line(
-            X=iters,
-            Y=klds,
-            env=self.viz_name+'_lines',
-            win=self.win_kld,
+            X=iters, Y=klds, env=self.viz_name+'_lines', win=self.win_kld,
             update=None if self.win_kld is None else 'append',
-            opts=dict(
-                width=400,
-                height=400,
-                legend=legend,
-                xlabel='iteration',
-                title='kl divergence')
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='kl divergence')
             )
 
         # self.win_mu = self.viz.line(
@@ -601,6 +655,7 @@ class Solver(object):
         model_states = {'net': self.net.state_dict(), }
         optim_states = {'optim': self.optim.state_dict(), }
         win_states = {'recon': self.win_recon,
+                      'total_loss': self.win_total_loss,
                       'beta': self.win_beta,
                       'kld': self.win_kld,
                       #   'mu':self.win_mu,
@@ -626,6 +681,7 @@ class Solver(object):
             checkpoint = torch.load(file_path)
             self.global_iter = checkpoint['iter']
             self.win_recon = checkpoint['win_states']['recon']
+            self.win_total_loss = checkpoint['win_states']['total_loss']
             self.win_kld = checkpoint['win_states']['kld']
             # self.win_var = checkpoint['win_states']['var']
             # self.win_mu = checkpoint['win_states']['mu']
