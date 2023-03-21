@@ -57,6 +57,8 @@ class Solver(object):
         self.global_iter = 0 # counter
         self.batch_size = args.batch_size
         self.lr = args.lr
+
+        ## Adam optimizer beta1, beta2
         self.beta1 = args.beta1
         self.beta2 = args.beta2
 
@@ -119,7 +121,8 @@ class Solver(object):
         self.save_output = args.save_output
         self.output_dir = os.path.join(args.output_dir, args.viz_name)
         self.save_step = args.save_step
-        # `win` is short for "window"
+
+        # `win` is short for "window"; these get instantiated later on
         self.win_recon = None
         self.win_beta = None
         self.win_kld = None
@@ -152,7 +155,7 @@ class Solver(object):
         include loss quanitities and beta"""
 
         self.net_mode(train=True)
-        self.C_max = cuda(torch.FloatTensor([self.C_max]), self.use_cuda)
+        # self.C_max = cuda(torch.FloatTensor([self.C_max]), self.use_cuda)
         out = False
 
         pbar = tqdm(total=self.max_iter)
@@ -205,12 +208,12 @@ class Solver(object):
                 if self.objective == 'H':
                     beta_vae_loss = recon_loss + self.beta * total_kld
 
-                elif self.objective == 'B':
-                    # tricks for C
-                    C = torch.clamp(self.C_max/self.C_stop_iter * self.global_iter, 
-                                    self.C_start, self.C_max.data[0])
+                # elif self.objective == 'B':
+                #     # tricks for C
+                #     C = torch.clamp(self.C_max/self.C_stop_iter * self.global_iter, 
+                #                     self.C_start, self.C_max.data[0])
 
-                    beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
+                #     beta_vae_loss = recon_loss + self.gamma*(total_kld-C).abs()
                 
 
                 """Backpropagation"""
