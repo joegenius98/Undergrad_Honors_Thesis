@@ -41,6 +41,8 @@ class DataGather(object):
                     dim_wise_kld=[],
                     mean_kld=[],
                     lambda_TC=[],
+                    k_sim_loss=[],
+                    k_contrast_loss=[],
                     mu=[],
                     var=[],
                     images=[], beta=[])
@@ -136,6 +138,8 @@ class Solver(object):
         self.win_beta = None
         self.win_kld = None
         self.win_mean_kld = None
+        self.win_k_sim_loss = None
+        self.win_k_contrast_loss = None
         # self.win_mu = None
         # self.win_var = None
 
@@ -184,7 +188,7 @@ class Solver(object):
 
         # header row construction 
         iter = ['iteration']
-        loss_names = ['total_loss', 'recon_loss', 'total_corr', 'betaVAE_kld']
+        loss_names = ['total_loss', 'recon_loss', 'total_corr', 'betaVAE_kld', 'k_sim_loss', 'k_contrast_loss']
         dynamic_hyperparam_names = ['lambda_TC']
         z_dim_kld_names = [f'kld_dim{i+1}' for i in range(self.z_dim)]
 
@@ -222,6 +226,7 @@ class Solver(object):
                 #     raise ValueError("NaN z_samples")
 
 
+                """Calculating loss"""
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
@@ -234,7 +239,8 @@ class Solver(object):
                 C_tc = cuda(torch.Tensor([C_tc]), self.use_cuda)
                 constrained_tc = tc - C_tc
 
-                """Calculating loss"""
+                k_sim_loss, k_contrast_loss = contrastive_losses(z_samples, self.num_sim_factors)
+
             
                 # if torch.any(torch.isnan(recon_loss)):
                 #     raise ValueError("NaN recon_loss")
@@ -258,15 +264,15 @@ class Solver(object):
                     total_loss = recon_loss + \
                         self.beta_TC * self.lambda_tc * constrained_tc + constrained_tc ** 2 + \
                         self.beta * total_kld + \
-                        self.augment_factor * sum(contrastive_losses(z_samples, self.num_sim_factors))
+                        self.augment_factor * (k_sim_loss - k_contrast_loss) 
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
 
-                if torch.any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
-                    raise ValueError("NaN sum of contrastive losses")
-                if torch.any(torch.isnan(total_loss)):
-                    raise ValueError("NaN total loss")
+                # if torch.any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
+                #     raise ValueError("NaN sum of contrastive losses")
+                # if torch.any(torch.isnan(total_loss)):
+                #     raise ValueError("NaN total loss")
                         
 
                 # elif self.objective == 'B':
@@ -286,15 +292,15 @@ class Solver(object):
                 note: total_loss has x_recon, which is from a forward pass of net, which is
                 why calling .backward() has access to all the neural net parameters
                 """
-                if self.global_iter == 122:
-                    print(f"Total loss is: {total_loss}")
-                    print(f"Recon loss is: {recon_loss}")
-                    print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
-                    print(f"KLD is: {total_kld}")
-                    print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
+                # if self.global_iter == 122:
+                #     print(f"Total loss is: {total_loss}")
+                #     print(f"Recon loss is: {recon_loss}")
+                #     print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
+                #     print(f"KLD is: {total_kld}")
+                #     print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
 
-                    print(f'mu: {mu}\nlogvar: {logvar}\nz_samples: {z_samples}')
-                    # self.net.enable_print_gradients()
+                #     print(f'mu: {mu}\nlogvar: {logvar}\nz_samples: {z_samples}')
+                #     # self.net.enable_print_gradients()
 
                 total_loss.backward()
 
@@ -328,16 +334,16 @@ class Solver(object):
                 """Store lots of training stats."""
 
                 if self.viz_on and self.global_iter % self.gather_step == 0:
-                    #  ['iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
-                    # 'mean_kld', 'lambda_TC', 'mu', 'var', 'images', 'beta']
                     self.gather.insert(iter=self.global_iter,
                                         total_loss=total_loss,
                                         recon_loss=recon_loss.data, 
-                                        total_corr=tc,
+                                        total_corr=tc.data,
                                         total_kld=total_kld.data,
                                         dim_wise_kld=dim_wise_kld.data, 
                                         mean_kld=mean_kld.data, 
                                         lambda_TC=self.lambda_tc.data,
+                                        k_sim_loss=k_sim_loss.data,
+                                        k_contrast_loss=k_contrast_loss.data,
                                         mu=mu.mean(0).data, 
                                         var=logvar.exp().mean(0).data,
                                         beta=self.beta)
@@ -346,11 +352,14 @@ class Solver(object):
 
                 if self.global_iter % 20 == 0:
                     # row names format:
-                    # iteration, total_loss, recon_loss, total_corr, betaVAE_kld, lambda_TC, kld_dim0, kld_dim1, kld_dim2, ..., kld_dimn
+                    # iteration, total_loss, recon_loss, total_corr, betaVAE_kld, k_sim_loss, 
+                    # k_contrast_loss, lambda_TC, kld_dim0, kld_dim1, kld_dim2, ..., kld_dimn
                     row_data = [0] * len(csv_row_names)
                     row_data[0] = self.global_iter
-                    row_data[1:6] = [str(round(l.item(),2)) for l in (total_loss, recon_loss, tc, total_kld)] + [self.lambda_tc]
-                    row_data[7:] = list(dim_wise_kld.detach().cpu().numpy())
+
+                    losses = (total_loss, recon_loss, tc,  total_kld, k_sim_loss, k_contrast_loss)
+                    row_data[1:1+len(losses)] = [str(round(l.item(), 2)) for l in losses] + [self.lambda_tc]
+                    row_data[len(losses)+2:] = list(dim_wise_kld.detach().cpu().numpy())
 
                     log_file_writer.writerow(row_data)
 
@@ -436,6 +445,9 @@ class Solver(object):
 
         mean_klds = torch.stack(self.gather.data['mean_kld']).cpu()
 
+        k_sim_losses = torch.stack(self.gather.data['k_sim_loss']).cpu()
+        k_contrast_losses = torch.stack(self.gather.data['k_contrast_loss']).cpu()
+
         lambdas_TC = torch.stack(self.gather.data['lambda_TC']).cpu()
 
         betas = torch.Tensor(self.gather.data['beta'])
@@ -495,6 +507,19 @@ class Solver(object):
             update=None if self.win_mean_kld is None else 'append',
             opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
             )
+        
+        self.win_k_sim_loss = self.viz.line(
+            X=iters, Y=k_sim_losses, env=self.viz_name+'_lines', win=self.win_k_sim_loss,
+            update=None if self.win_k_sim_loss is None else 'append',
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
+            )
+
+        self.win_k_contrast_loss = self.viz.line(
+            X=iters, Y=k_contrast_losses, env=self.viz_name+'_lines', win=self.win_k_contrast_loss,
+            update=None if self.win_k_contrast_loss is None else 'append',
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
+            )
+
         # self.win_mu = self.viz.line(
         #     X=iters,
         #     Y=mus,
@@ -719,6 +744,8 @@ class Solver(object):
                       'beta': self.win_beta,
                       'kld': self.win_kld, # has dimension-wise and total KL div.
                       'mean_kld': self.win_mean_kld,
+                      'k_sim_loss': self.win_k_sim_loss,
+                      'k_contrast_loss': self.win_k_contrast_loss
                       #   'mu':self.win_mu,
                       #   'var':self.win_var,
                       }
@@ -754,6 +781,8 @@ class Solver(object):
             self.win_beta = win_states['beta']
             self.win_kld = win_states['kld']
             self.win_mean_kld = win_states['mean_kld'] 
+            self.win_k_sim_loss = win_states['k_sim_loss']
+            self.win_k_contrast_loss = win_states['k_contrast_loss']
             # self.win_var = checkpoint['win_states']['var']
             # self.win_mu = checkpoint['win_states']['mu']
 

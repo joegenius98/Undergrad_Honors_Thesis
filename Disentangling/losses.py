@@ -104,7 +104,7 @@ def contrastive_losses(latent_samples: torch.Tensor, k):
     # k-factor contrastive loss
     k_factor_contrastive_diffs = image_reprs[:, :k] - other_reprs[:, :k]
     k_factor_contrastive_norms = torch.norm(k_factor_contrastive_diffs, p=2, dim=1)
-    k_factor_contrastive_loss = -torch.mean(k_factor_contrastive_norms)
+    k_factor_contrastive_loss = torch.mean(k_factor_contrastive_norms)
 
 
     # contrastive loss
