@@ -288,9 +288,9 @@ class Solver(object):
                 """
                 if self.global_iter == 122:
                     print(f"Total loss is: {total_loss}")
-                    print(f"Recon loss is: {total_loss}")
+                    print(f"Recon loss is: {recon_loss}")
                     print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
-                    print(f"KLD is: {total_loss}")
+                    print(f"KLD is: {total_kld}")
                     print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
                     # self.net.enable_print_gradients()
 
