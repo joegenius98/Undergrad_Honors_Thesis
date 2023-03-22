@@ -128,7 +128,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_output', default=True,
                         type=str2bool, help='whether to save gif traverse and subset of reconstructed images')
     parser.add_argument('--output_dir', default='outputs',
-                        type=str, help='output directory')
+                        type=str, help='output directory associated with --save_output')
 
     
     ### traverse visualization limits
