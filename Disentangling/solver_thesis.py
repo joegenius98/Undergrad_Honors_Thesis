@@ -205,8 +205,6 @@ class Solver(object):
 
                 """Feedforward and calculating quantities for loss"""
 
-                if self.global_iter == 123:
-                    x.register_hook(lambda grad: print(grad))
 
                 if torch.any(torch.isnan(x)):
                     raise ValueError("NaN minibatch")
@@ -288,6 +286,11 @@ class Solver(object):
                 note: total_loss has x_recon, which is from a forward pass of net, which is
                 why calling .backward() has access to all the neural net parameters
                 """
+                if self.global_iter == 122:
+                    print(f"Loss is: {total_loss}")
+                    for i in range(len(self.net.encoder)):
+                        self.net.encoder[i].register_hook(lambda grad: print(grad))
+                
                 total_loss.backward()
 
                 # grads = []

@@ -97,15 +97,15 @@ class ContrastiveVAE_L(BetaVAE_H):
         distributions = self._encode(x)
 
         if torch.any(torch.isnan(distributions)):
-            input_tensor = torch.clone(x)
+            # input_tensor = torch.clone(x)
 
-            for i, layer in enumerate(self.encoder):
-                if torch.any(torch.isnan(input_tensor)):
-                    print(f"{layer.__class__.__name__} at index {i - 1} is at fault!")
-                    for param in layer.parameters():
-                        print(param)
+            # for i, layer in enumerate(self.encoder):
+            #     if torch.any(torch.isnan(input_tensor)):
+            #         print(f"{layer.__class__.__name__} at index {i - 1} is at fault!")
+            #         for param in layer.parameters():
+            #             print(param)
 
-                input_tensor = layer(input_tensor)
+            #     input_tensor = layer(input_tensor)
                 
             # print(distributions)
             # print(f"Are all of the values NaN?: {torch.all(torch.isnan(distributions))}")
