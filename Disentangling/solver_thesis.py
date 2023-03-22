@@ -292,6 +292,8 @@ class Solver(object):
                     print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
                     print(f"KLD is: {total_kld}")
                     print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
+
+                    print(f'mu: {mu}\nlogvar: {logvar}\nz_samples: {z_samples}')
                     # self.net.enable_print_gradients()
 
                 total_loss.backward()
