@@ -16,6 +16,7 @@ import visdom
 from tqdm import tqdm
 import os
 import torch
+torch.autograd.set_detect_anomaly(True)
 # torch.cuda.set_device(0)
 import warnings
 warnings.filterwarnings("ignore")

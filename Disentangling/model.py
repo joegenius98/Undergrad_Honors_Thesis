@@ -101,7 +101,7 @@ class ContrastiveVAE_L(BetaVAE_H):
 
             for i, layer in enumerate(self.encoder):
                 if torch.any(torch.isnan(input_tensor)):
-                    print(f"{layer.__class__.__name__} at index {i} is at fault!")
+                    print(f"{layer.__class__.__name__} at index {i - 1} is at fault!")
                     for param in layer.parameters():
                         print(param)
 
