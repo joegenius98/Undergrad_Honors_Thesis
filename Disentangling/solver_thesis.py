@@ -204,8 +204,23 @@ class Solver(object):
 
                 """Feedforward and calculating quantities for loss"""
 
+		if any(torch.isnan(x)):
+		    raise ValueError("NaN minibatch")
+
                 x = cuda(x, self.use_cuda)
                 z_samples, x_recon, mu, logvar = self.net(x)
+
+		if any(torch.isnan(z_samples)):
+		    raise ValueError("NaN z_samples")
+		if any(torch.isnan(x_recon)):
+		    raise ValueError("NaN x_recon")
+		if any(torch.isnan(mu)):
+		    raise ValueError("NaN mu")
+		if any(torch.isnan(z_samples)):
+		    raise ValueError("NaN z_samples")
+
+
+
 
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
@@ -220,6 +235,22 @@ class Solver(object):
                 constrained_tc = tc - C_tc
 
                 """Calculating loss"""
+		
+		if any(torch.isnan(recon_loss)):
+		    raise ValueError("NaN recon_loss")
+		if any(torch.isnan(total_kld)):
+		    raise ValueError("NaN total_kld")
+		if any(torch.isnan(dim_wise_kld)):
+		    raise ValueError("NaN dim_wise_kld")
+		if any(torch.isnan(mean_kld)):
+		    raise ValueError("NaN mean_kld")
+		if any(torch.isnan(tc)):
+		    raise ValueError("NaN total correlation")
+		if any(torch.isnan(C_tc)):
+		    raise ValueError("NaN C_tc")
+		if any(torch.isnan(constrained_tc)):
+		    raise ValueError("NaN constrained_tc")
+
 
                 # honors thesis loss
                 total_loss = None
@@ -231,6 +262,11 @@ class Solver(object):
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
+
+		if any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
+		    raise ValueError("NaN sum of contrastive losses")
+		if any(torch.isnan(total_loss)):
+		    raise ValueError("NaN total loss")
                 
 
                 # elif self.objective == 'B':
