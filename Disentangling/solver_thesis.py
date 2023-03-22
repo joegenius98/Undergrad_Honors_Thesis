@@ -196,7 +196,7 @@ class Solver(object):
         log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
-        lbd_step = 250000
+        lbd_step = 25000
         alpha = 0.99
         period = 5000
 
@@ -511,13 +511,13 @@ class Solver(object):
         self.win_k_sim_loss = self.viz.line(
             X=iters, Y=k_sim_losses, env=self.viz_name+'_lines', win=self.win_k_sim_loss,
             update=None if self.win_k_sim_loss is None else 'append',
-            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k sim. loss')
             )
 
         self.win_k_contrast_loss = self.viz.line(
             X=iters, Y=k_contrast_losses, env=self.viz_name+'_lines', win=self.win_k_contrast_loss,
             update=None if self.win_k_contrast_loss is None else 'append',
-            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k-factor contrast loss')
             )
 
         # self.win_mu = self.viz.line(
