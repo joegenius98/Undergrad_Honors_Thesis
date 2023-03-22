@@ -196,7 +196,7 @@ class Solver(object):
         log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
-        lbd_step = 100
+        lbd_step = 250000
         alpha = 0.99
         period = 5000
 
