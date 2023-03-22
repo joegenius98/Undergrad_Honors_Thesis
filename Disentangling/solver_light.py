@@ -185,7 +185,7 @@ class Solver(object):
         # self.KL_loss = args.KL_loss
         # self.pid_fixed = args.pid_fixed
         # self.is_PID = args.is_PID
-        self.step_value = args.step_val
+        # self.step_value = args.step_val
         self.C_start = args.C_start
 
         if args.dataset.lower() == 'dsprites':
