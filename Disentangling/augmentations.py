@@ -85,9 +85,9 @@ def shrink_shape_and_pad(image):
 def get_max_shift_amts(image):
     x_min, x_max, y_min, y_max = get_shape_bounds(image)
     max_shift_left = x_min
-    max_shift_right = image.size(2) - x_max
+    max_shift_right = image.size(2) - 1 - x_max
     max_shift_up = y_min
-    max_shift_down = image.size(1) - y_max
+    max_shift_down = image.size(1) - 1 - y_max
     return max_shift_left, max_shift_right, max_shift_up, max_shift_down
 
 
