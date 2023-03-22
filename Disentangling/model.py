@@ -126,6 +126,29 @@ class ContrastiveVAE_L(BetaVAE_H):
             raise ValueError("NaN x_recon")
 
         return z, x_recon, mu, logvar
+    
+    def enable_print_gradients(self):
+        """
+        Enables the printing out of gradients as a .backward() call
+        is being executed 
+        """
+        for module in self.encoder:
+            if hasattr(module, 'weight'):
+                # register hook on the module's weight tensor
+                module.weight.register_hook(lambda grad: print(grad))
+            elif hasattr(module, 'bias'):
+                # register hook on the module's bias tensor
+                module.bias.register_hook(lambda grad: print(grad))
+
+        for module in self.decoder:
+            if hasattr(module, 'weight'):
+                # register hook on the module's weight tensor
+                module.weight.register_hook(lambda grad: print(grad))
+            elif hasattr(module, 'bias'):
+                # register hook on the module's bias tensor
+                module.bias.register_hook(lambda grad: print(grad))
+
+
 
 
 
