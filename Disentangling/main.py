@@ -141,7 +141,7 @@ if __name__ == "__main__":
     # checkpoints
     parser.add_argument('--ckpt_dir', default='checkpoints',
                         type=str, help='checkpoint directory')
-    parser.add_argument('--ckpt_name', default='last', type=str,
+    parser.add_argument('--ckpt_name', default=None, type=str,
                         help='checkpoint filename under `ckpt_dir` to load previous checkpoint')
 
     # parser.add_argument('--KL_loss', default=25,
