@@ -303,9 +303,9 @@ class Solver(object):
                 grads = torch.cat(grads)
 
                 # examine gradient magnitudes
-                print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
-                print(f'Max gradient magnitude: {grads.abs().max().item()}')
-                print(f'Min gradient magnitude: {grads.abs().min().item()}')
+                # print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
+                # print(f'Max gradient magnitude: {grads.abs().max().item()}')
+                # print(f'Min gradient magnitude: {grads.abs().min().item()}')
                 # for layer in self.net.encoder:
                 #     if hasattr(layer, 'weight'):
                 #         print(f'Layer {layer}: mean={layer.weight.data.mean()}, std={layer.weight.data.std()}')
