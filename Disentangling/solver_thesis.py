@@ -358,8 +358,8 @@ class Solver(object):
                     row_data[0] = self.global_iter
 
                     losses = (total_loss, recon_loss, tc,  total_kld, k_sim_loss, k_contrast_loss)
-                    row_data[1:1+len(losses)] = [str(round(l.item(), 2)) for l in losses] + [self.lambda_tc]
-                    row_data[len(losses)+2:] = list(dim_wise_kld.detach().cpu().numpy())
+                    row_data[1:1+len(losses)] = [str(round(l.item(), 2)) for l in losses] + [str(round(self.lambda_tc, 2))]
+                    row_data[len(losses)+2:] = [str(round(dwk, 2)) for dwk in list(dim_wise_kld.detach().cpu().numpy())]
 
                     log_file_writer.writerow(row_data)
 
@@ -448,7 +448,7 @@ class Solver(object):
         k_sim_losses = torch.stack(self.gather.data['k_sim_loss']).cpu()
         k_contrast_losses = torch.stack(self.gather.data['k_contrast_loss']).cpu()
 
-        lambdas_TC = torch.stack(self.gather.data['lambda_TC']).cpu()
+        lambdas_TC = self.gather.data['lambda_TC']
 
         betas = torch.Tensor(self.gather.data['beta'])
 
