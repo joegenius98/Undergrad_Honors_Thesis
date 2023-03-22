@@ -206,20 +206,20 @@ class Solver(object):
                 """Feedforward and calculating quantities for loss"""
 
 
-                if torch.any(torch.isnan(x)):
-                    raise ValueError("NaN minibatch")
+                # if torch.any(torch.isnan(x)):
+                #     raise ValueError("NaN minibatch")
 
                 x = cuda(x, self.use_cuda)
                 z_samples, x_recon, mu, logvar = self.net(x)
 
-                if torch.any(torch.isnan(z_samples)):
-                    raise ValueError("NaN z_samples")
-                if torch.any(torch.isnan(x_recon)):
-                    raise ValueError("NaN x_recon")
-                if torch.any(torch.isnan(mu)):
-                    raise ValueError("NaN mu")
-                if torch.any(torch.isnan(z_samples)):
-                    raise ValueError("NaN z_samples")
+                # if torch.any(torch.isnan(z_samples)):
+                #     raise ValueError("NaN z_samples")
+                # if torch.any(torch.isnan(x_recon)):
+                #     raise ValueError("NaN x_recon")
+                # if torch.any(torch.isnan(mu)):
+                #     raise ValueError("NaN mu")
+                # if torch.any(torch.isnan(z_samples)):
+                #     raise ValueError("NaN z_samples")
 
 
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
@@ -236,20 +236,20 @@ class Solver(object):
 
                 """Calculating loss"""
             
-                if torch.any(torch.isnan(recon_loss)):
-                    raise ValueError("NaN recon_loss")
-                if torch.any(torch.isnan(total_kld)):
-                    raise ValueError("NaN total_kld")
-                if torch.any(torch.isnan(dim_wise_kld)):
-                    raise ValueError("NaN dim_wise_kld")
-                if torch.any(torch.isnan(mean_kld)):
-                    raise ValueError("NaN mean_kld")
-                if torch.any(torch.isnan(tc)):
-                    raise ValueError("NaN total correlation")
-                if torch.any(torch.isnan(C_tc)):
-                    raise ValueError("NaN C_tc")
-                if torch.any(torch.isnan(constrained_tc)):
-                    raise ValueError("NaN constrained_tc")
+                # if torch.any(torch.isnan(recon_loss)):
+                #     raise ValueError("NaN recon_loss")
+                # if torch.any(torch.isnan(total_kld)):
+                #     raise ValueError("NaN total_kld")
+                # if torch.any(torch.isnan(dim_wise_kld)):
+                #     raise ValueError("NaN dim_wise_kld")
+                # if torch.any(torch.isnan(mean_kld)):
+                #     raise ValueError("NaN mean_kld")
+                # if torch.any(torch.isnan(tc)):
+                #     raise ValueError("NaN total correlation")
+                # if torch.any(torch.isnan(C_tc)):
+                #     raise ValueError("NaN C_tc")
+                # if torch.any(torch.isnan(constrained_tc)):
+                #     raise ValueError("NaN constrained_tc")
 
 
                 # honors thesis loss
@@ -345,17 +345,6 @@ class Solver(object):
                 """Log lots of training stats."""
 
                 if self.global_iter % 20 == 0:
-                    # write log to file
-                    # if self.objective == 'B':
-                    #     C = C.item()
-                    # fw_log.write('[{}] recon_loss:{:.3f} total_kld:{:.3f} exp_kld:{:.3f} beta:{:.4f}\n'.format(
-                    #     self.global_iter, recon_loss.item(), total_kld.item(), C, self.beta))
-                    # # write KL to file
-                    # dim_kl = dim_wise_kld.data.cpu().numpy()
-                    # dim_kl = [str(k) for k in dim_kl]
-                    # fw_kl.write('total_kld:{0:.3f}\t'.format(total_kld.item()))
-                    # fw_kl.write('z_dim:' + ','.join(dim_kl) + '\n')
-                    
                     # row names format:
                     # iteration, total_loss, recon_loss, total_corr, betaVAE_kld, lambda_TC, kld_dim0, kld_dim1, kld_dim2, ..., kld_dimn
                     row_data = [0] * len(csv_row_names)
@@ -367,8 +356,6 @@ class Solver(object):
 
                     if self.global_iter % 500 == 0:
                         log_file.flush()
-                        # fw_log.flush()
-                        # fw_kl.flush()
 
                 # visualization (like Tensorboard)
                 if self.viz_on and self.global_iter % self.gather_step == 0:
@@ -400,8 +387,6 @@ class Solver(object):
         pbar.write("[Training Finished]")
         pbar.close()
         log_file.close()
-        # fw_log.close()
-        # fw_kl.close()
 
 
     def viz_reconstruction(self):
