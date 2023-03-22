@@ -97,25 +97,33 @@ def contrastive_losses(latent_samples: torch.Tensor, k):
     other_reprs = latent_samples[2::3]
 
     # k-factor consistency loss
-    k_factor_diffs = image_reprs[:, :k] - aug_reprs[:, :k]
-    k_factor_diff_norms = torch.norm(k_factor_diffs, p=2, dim=1)
-    k_factor_consistency_loss = torch.mean(k_factor_diff_norms)
+    k_factor_consistency_diffs = image_reprs[:, :k] - aug_reprs[:, :k]
+    k_factor_diff_consistency_norms = torch.norm(k_factor_consistency_diffs, p=2, dim=1)
+    k_factor_consistency_loss = torch.mean(k_factor_diff_consistency_norms)
+
+    # k-factor contrastive loss
+    k_factor_contrastive_diffs = image_reprs[:, :k] - other_reprs[:, :k]
+    k_factor_contrastive_norms = torch.norm(k_factor_contrastive_diffs, p=2, dim=1)
+    k_factor_contrastive_loss = -torch.mean(k_factor_contrastive_norms)
+
 
     # contrastive loss
     # dot product tensors, each mapping a relationship between one group to another
     # note that the entire representation vector is considered; maybe could change to just k factors later
-    img_aug_scores = torch.sum(image_reprs * aug_reprs, dim=1) # shape (batch_size // 3,)
-    img_other_scores = torch.sum(image_reprs * other_reprs, dim=1)
-    aug_other_scores = torch.sum(aug_reprs * other_reprs, dim=1)
+    """Abandoned idea for now: dot products do not make sense for encouraging differerences in representation
+    Also, this implementation needs to be numerically stable as sometimes I get infinity from torch.exp(img_aug_scores)"""
+    # img_aug_scores = torch.sum(image_reprs * aug_reprs, dim=1) # shape (batch_size // 3,)
+    # img_other_scores = torch.sum(image_reprs * other_reprs, dim=1)
+    # aug_other_scores = torch.sum(aug_reprs * other_reprs, dim=1)
 
-    # img, aug, other altogether
-    logsumexp_scores_per_triplet = torch.logsumexp(torch.stack([img_aug_scores, img_other_scores, aug_other_scores]), dim=0)
-    # img, aug pair
-    print(img_aug_scores)
-    logexp_scores_per_pair = torch.log(torch.exp(img_aug_scores))
-    contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(logexp_scores_per_pair)
+    # # img, aug, other altogether
+    # logsumexp_scores_per_triplet = torch.logsumexp(torch.stack([img_aug_scores, img_other_scores, aug_other_scores]), dim=0)
+    # # img, aug pair
+    # print(img_aug_scores)
+    # logexp_scores_per_pair = torch.log(torch.exp(img_aug_scores))
+    # contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(logexp_scores_per_pair)
 
-    return k_factor_consistency_loss, contrastive_loss
+    return k_factor_consistency_loss, k_factor_contrastive_loss
 
 
 
