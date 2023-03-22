@@ -16,7 +16,7 @@ import visdom
 from tqdm import tqdm
 import os
 import torch
-torch.autograd.set_detect_anomaly(True)
+# torch.autograd.set_detect_anomaly(True)
 # torch.cuda.set_device(0)
 import warnings
 warnings.filterwarnings("ignore")
@@ -206,7 +206,7 @@ class Solver(object):
                 """Feedforward and calculating quantities for loss"""
 
                 if self.global_iter == 123:
-                    print(x)
+                    x.register_hook(lambda grad: print(grad))
 
                 if torch.any(torch.isnan(x)):
                     raise ValueError("NaN minibatch")
