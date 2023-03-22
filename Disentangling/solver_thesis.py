@@ -285,6 +285,18 @@ class Solver(object):
                 why calling .backward() has access to all the neural net parameters
                 """
                 total_loss.backward()
+
+                grads = []
+                for p in self.net.encoder.parameters():
+                    if p.grad is not None:
+                        grads.append(p.grad.view(-1))
+                grads = torch.cat(grads)
+
+                # examine gradient magnitudes
+                print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
+                print(f'Max gradient magnitude: {grads.abs().max().item()}')
+                print(f'Min gradient magnitude: {grads.abs().min().item()}')
+
                 # update neural net params. based on gradient
                 self.optim.step()
 
