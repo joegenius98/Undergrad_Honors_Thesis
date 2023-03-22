@@ -204,6 +204,9 @@ class Solver(object):
 
                 """Feedforward and calculating quantities for loss"""
 
+                if self.global_iter == 123:
+                    print(x)
+
                 if torch.any(torch.isnan(x)):
                     raise ValueError("NaN minibatch")
 
@@ -348,7 +351,7 @@ class Solver(object):
                     # iteration, total_loss, recon_loss, total_corr, betaVAE_kld, lambda_TC, kld_dim0, kld_dim1, kld_dim2, ..., kld_dimn
                     row_data = [0] * len(csv_row_names)
                     row_data[0] = self.global_iter
-                    row_data[1:6] = [l.item() for l in (total_loss, recon_loss, tc, total_kld)] + [self.lambda_tc]
+                    row_data[1:6] = [str(round(l.item(),2)) for l in (total_loss, recon_loss, tc, total_kld)] + [self.lambda_tc]
                     row_data[7:] = list(dim_wise_kld.detach().cpu().numpy())
 
                     log_file_writer.writerow(row_data)

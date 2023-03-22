@@ -98,6 +98,7 @@ class ContrastiveVAE_L(BetaVAE_H):
 
         if torch.any(torch.isnan(distributions)):
             print(distributions)
+            print(f"Are all of the values NaN?: {torch.all(torch.isnan(distributions))}")
             raise ValueError("NaN latent vector")
 
         mu = distributions[:, :self.z_dim]
