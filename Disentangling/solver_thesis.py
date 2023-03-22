@@ -204,22 +204,20 @@ class Solver(object):
 
                 """Feedforward and calculating quantities for loss"""
 
-		if any(torch.isnan(x)):
-		    raise ValueError("NaN minibatch")
+                if any(torch.isnan(x)):
+                    raise ValueError("NaN minibatch")
 
                 x = cuda(x, self.use_cuda)
                 z_samples, x_recon, mu, logvar = self.net(x)
 
-		if any(torch.isnan(z_samples)):
-		    raise ValueError("NaN z_samples")
-		if any(torch.isnan(x_recon)):
-		    raise ValueError("NaN x_recon")
-		if any(torch.isnan(mu)):
-		    raise ValueError("NaN mu")
-		if any(torch.isnan(z_samples)):
-		    raise ValueError("NaN z_samples")
-
-
+                if any(torch.isnan(z_samples)):
+                    raise ValueError("NaN z_samples")
+                if any(torch.isnan(x_recon)):
+                    raise ValueError("NaN x_recon")
+                if any(torch.isnan(mu)):
+                    raise ValueError("NaN mu")
+                if any(torch.isnan(z_samples)):
+                    raise ValueError("NaN z_samples")
 
 
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
@@ -235,21 +233,21 @@ class Solver(object):
                 constrained_tc = tc - C_tc
 
                 """Calculating loss"""
-		
-		if any(torch.isnan(recon_loss)):
-		    raise ValueError("NaN recon_loss")
-		if any(torch.isnan(total_kld)):
-		    raise ValueError("NaN total_kld")
-		if any(torch.isnan(dim_wise_kld)):
-		    raise ValueError("NaN dim_wise_kld")
-		if any(torch.isnan(mean_kld)):
-		    raise ValueError("NaN mean_kld")
-		if any(torch.isnan(tc)):
-		    raise ValueError("NaN total correlation")
-		if any(torch.isnan(C_tc)):
-		    raise ValueError("NaN C_tc")
-		if any(torch.isnan(constrained_tc)):
-		    raise ValueError("NaN constrained_tc")
+            
+                if any(torch.isnan(recon_loss)):
+                    raise ValueError("NaN recon_loss")
+                if any(torch.isnan(total_kld)):
+                    raise ValueError("NaN total_kld")
+                if any(torch.isnan(dim_wise_kld)):
+                    raise ValueError("NaN dim_wise_kld")
+                if any(torch.isnan(mean_kld)):
+                    raise ValueError("NaN mean_kld")
+                if any(torch.isnan(tc)):
+                    raise ValueError("NaN total correlation")
+                if any(torch.isnan(C_tc)):
+                    raise ValueError("NaN C_tc")
+                if any(torch.isnan(constrained_tc)):
+                    raise ValueError("NaN constrained_tc")
 
 
                 # honors thesis loss
@@ -263,11 +261,11 @@ class Solver(object):
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
 
-		if any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
-		    raise ValueError("NaN sum of contrastive losses")
-		if any(torch.isnan(total_loss)):
-		    raise ValueError("NaN total loss")
-                
+                if any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
+                    raise ValueError("NaN sum of contrastive losses")
+                if any(torch.isnan(total_loss)):
+                    raise ValueError("NaN total loss")
+                        
 
                 # elif self.objective == 'B':
                 #     # tricks for C
@@ -306,16 +304,16 @@ class Solver(object):
                     #  ['iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
                     # 'mean_kld', 'lambda_TC', 'mu', 'var', 'images', 'beta']
                     self.gather.insert(iter=self.global_iter,
-                                       total_loss=total_loss,
-                                       recon_loss=recon_loss.data, 
-                                       total_corr=tc,
-                                       total_kld=total_kld.data,
-                                       dim_wise_kld=dim_wise_kld.data, 
-                                       mean_kld=mean_kld.data, 
-                                       lambda_TC=self.lambda_tc.data,
-                                       mu=mu.mean(0).data, 
-                                       var=logvar.exp().mean(0).data,
-                                       beta=self.beta)
+                                        total_loss=total_loss,
+                                        recon_loss=recon_loss.data, 
+                                        total_corr=tc,
+                                        total_kld=total_kld.data,
+                                        dim_wise_kld=dim_wise_kld.data, 
+                                        mean_kld=mean_kld.data, 
+                                        lambda_TC=self.lambda_tc.data,
+                                        mu=mu.mean(0).data, 
+                                        var=logvar.exp().mean(0).data,
+                                        beta=self.beta)
                 
                 """Log lots of training stats."""
 
