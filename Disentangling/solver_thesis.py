@@ -287,7 +287,11 @@ class Solver(object):
                 why calling .backward() has access to all the neural net parameters
                 """
                 if self.global_iter == 122:
-                    print(f"Loss is: {total_loss}")
+                    print(f"Total loss is: {total_loss}")
+                    print(f"Recon loss is: {total_loss}")
+                    print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
+                    print(f"KLD is: {total_loss}")
+                    print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
                     # self.net.enable_print_gradients()
 
                 total_loss.backward()

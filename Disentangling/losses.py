@@ -68,7 +68,7 @@ def _gaussian_log_density(samples, mean, log_var):
     return -0.5 * (tmp * tmp * inv_sigma + log_var + normalization)
 
 
-def contrastive_losses(latent_vectors: torch.Tensor, k):
+def contrastive_losses(latent_samples: torch.Tensor, k):
     """
     Computes the k-factor consistency loss and contrastive loss for given latent vectors.
     
@@ -92,9 +92,9 @@ def contrastive_losses(latent_vectors: torch.Tensor, k):
     """
     # Separate the vectors into groups
     # images, their respective augmentations, and their respective contrastive other images
-    image_reprs = latent_vectors[::3]
-    aug_reprs = latent_vectors[1::3]
-    other_reprs = latent_vectors[2::3]
+    image_reprs = latent_samples[::3]
+    aug_reprs = latent_samples[1::3]
+    other_reprs = latent_samples[2::3]
 
     # k-factor consistency loss
     k_factor_diffs = image_reprs[:, :k] - aug_reprs[:, :k]
