@@ -135,18 +135,18 @@ class ContrastiveVAE_L(BetaVAE_H):
         for module in self.encoder:
             if hasattr(module, 'weight'):
                 # register hook on the module's weight tensor
-                module.weight.register_hook(lambda grad: print(grad))
+                module.weight.register_hook(lambda grad: print(f"{module.__class__.__name__}: {grad})"))
             elif hasattr(module, 'bias'):
                 # register hook on the module's bias tensor
-                module.bias.register_hook(lambda grad: print(grad))
+                module.bias.register_hook(lambda grad: print(f"{module.__class__.__name__}: {grad})"))
 
         for module in self.decoder:
             if hasattr(module, 'weight'):
                 # register hook on the module's weight tensor
-                module.weight.register_hook(lambda grad: print(grad))
+                module.weight.register_hook(lambda grad: print(f"{module.__class__.__name__}: {grad})"))
             elif hasattr(module, 'bias'):
                 # register hook on the module's bias tensor
-                module.bias.register_hook(lambda grad: print(grad))
+                module.bias.register_hook(lambda grad: print(f"{module.__class__.__name__}: {grad})"))
 
 
 
