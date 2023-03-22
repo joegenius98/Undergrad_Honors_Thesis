@@ -335,13 +335,13 @@ class Solver(object):
 
                 if self.viz_on and self.global_iter % self.gather_step == 0:
                     self.gather.insert(iter=self.global_iter,
-                                        total_loss=total_loss,
+                                        total_loss=total_loss.data,
                                         recon_loss=recon_loss.data, 
                                         total_corr=tc.data,
                                         total_kld=total_kld.data,
                                         dim_wise_kld=dim_wise_kld.data, 
                                         mean_kld=mean_kld.data, 
-                                        lambda_TC=self.lambda_tc.data,
+                                        lambda_TC=self.lambda_tc,
                                         k_sim_loss=k_sim_loss.data,
                                         k_contrast_loss=k_contrast_loss.data,
                                         mu=mu.mean(0).data, 
