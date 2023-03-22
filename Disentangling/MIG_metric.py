@@ -16,7 +16,7 @@ from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 
-from model import BetaVAE_H, BetaVAE_B
+from model import BetaVAE_H, BetaVAE_B, ContrastiveVAE_L
 # from factmodel import FactorVAE1
 from dataset import CustomTensorDataset
 
@@ -40,7 +40,7 @@ print("checkpoint file_path:>> ", file_path)
 # model_map = {'betavae_h': BetaVAE_H,
 #              'betavae_b': BetaVAE_B, 'factvae': FactorVAE1}
 
-model_map = {'betavae_h': BetaVAE_H, 'betavae_b': BetaVAE_B}
+model_map = {'betavae_h': BetaVAE_H, 'betavae_b': BetaVAE_B, 'contrastivevae_l': ContrastiveVAE_L}
 model_name = sys.argv[1]
 
 # In[2]:
