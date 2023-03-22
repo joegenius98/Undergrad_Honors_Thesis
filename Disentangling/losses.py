@@ -77,7 +77,7 @@ def contrastive_losses(latent_samples: torch.Tensor, k):
     representations of an image and its augmentation to be different from the other image.
     
     Args:
-        latent_vectors (torch.Tensor): A PyTorch Tensor of shape (batch_size, number_of_latent_dimensions),
+        latent_samples (torch.Tensor): A PyTorch Tensor of shape (batch_size, number_of_latent_dimensions),
                                        containing the latent vectors for images, their augmentations, 
                                        and other randomly selected images.
         k: how many factors to encourage to be similar for an image's representation and the representation
@@ -111,6 +111,7 @@ def contrastive_losses(latent_samples: torch.Tensor, k):
     # img, aug, other altogether
     logsumexp_scores_per_triplet = torch.logsumexp(torch.stack([img_aug_scores, img_other_scores, aug_other_scores]), dim=0)
     # img, aug pair
+    print(torch.exp(img_aug_scores))
     logexp_scores_per_pair = torch.log(torch.exp(img_aug_scores))
     contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(logexp_scores_per_pair)
 
