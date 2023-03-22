@@ -129,10 +129,12 @@ class Solver(object):
 
         # `win` is short for "window"; these get instantiated later on
         self.win_recon = None
-        self.win_beta = None
-        self.win_kld = None
         self.win_total_loss = None
         self.win_tc = None
+        self.win_lambda_tc = None
+        self.win_beta = None
+        self.win_kld = None
+        self.win_mean_kld = None
         # self.win_mu = None
         # self.win_var = None
 
@@ -176,14 +178,14 @@ class Solver(object):
         # fw_kl = open(kl_file, "w")
 
         # newline='' prevents a blank line between every row
-        log_file = open(os.path.join(f"./train_logs/train_log{self.num_sim_factors}.csv"), 'w', newline='')
+        log_file = open(os.path.join(f"./train_logs/train_log{int(self.num_sim_factors)}.csv"), 'w', newline='')
         log_file_writer = csv.writer(log_file, delimiter=',')
 
         # header row construction 
         iter = ['iteration']
         loss_names = ['total_loss', 'recon_loss', 'total_corr', 'betaVAE_kld']
         dynamic_hyperparam_names = ['lambda_TC']
-        z_dim_kld_names = [f'kld_dim{i+1}' for i in range(len(self.z_dim))]
+        z_dim_kld_names = [f'kld_dim{i+1}' for i in range(self.z_dim)]
 
         csv_row_names = iter + loss_names + dynamic_hyperparam_names + z_dim_kld_names
         log_file_writer.writerow(csv_row_names)
@@ -376,20 +378,22 @@ class Solver(object):
         `cat` ||-------------------------------- in the **given** dimension.
         """
         # 'iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
-        # 'mean_kld', 'lambda_TC', 'mu', 'var', 'images', 'beta'
+        # 'klds', 'mean_kld', 'lambda_TC', 'beta'
+        iters = torch.Tensor(self.gather.data['iter'])
         total_losses = torch.stack(self.gather.data['total_loss']).cpu()
         recon_losses = torch.stack(self.gather.data['recon_loss']).cpu()
         total_corrs = torch.stack(self.gather.data['total_corr']).cpu()
 
         total_klds = torch.stack(self.gather.data['total_kld']).cpu()
         dim_wise_klds = torch.stack(self.gather.data['dim_wise_kld']).cpu()
+        klds = torch.cat([dim_wise_klds, total_klds], 1).cpu()
+
         mean_klds = torch.stack(self.gather.data['mean_kld']).cpu()
 
         lambdas_TC = torch.stack(self.gather.data['lambda_TC']).cpu()
 
         betas = torch.Tensor(self.gather.data['beta'])
-        klds = torch.cat([dim_wise_klds, total_klds], 1).cpu()
-        iters = torch.Tensor(self.gather.data['iter'])
+
 
         # legend
         legend = []
@@ -421,10 +425,10 @@ class Solver(object):
             opts=dict(width=400, height=400, xlabel='iteration', title='total correlation')
             )
 
-        self.win_tc = self.viz.line(
-            X=iters, Y=total_corrs, env=self.viz_name+'_lines', win=self.win_tc,
-            update=None if self.win_tc is None else 'append',
-            opts=dict(width=400, height=400, xlabel='iteration', title='total correlation')
+        self.win_lambda_tc = self.viz.line(
+            X=iters, Y=lambdas_TC, env=self.viz_name+'_lines', win=self.win_lambda_tc,
+            update=None if self.win_lambda_tc is None else 'append',
+            opts=dict(width=400, height=400, xlabel='iteration', title='total corr. lambda')
             )
 
 
@@ -440,6 +444,11 @@ class Solver(object):
             opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='kl divergence')
             )
 
+        self.win_mean_kld = self.viz.line(
+            X=iters, Y=mean_klds, env=self.viz_name+'_lines', win=self.win_mean_kld,
+            update=None if self.win_mean_kld is None else 'append',
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='mean kl div.')
+            )
         # self.win_mu = self.viz.line(
         #     X=iters,
         #     Y=mus,
@@ -654,10 +663,16 @@ class Solver(object):
     def save_checkpoint(self, filename, silent=True):
         model_states = {'net': self.net.state_dict(), }
         optim_states = {'optim': self.optim.state_dict(), }
+
+        # 'iter', 'total_loss', 'recon_loss', 'total_corr', 'total_kld', 'dim_wise_kld', 
+        # 'klds', 'mean_kld', 'lambda_TC', 'beta'
         win_states = {'recon': self.win_recon,
                       'total_loss': self.win_total_loss,
+                      'tc': self.win_tc,
+                      'lambda_tc': self.win_lambda_tc,
                       'beta': self.win_beta,
-                      'kld': self.win_kld,
+                      'kld': self.win_kld, # has dimension-wise and total KL div.
+                      'mean_kld': self.win_mean_kld,
                       #   'mu':self.win_mu,
                       #   'var':self.win_var,
                       }
@@ -679,12 +694,24 @@ class Solver(object):
         file_path = os.path.join(self.ckpt_dir, filename)
         if os.path.isfile(file_path):
             checkpoint = torch.load(file_path)
+
+            # current training iteration
             self.global_iter = checkpoint['iter']
-            self.win_recon = checkpoint['win_states']['recon']
-            self.win_total_loss = checkpoint['win_states']['total_loss']
-            self.win_kld = checkpoint['win_states']['kld']
+
+            # visdom window states
+            win_states = checkpoint['win_states']
+
+            self.win_recon = win_states['recon']
+            self.win_total_loss = win_states['total_loss']
+            self.win_tc = win_states['tc']
+            self.win_lambda_tc = win_states['lambda_tc']
+            self.win_beta = win_states['beta']
+            self.win_kld = win_states['kld']
+            self.win_mean_kld = win_states['mean_kld'] 
             # self.win_var = checkpoint['win_states']['var']
             # self.win_mu = checkpoint['win_states']['mu']
+
+            # model and optimizer (e.g. Adam) states
             self.net.load_state_dict(checkpoint['model_states']['net'])
             self.optim.load_state_dict(checkpoint['optim_states']['optim'])
             print(f"=> loaded checkpoint {file_path} (iter {self.global_iter})")
