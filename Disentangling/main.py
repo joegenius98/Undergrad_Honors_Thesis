@@ -85,7 +85,7 @@ if __name__ == "__main__":
                         help='starting factor of constrained total correlation by (gets dynamically updated throughout training based on constrained total corr.)')
 
     #### contrastive loss hyperparameters
-    parser.add_argument('--num_sim_factors', default=1, type=float,
+    parser.add_argument('--num_sim_factors', default=1, type=int,
                         help='number of factors to encourage to similar in value in image representation and its augmentation representation')
     parser.add_argument('--augment_factor', default=1, type=float,
                         help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')

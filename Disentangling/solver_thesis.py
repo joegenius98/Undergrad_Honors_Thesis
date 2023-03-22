@@ -178,7 +178,7 @@ class Solver(object):
         # fw_kl = open(kl_file, "w")
 
         # newline='' prevents a blank line between every row
-        log_file = open(os.path.join(f"./train_logs/train_log{int(self.num_sim_factors)}.csv"), 'w', newline='')
+        log_file = open(os.path.join(f"./train_logs/train_log{self.num_sim_factors}.csv"), 'w', newline='')
         log_file_writer = csv.writer(log_file, delimiter=',')
 
         # header row construction 
@@ -212,8 +212,8 @@ class Solver(object):
 
                 if self.global_iter % period == 0:
                     C_tc += self.C_tc_step_val
-                if C > self.C_max:
-                    C = self.C_tc_max
+                if C_tc > self.C_tc_max:
+                    C_tc = self.C_tc_max
 
                 tc = total_corr(z_samples, mu, logvar)
                 C_tc = cuda(torch.Tensor([C_tc]), self.use_cuda)
@@ -300,7 +300,7 @@ class Solver(object):
                     row_data = [0] * len(csv_row_names)
                     row_data[0] = self.global_iter
                     row_data[1:6] = [l.item() for l in (total_loss, recon_loss, tc, total_kld)] + [self.lambda_tc]
-                    row_data[7:] = list(dim_wise_kld.cpu().numpy())
+                    row_data[7:] = list(dim_wise_kld.detach().cpu().numpy())
 
                     log_file_writer.writerow(row_data)
 

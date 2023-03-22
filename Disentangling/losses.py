@@ -111,7 +111,6 @@ def contrastive_losses(latent_vectors: torch.Tensor, k):
     # img, aug, other altogether
     logsumexp_scores_per_triplet = torch.logsumexp(torch.stack([img_aug_scores, img_other_scores, aug_other_scores]), dim=0)
     # img, aug pair
-    # 1e-8 prevents -inf or inf from logarithm of 0
     logexp_scores_per_pair = torch.log(torch.exp(img_aug_scores))
     contrastive_loss = torch.mean(logsumexp_scores_per_triplet) - torch.mean(logexp_scores_per_pair)
 
