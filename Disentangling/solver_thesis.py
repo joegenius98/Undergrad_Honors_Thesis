@@ -288,23 +288,23 @@ class Solver(object):
                 """
                 if self.global_iter == 122:
                     print(f"Loss is: {total_loss}")
-                    self.net.enable_print_gradients()
+                    # self.net.enable_print_gradients()
 
                 total_loss.backward()
 
-                # grads = []
-                # for p in self.net.encoder.parameters():
-                #     if p.grad is not None:
-                #         grads.append(p.grad.view(-1))
-                # grads = torch.cat(grads)
+                grads = []
+                for p in self.net.encoder.parameters():
+                    if p.grad is not None:
+                        grads.append(p.grad.view(-1))
+                grads = torch.cat(grads)
 
-                # # examine gradient magnitudes
-                # print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
-                # print(f'Max gradient magnitude: {grads.abs().max().item()}')
-                # print(f'Min gradient magnitude: {grads.abs().min().item()}')
-                for layer in self.net.encoder:
-                    if hasattr(layer, 'weight'):
-                        print(f'Layer {layer}: mean={layer.weight.data.mean()}, std={layer.weight.data.std()}')
+                # examine gradient magnitudes
+                print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
+                print(f'Max gradient magnitude: {grads.abs().max().item()}')
+                print(f'Min gradient magnitude: {grads.abs().min().item()}')
+                # for layer in self.net.encoder:
+                #     if hasattr(layer, 'weight'):
+                #         print(f'Layer {layer}: mean={layer.weight.data.mean()}, std={layer.weight.data.std()}')
 
                 # update neural net params. based on gradient
                 self.optim.step()
