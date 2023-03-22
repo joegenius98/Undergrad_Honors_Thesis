@@ -56,7 +56,6 @@ def triplet_batch_dSprites(batch):
     """to return batches of 3 (original image, augmented original, and another image)
     implies we need at least two separate images to work off of""" 
     if batch_size >= 2:
-        print(f"Batch size: {batch_size}")
         # format: (batch_size, 3 for (original, augmented, another), num_channels, height, width)
         # images_batch = torch.zeros((batch_size, 3, nc, h, w))
         images_batch = torch.zeros((batch_size * 3, nc, h, w))
