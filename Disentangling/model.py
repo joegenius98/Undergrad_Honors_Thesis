@@ -96,23 +96,23 @@ class ContrastiveVAE_L(BetaVAE_H):
     def forward(self, x):
         distributions = self._encode(x)
 
-	if torch.any(torch.isnan(distributions)):
-	    print(distributions)
-	    raise ValueError("NaN latent vector")
+        if torch.any(torch.isnan(distributions)):
+            print(distributions)
+            raise ValueError("NaN latent vector")
 
         mu = distributions[:, :self.z_dim]
         logvar = distributions[:, self.z_dim:]
         z = reparametrize(mu, logvar)
 
         if torch.any(torch.isnan(z)):
-	    print(z)
-	    raise ValueError("NaN z_samples")
+            print(z)
+            raise ValueError("NaN z_samples")
 
         x_recon = self._decode(z)
 
-	if torch.any(torch.isnan(x_recon)):
-	    print(x_recon)
-	    raise ValueError("NaN x_recon")
+        if torch.any(torch.isnan(x_recon)):
+            print(x_recon)
+            raise ValueError("NaN x_recon")
 
         return z, x_recon, mu, logvar
 
