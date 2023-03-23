@@ -242,22 +242,6 @@ class Solver(object):
                 k_sim_loss, k_contrast_loss = contrastive_losses(z_samples, self.num_sim_factors)
 
             
-                # if torch.any(torch.isnan(recon_loss)):
-                #     raise ValueError("NaN recon_loss")
-                # if torch.any(torch.isnan(total_kld)):
-                #     raise ValueError("NaN total_kld")
-                # if torch.any(torch.isnan(dim_wise_kld)):
-                #     raise ValueError("NaN dim_wise_kld")
-                # if torch.any(torch.isnan(mean_kld)):
-                #     raise ValueError("NaN mean_kld")
-                # if torch.any(torch.isnan(tc)):
-                #     raise ValueError("NaN total correlation")
-                # if torch.any(torch.isnan(C_tc)):
-                #     raise ValueError("NaN C_tc")
-                # if torch.any(torch.isnan(constrained_tc)):
-                #     raise ValueError("NaN constrained_tc")
-
-
                 # honors thesis loss
                 total_loss = None
                 if self.objective == 'L':
@@ -268,12 +252,6 @@ class Solver(object):
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
-
-                # if torch.any(torch.isnan(sum(contrastive_losses(z_samples, self.num_sim_factors)))):
-                #     raise ValueError("NaN sum of contrastive losses")
-                # if torch.any(torch.isnan(total_loss)):
-                #     raise ValueError("NaN total loss")
-                        
 
                 # elif self.objective == 'B':
                 #     # tricks for C
@@ -292,31 +270,7 @@ class Solver(object):
                 note: total_loss has x_recon, which is from a forward pass of net, which is
                 why calling .backward() has access to all the neural net parameters
                 """
-                # if self.global_iter == 122:
-                #     print(f"Total loss is: {total_loss}")
-                #     print(f"Recon loss is: {recon_loss}")
-                #     print(f"Total corr. is: {(tc, C_tc, constrained_tc)}")
-                #     print(f"KLD is: {total_kld}")
-                #     print(f"Contrastive losses: {contrastive_losses(z_samples, self.num_sim_factors)}")
-
-                #     print(f'mu: {mu}\nlogvar: {logvar}\nz_samples: {z_samples}')
-                #     # self.net.enable_print_gradients()
-
                 total_loss.backward()
-
-                grads = []
-                for p in self.net.encoder.parameters():
-                    if p.grad is not None:
-                        grads.append(p.grad.view(-1))
-                grads = torch.cat(grads)
-
-                # examine gradient magnitudes
-                # print(f'Mean gradient magnitude: {grads.abs().mean().item()}')
-                # print(f'Max gradient magnitude: {grads.abs().max().item()}')
-                # print(f'Min gradient magnitude: {grads.abs().min().item()}')
-                # for layer in self.net.encoder:
-                #     if hasattr(layer, 'weight'):
-                #         print(f'Layer {layer}: mean={layer.weight.data.mean()}, std={layer.weight.data.std()}')
 
                 # update neural net params. based on gradient
                 self.optim.step()
