@@ -15,6 +15,7 @@ import visdom
 
 from tqdm import tqdm
 import os
+from pathlib import Path
 import torch
 # torch.autograd.set_detect_anomaly(True)
 # torch.cuda.set_device(0)
@@ -127,7 +128,7 @@ class Solver(object):
         self.viz_port = args.viz_port
         self.gather_step = args.gather_step
         self.save_output = args.save_output
-        self.output_dir = os.path.join(args.output_dir, args.viz_name)
+        self.output_dir = os.path.join(args.output_dir, self.viz_name)
         self.save_step = args.save_step
 
         # `win` is short for "window"; these get instantiated later on
@@ -144,11 +145,21 @@ class Solver(object):
         # self.win_var = None
 
         # checkpoints
-        self.ckpt_dir = os.path.join(args.ckpt_dir, args.viz_name)
+        self.ckpt_dir = os.path.join(args.ckpt_dir, self.viz_name)
         self.ckpt_name = args.ckpt_name
 
+
+        # TODO: come up with unique identifier for log filename. I might use
+        # a different set of hyperparameters but the same number of k factors (e.g. k = 2 with two diff. values of beta).
         if self.viz_on:
-            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/thesis_init_k={self.num_sim_factors}")
+            visdom_log_dir = Path(__file__).parent / 'vis_logs'
+
+            if not visdom_log_dir.exists():
+                visdom_log_dir.mkdir()
+
+            self.viz = visdom.Visdom(port=self.viz_port, \
+                    log_to_filename = visdom_log_dir/self.viz_name/f'vis_log')
+
 
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir, exist_ok=True)
@@ -183,7 +194,10 @@ class Solver(object):
         # fw_kl = open(kl_file, "w")
 
         # newline='' prevents a blank line between every row
-        log_file = open(os.path.join(f"./train_logs/train_log{self.num_sim_factors}.csv"), 'w', newline='')
+        train_log_dir = Path(__file__) / 'train_logs' / f'{self.viz_name}'
+        if not train_log_dir.exists(): train_log_dir.mkdir()
+
+        log_file = open(train_log_dir / f"train_log.csv", 'w', newline='')
         log_file_writer = csv.writer(log_file, delimiter=',')
 
         # header row construction 
