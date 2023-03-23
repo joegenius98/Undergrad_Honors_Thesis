@@ -152,7 +152,7 @@ class Solver(object):
         # TODO: come up with unique identifier for log filename. I might use
         # a different set of hyperparameters but the same number of k factors (e.g. k = 2 with two diff. values of beta).
         if self.viz_on:
-            visdom_log_dir = Path(__file__).parent / 'vis_logs'
+            visdom_log_dir = Path(__file__).parent / 'vis_logs' / self.viz_name
 
             if not visdom_log_dir.exists():
                 visdom_log_dir.mkdir()
