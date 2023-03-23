@@ -194,7 +194,7 @@ class Solver(object):
         # fw_kl = open(kl_file, "w")
 
         # newline='' prevents a blank line between every row
-        train_log_dir = Path(__file__) / 'train_logs' / f'{self.viz_name}'
+        train_log_dir = Path(__file__).parent / 'train_logs' / f'{self.viz_name}'
         if not train_log_dir.exists(): train_log_dir.mkdir()
 
         log_file = open(train_log_dir / f"train_log.csv", 'w', newline='')
