@@ -159,6 +159,7 @@ class Solver(object):
 
             self.viz = visdom.Visdom(port=self.viz_port, \
                     log_to_filename = visdom_log_dir/self.viz_name/f'vis_log')
+            print(f"Visdom log filepath: {visdom_log_dir/self.viz_name/f'vis_log'}")
 
 
         if not os.path.exists(self.ckpt_dir):
