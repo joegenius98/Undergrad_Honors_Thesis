@@ -155,11 +155,9 @@ class Solver(object):
             visdom_log_dir = Path(__file__).parent / 'vis_logs' / self.viz_name
 
             if not visdom_log_dir.exists():
-                visdom_log_dir.mkdir()
+                visdom_log_dir.mkdir(parents=True)
 
-            self.viz = visdom.Visdom(port=self.viz_port, \
-                    log_to_filename = visdom_log_dir/self.viz_name/f'vis_log')
-            print(f"Visdom log filepath: {visdom_log_dir/self.viz_name/f'vis_log'}")
+            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename = visdom_log_dir/f'vis_log')
 
 
         if not os.path.exists(self.ckpt_dir):
@@ -196,9 +194,9 @@ class Solver(object):
 
         # newline='' prevents a blank line between every row
         train_log_dir = Path(__file__).parent / 'train_logs' / f'{self.viz_name}'
-        if not train_log_dir.exists(): train_log_dir.mkdir()
+        if not train_log_dir.exists(): train_log_dir.mkdir(parents=True)
 
-        log_file = open(train_log_dir / f"train_log.csv", 'w', newline='')
+        log_file = open(train_log_dir / "train_log.csv", 'w', newline='')
         log_file_writer = csv.writer(log_file, delimiter=',')
 
         # header row construction 
