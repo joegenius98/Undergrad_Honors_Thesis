@@ -196,7 +196,7 @@ class Solver(object):
         log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
-        lbd_step = 25000
+        lbd_step = 20000
         alpha = 0.99
         period = 5000
 
@@ -264,7 +264,7 @@ class Solver(object):
                     total_loss = recon_loss + \
                         self.beta_TC * self.lambda_tc * constrained_tc + constrained_tc ** 2 + \
                         self.beta * total_kld + \
-                        self.augment_factor * (k_sim_loss - k_contrast_loss) 
+                        self.augment_factor * k_sim_loss - 1/self.augment_factor * k_contrast_loss 
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
@@ -325,7 +325,7 @@ class Solver(object):
                     if self.global_iter == 1:
                         constrain_ma = constrained_tc
                     else:
-                        constrain_ma = alpha * constrain_ma.detach_() + (1 - alpha) * constrain_ma
+                        constrain_ma = alpha * constrain_ma.detach_() + (1 - alpha) * constrained_tc
 
                     if self.global_iter % lbd_step == 0 and self.global_iter > 500:
                         self.lambda_tc *= torch.clamp(torch.exp(constrain_ma), 0.9, 1.05)
@@ -511,13 +511,13 @@ class Solver(object):
         self.win_k_sim_loss = self.viz.line(
             X=iters, Y=k_sim_losses, env=self.viz_name+'_lines', win=self.win_k_sim_loss,
             update=None if self.win_k_sim_loss is None else 'append',
-            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k sim. loss')
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k-factor similarity loss')
             )
 
         self.win_k_contrast_loss = self.viz.line(
             X=iters, Y=k_contrast_losses, env=self.viz_name+'_lines', win=self.win_k_contrast_loss,
             update=None if self.win_k_contrast_loss is None else 'append',
-            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k-factor contrast loss')
+            opts=dict( width=400,height=400,legend=legend,xlabel='iteration', title='k-factor contrastive loss')
             )
 
         # self.win_mu = self.viz.line(
