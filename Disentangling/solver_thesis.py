@@ -209,9 +209,9 @@ class Solver(object):
         log_file_writer.writerow(csv_row_names)
         # fw_kl.write('total KL\tz_dim' + '\n')
 
-        lbd_step = 5000
-        alpha = 0.99
-        period = 5000
+        # lbd_step = 20000
+        # alpha = 0.99
+        # period = 5000
 
         C_tc = self.C_tc_start
 
@@ -243,10 +243,10 @@ class Solver(object):
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
-                if self.global_iter % period == 0:
-                    C_tc += self.C_tc_step_val
-                if C_tc > self.C_tc_max:
-                    C_tc = self.C_tc_max
+                # if self.global_iter % period == 0:
+                #     C_tc += self.C_tc_step_val
+                # if C_tc > self.C_tc_max:
+                #     C_tc = self.C_tc_max
 
                 tc = total_corr(z_samples, mu, logvar)
                 C_tc = cuda(torch.Tensor([C_tc]), self.use_cuda)
@@ -262,6 +262,7 @@ class Solver(object):
                         self.beta_TC * self.lambda_tc * constrained_tc + constrained_tc ** 2 + \
                         self.beta * total_kld + \
                         self.augment_factor * k_sim_loss - 1/self.augment_factor * k_contrast_loss 
+                        # self.augment_factor * k_sim_loss
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
@@ -288,15 +289,15 @@ class Solver(object):
                 # update neural net params. based on gradient
                 self.optim.step()
 
-                with torch.no_grad():
-                    if self.global_iter == 1:
-                        constrain_ma = constrained_tc
-                    else:
-                        constrain_ma = alpha * constrain_ma.detach_() + (1 - alpha) * constrained_tc
+                # with torch.no_grad():
+                #     if self.global_iter == 1:
+                #         constrain_ma = constrained_tc
+                #     else:
+                #         constrain_ma = alpha * constrain_ma.detach_() + (1 - alpha) * constrained_tc
 
-                    if self.global_iter % lbd_step == 0 and self.global_iter > 500:
-                        self.lambda_tc *= torch.clamp(torch.exp(constrain_ma), 0.9, 1.05)
-                        self.lambda_tc = self.lambda_tc.item()
+                #     if self.global_iter % lbd_step == 0 and self.global_iter > 500:
+                #         self.lambda_tc *= torch.clamp(torch.exp(constrain_ma), 0.9, 1.05)
+                #         self.lambda_tc = self.lambda_tc.item()
 
                 """Store lots of training stats."""
 
