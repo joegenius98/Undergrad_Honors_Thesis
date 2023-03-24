@@ -261,7 +261,8 @@ class Solver(object):
                     total_loss = recon_loss + \
                         self.beta_TC * self.lambda_tc * constrained_tc + constrained_tc ** 2 + \
                         self.beta * total_kld + \
-                        self.augment_factor * k_sim_loss - 1/self.augment_factor * k_contrast_loss 
+                        self.augment_factor * k_sim_loss
+                        # self.augment_factor * k_sim_loss - 1/self.augment_factor * k_contrast_loss 
 
                 elif self.objective == 'H':
                     total_loss = recon_loss + self.beta * total_kld
