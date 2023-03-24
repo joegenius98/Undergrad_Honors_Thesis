@@ -9,7 +9,8 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
-from augmentations import DSPRITE_AUGMENTATIONS
+# from augmentations import DSPRITE_AUGMENTATIONS
+from augmentations import translate_shape
 
 class CustomImageFolder(ImageFolder):
     def __init__(self, root, transform=None):
@@ -65,7 +66,8 @@ def triplet_batch_dSprites(batch):
             second_image_index = i + 1 # can be i and i + 1 if we toggle shuffle = True, so that it's random
             first_image = batch[first_image_index]
             second_image = batch[second_image_index]
-            first_image_augmented = random.choice(DSPRITE_AUGMENTATIONS)(first_image)
+            # first_image_augmented = random.choice(DSPRITE_AUGMENTATIONS)(first_image)
+            first_image_augmented = translate_shape(first_image)
 
             images_batch[3*i, :, :, :] = first_image
             images_batch[3*i+1, :, :, :] = first_image_augmented
@@ -79,7 +81,8 @@ def triplet_batch_dSprites(batch):
         # This is to address the out of bounds error
         last_idx = batch_size-1
         images_batch[3*last_idx, :, :, :] = batch[batch_size-1]
-        images_batch[3*last_idx+1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        # images_batch[3*last_idx+1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        images_batch[3*last_idx+1, :, :, :] = translate_shape(batch[batch_size-1])
         images_batch[3*last_idx+2, :, :, :] = batch[0] 
 
 
@@ -89,7 +92,9 @@ def triplet_batch_dSprites(batch):
         # images_batch = torch.zeros((batch_size, 2, nc, h, w))
         images_batch = torch.zeros((batch_size * 2, nc, h, w))
         images_batch[0, :, :, :] = batch[0]
-        images_batch[1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        # images_batch[1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
+        images_batch[1, :, :, :] = translate_shape(batch[batch_size-1])
+        
         
     return images_batch
     # return images_batch.view((batch_size * 3, nc, h, w))
