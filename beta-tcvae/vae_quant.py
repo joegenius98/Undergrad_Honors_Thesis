@@ -447,7 +447,7 @@ def main():
             # report training diagnostics
             if iteration % args.log_freq == 0:
                 train_elbo.append(elbo_running_mean.avg)
-                print('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)' % (
+                pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)' % (
                     iteration, time.time() - batch_time, vae.beta, vae.lamb,
                     elbo_running_mean.val, elbo_running_mean.avg))
 
