@@ -16,8 +16,9 @@ import lib.datasets as dset
 from lib.flows import FactorialNormalizingFlow
 
 from elbo_decomposition import elbo_decomposition
-# from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401
+from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401
 
+from tqdm import tqdm 
 
 class MLPEncoder(nn.Module):
     def __init__(self, output_dim):
@@ -415,10 +416,17 @@ def main():
     num_iterations = len(train_loader) * args.num_epochs
     iteration = 0
     # initialize loss accumulator
-    elbo_running_mean = utils.RunningAverageMeter()
+    # elbo_running_mean = utils.RunningAverageMeter()
+    elbo_running_mean = utils.AverageMeter()
+
+
+    pbar = tqdm(total=num_iterations)
+
     while iteration < num_iterations:
         for i, x in enumerate(train_loader):
+            pbar.update(1)
             iteration += 1
+
             batch_time = time.time()
             vae.train()
             anneal_kl(args, vae, iteration)
@@ -452,7 +460,7 @@ def main():
 
                 utils.save_checkpoint({
                     'state_dict': vae.state_dict(),
-                    'args': args}, args.save, 0)
+                    'args': args}, "./checkpoints", iteration)
                 eval('plot_vs_gt_' + args.dataset)(vae, train_loader.dataset,
                     os.path.join(args.save, 'gt_vs_latent_{:05d}.png'.format(iteration)))
 
