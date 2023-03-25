@@ -300,13 +300,12 @@ def setup_data_loaders(args, use_cuda=False):
 # win_latent_walk = None
 win_train_elbo = None
 
-
-def display_samples(model, x, vis, env_name):
+@torch.no_grad()
+def display_samples(model, x, vis, env_name, curr_iter):
 
     # plot random samples
     sample_mu = model.model_sample(batch_size=100).sigmoid()
-    sample_mu = sample_mu
-    images = list(sample_mu.view(-1, 1, 64, 64).data.cpu())
+    images = sample_mu.view(-1, 1, 64, 64).data.cpu()
     # win_samples = vis.images(images, 10, 2, opts={'caption': 'samples'}, win=win_samples)
     vis.images(images, 10, 2, opts={'caption': 'samples'}, env=f"{env_name}_samples")
 
@@ -318,7 +317,7 @@ def display_samples(model, x, vis, env_name):
         test_imgs.view(1, -1, 64, 64), reco_imgs.view(1, -1, 64, 64)], 0).transpose(0, 1)
 
     vis.images(
-        list(test_reco_imgs.contiguous().view(-1, 1, 64, 64).data.cpu()), 10, 2,
+        test_reco_imgs.contiguous().view(-1, 1, 64, 64).data.cpu(), 10, 2,
         opts={'caption': 'test reconstruction image'}, env=f'{env_name}_reconstructions')
 
     # plot latent walks (change one variable while all others stay the same)
@@ -326,8 +325,7 @@ def display_samples(model, x, vis, env_name):
     batch_size, z_dim = zs.size()
     xs = []
 
-    with torch.no_grad():
-        delta = torch.linspace(-2, 2, 7).type_as(zs)
+    delta = torch.linspace(-2, 2, 7).type_as(zs)
 
     for i in range(z_dim):
         vec = Variable(torch.zeros(z_dim)).view(1, z_dim).expand(7, z_dim).contiguous().type_as(zs)
@@ -339,9 +337,9 @@ def display_samples(model, x, vis, env_name):
         xs_walk = model.decoder.forward(zs_walk.view(-1, z_dim)).sigmoid()
         xs.append(xs_walk)
 
-    xs = list(torch.cat(xs, 0).data.cpu())
+    xs = torch.cat(xs, 0).data.cpu()
 
-    vis.images(xs, 7, 2, opts={'caption': 'latent walk'}, env=f"{env_name}_traverse")
+    vis.images(xs, 7, 2, opts={'caption': f'latent walk_{curr_iter}'}, env=f"{env_name}_traverse")
 
 
 def plot_avg_elbos(iters, avg_elbos, vis, env_name):
@@ -470,7 +468,7 @@ def main():
 
                 # plot training and test ELBOs
                 if args.visdom:
-                    display_samples(vae, x, vis, args.save)
+                    display_samples(vae, x, vis, args.save, iteration)
                     plot_avg_elbos(logging_iterations, avg_elbos, vis, args.save)
 
                 utils.save_checkpoint({
