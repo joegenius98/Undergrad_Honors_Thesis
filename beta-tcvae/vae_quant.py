@@ -418,6 +418,7 @@ def main():
 
     # setup visdom for visualization
     if args.visdom:
+        print('Visdom visualization enabled')
         vis = visdom.Visdom(port=4500, log_to_filename=f"./vis_logs/{args.save}")
 
     avg_elbos = []
