@@ -97,7 +97,8 @@ def analytical_NLL(qz_params, q_dist, prior_dist, qz_samples=None):
         nlogqz_condx (K,) Variable
         nlogpz (K,) Variable
     """
-    pz_params = Variable(torch.zeros(1).type_as(qz_params.data).expand(qz_params.size()), volatile=True)
+    # pz_params = Variable(torch.zeros(1).type_as(qz_params.data).expand(qz_params.size()), volatile=True)
+    pz_params = torch.zeros(1).type_as(qz_params.data).expand(qz_params.size())
 
     nlogqz_condx = q_dist.NLL(qz_params).mean(0)
     nlogpz = prior_dist.NLL(pz_params, qz_params).mean(0)
@@ -117,7 +118,8 @@ def elbo_decomposition(vae, dataset_loader):
     logpx = 0
     for xs in dataset_loader:
         batch_size = xs.size(0)
-        xs = Variable(xs.view(batch_size, -1, 64, 64).cuda(), volatile=True)
+        # xs = Variable(xs.view(batch_size, -1, 64, 64).cuda(), volatile=True)
+        xs = xs.view(batch_size, -1, 64, 64)
         z_params = vae.encoder.forward(xs).view(batch_size, K, nparams)
         qz_params[n:n + batch_size] = z_params.data
         n += batch_size
@@ -130,7 +132,7 @@ def elbo_decomposition(vae, dataset_loader):
     # Reconstruction term
     logpx = logpx / (N * S)
 
-    qz_params = Variable(qz_params.cuda(), volatile=True)
+    # qz_params = Variable(qz_params.cuda(), volatile=True)
 
     print('Sampling from q(z).')
     # sample S times from each marginal q(z_j|x_n)

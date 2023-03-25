@@ -28,7 +28,8 @@ def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
     n = 0
     for xs in dataset_loader:
         batch_size = xs.size(0)
-        xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
+        # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
+        xs = xs.view(batch_size, 1, 64, 64)
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 
@@ -117,7 +118,8 @@ def plot_vs_gt_faces(vae, faces_dataset, save, z_inds=None):
     n = 0
     for xs in dataset_loader:
         batch_size = xs.size(0)
-        xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
+        # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
+        xs = xs.view(batch_size, 1, 64, 64)
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 

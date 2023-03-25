@@ -344,7 +344,8 @@ def display_samples(model, x, vis):
 
 def plot_elbo(train_elbo, vis):
     global win_train_elbo
-    win_train_elbo = vis.line(torch.Tensor(train_elbo), opts={'markers': True}, win=win_train_elbo)
+    win_train_elbo = vis.line(torch.Tensor(train_elbo), opts={'markers': True}, win=win_train_elbo, 
+                              update=None if win_train_elbo is None else 'append')
 
 
 def anneal_kl(args, vae, iteration):
