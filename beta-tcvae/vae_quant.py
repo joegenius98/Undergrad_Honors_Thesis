@@ -295,20 +295,20 @@ def setup_data_loaders(args, use_cuda=False):
     return train_loader
 
 
-win_samples = None
-win_test_reco = None
-win_latent_walk = None
+# win_samples = None
+# win_test_reco = None
+# win_latent_walk = None
 win_train_elbo = None
 
 
-def display_samples(model, x, vis):
-    global win_samples, win_test_reco, win_latent_walk
+def display_samples(model, x, vis, env_name):
 
     # plot random samples
     sample_mu = model.model_sample(batch_size=100).sigmoid()
     sample_mu = sample_mu
     images = list(sample_mu.view(-1, 1, 64, 64).data.cpu())
-    win_samples = vis.images(images, 10, 2, opts={'caption': 'samples'}, win=win_samples)
+    # win_samples = vis.images(images, 10, 2, opts={'caption': 'samples'}, win=win_samples)
+    vis.images(images, 10, 2, opts={'caption': 'samples'}, env=f"{env_name}_samples")
 
     # plot the reconstructed distribution for the first 50 test images
     test_imgs = x[:50, :]
@@ -316,9 +316,10 @@ def display_samples(model, x, vis):
     reco_imgs = reco_imgs.sigmoid()
     test_reco_imgs = torch.cat([
         test_imgs.view(1, -1, 64, 64), reco_imgs.view(1, -1, 64, 64)], 0).transpose(0, 1)
-    win_test_reco = vis.images(
+
+    vis.images(
         list(test_reco_imgs.contiguous().view(-1, 1, 64, 64).data.cpu()), 10, 2,
-        opts={'caption': 'test reconstruction image'}, win=win_test_reco)
+        opts={'caption': 'test reconstruction image'}, env=f'{env_name}_reconstructions')
 
     # plot latent walks (change one variable while all others stay the same)
     zs = zs[0:3]
@@ -339,13 +340,15 @@ def display_samples(model, x, vis):
         xs.append(xs_walk)
 
     xs = list(torch.cat(xs, 0).data.cpu())
-    win_latent_walk = vis.images(xs, 7, 2, opts={'caption': 'latent walk'}, win=win_latent_walk)
+
+    vis.images(xs, 7, 2, opts={'caption': 'latent walk'}, env=f"{env_name}_traverse")
 
 
-def plot_elbo(train_elbo, vis):
+def plot_avg_elbos(iters, avg_elbos, vis, env_name):
     global win_train_elbo
-    win_train_elbo = vis.line(torch.Tensor(train_elbo), opts={'markers': True}, win=win_train_elbo, 
-                              update=None if win_train_elbo is None else 'append')
+    win_train_elbo = vis.line(X=torch.Tensor(iters), Y= torch.Tensor(avg_elbos), 
+                              opts={'markers': True}, win=win_train_elbo, 
+                              update=None if win_train_elbo is None else 'append', env=f"{env_name}_lines")
 
 
 def anneal_kl(args, vae, iteration):
@@ -417,7 +420,7 @@ def main():
     if args.visdom:
         vis = visdom.Visdom(env=args.save, port=4500, log_to_filename=f"./vis_logs/{args.save}")
 
-    train_elbo = []
+    avg_elbos = []
 
     # training loop
     dataset_size = len(train_loader.dataset)
@@ -429,6 +432,7 @@ def main():
 
 
     pbar = tqdm(total=num_iterations)
+    logging_iterations = []
 
     while iteration < num_iterations:
         for i, x in enumerate(train_loader):
@@ -454,7 +458,9 @@ def main():
 
             # report training diagnostics
             if iteration % args.log_freq == 0:
-                train_elbo.append(elbo_running_mean.avg)
+                logging_iterations.append(iteration)
+
+                avg_elbos.append(elbo_running_mean.avg)
                 pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)' % (
                     iteration, time.time() - batch_time, vae.beta, vae.lamb,
                     elbo_running_mean.val, elbo_running_mean.avg))
@@ -463,8 +469,8 @@ def main():
 
                 # plot training and test ELBOs
                 if args.visdom:
-                    display_samples(vae, x, vis)
-                    plot_elbo(train_elbo, vis)
+                    display_samples(vae, x, vis, args.save)
+                    plot_avg_elbos(logging_iterations, avg_elbos, vis, args.save)
 
                 utils.save_checkpoint({
                     'state_dict': vae.state_dict(),
