@@ -15,7 +15,7 @@ VAR_THRESHOLD = 1e-2
 
 
 @torch.no_grad()
-def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
+def plot_vs_gt_shapes(vae, shapes_dataset, save, pbar, z_inds=None):
     dataset_loader = DataLoader(shapes_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
     N = len(dataset_loader.dataset)  # number of data samples
@@ -40,9 +40,9 @@ def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
     qz_means = qz_params[:, :, :, :, :, :, 0]
     var = torch.std(qz_means.contiguous().view(N, K), dim=0).pow(2)
     active_units = torch.arange(0, K)[var > VAR_THRESHOLD].long()
-    print('Active units: ' + ','.join(map(str, active_units.tolist())))
+    pbar.write('Active units: ' + ','.join(map(str, active_units.tolist())))
     n_active = len(active_units)
-    print('Number of active units: {}/{}'.format(n_active, vae.z_dim))
+    pbar.write('Number of active units: {}/{}'.format(n_active, vae.z_dim))
 
     if z_inds is None:
         z_inds = active_units
@@ -106,7 +106,7 @@ def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
 
 
 @torch.no_grad()
-def plot_vs_gt_faces(vae, faces_dataset, save, z_inds=None):
+def plot_vs_gt_faces(vae, faces_dataset, save, pbar, z_inds=None):
     dataset_loader = DataLoader(faces_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
     N = len(dataset_loader.dataset)  # number of data samples
@@ -131,9 +131,9 @@ def plot_vs_gt_faces(vae, faces_dataset, save, z_inds=None):
     qz_means = qz_params[:, :, :, :, :, 0]
     var = torch.std(qz_means.contiguous().view(N, K), dim=0).pow(2)
     active_units = torch.arange(0, K)[var > VAR_THRESHOLD].long()
-    print('Active units: ' + ','.join(map(str, active_units.tolist())))
+    pbar.write('Active units: ' + ','.join(map(str, active_units.tolist())))
     n_active = len(active_units)
-    print('Number of active units: {}/{}'.format(n_active, vae.z_dim))
+    pbar.write('Number of active units: {}/{}'.format(n_active, vae.z_dim))
 
     if z_inds is None:
         z_inds = active_units

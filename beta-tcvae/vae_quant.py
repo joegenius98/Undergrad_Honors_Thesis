@@ -307,7 +307,7 @@ def display_samples(model, x, vis, env_name, curr_iter):
     sample_mu = model.model_sample(batch_size=100).sigmoid()
     images = sample_mu.view(-1, 1, 64, 64).data.cpu()
     # win_samples = vis.images(images, 10, 2, opts={'caption': 'samples'}, win=win_samples)
-    vis.images(images, 10, 2, opts={'caption': 'samples'}, env=f"{env_name}_samples")
+    vis.images(images, 10, 2, opts={'title': f'samples_iter_{curr_iter}'}, env=f"{env_name}_samples")
 
     # plot the reconstructed distribution for the first 50 test images
     test_imgs = x[:50, :]
@@ -318,7 +318,7 @@ def display_samples(model, x, vis, env_name, curr_iter):
 
     vis.images(
         test_reco_imgs.contiguous().view(-1, 1, 64, 64).data.cpu(), 10, 2,
-        opts={'caption': 'test reconstruction image'}, env=f'{env_name}_reconstructions')
+        opts={'title': f'recon_iter_{curr_iter}'}, env=f'{env_name}_reconstructions')
 
     # plot latent walks (change one variable while all others stay the same)
     zs = zs[0:3]
@@ -339,7 +339,7 @@ def display_samples(model, x, vis, env_name, curr_iter):
 
     xs = torch.cat(xs, 0).data.cpu()
 
-    vis.images(xs, 7, 2, opts={'caption': f'latent walk_{curr_iter}'}, env=f"{env_name}_traverse")
+    vis.images(xs, 7, 2, opts={'title': f'latent walk_{curr_iter}'}, env=f"{env_name}_traverse")
 
 
 def plot_avg_elbos(iters, avg_elbos, vis, env_name):
@@ -475,7 +475,7 @@ def main():
                     'state_dict': vae.state_dict(),
                     'args': args}, args.save, iteration)
                 eval('plot_vs_gt_' + args.dataset)(vae, train_loader.dataset,
-                    os.path.join(args.save, 'gt_vs_latent_{:05d}.png'.format(iteration)))
+                    os.path.join(args.save, 'gt_vs_latent_{:05d}.png'.format(iteration)), pbar)
 
     # Report statistics after training
     vae.eval()
@@ -494,7 +494,7 @@ def main():
         'marginal_entropies': marginal_entropies,
         'joint_entropy': joint_entropy
     }, os.path.join(args.save, 'elbo_decomposition.pth'))
-    eval('plot_vs_gt_' + args.dataset)(vae, dataset_loader.dataset, os.path.join(args.save, 'gt_vs_latent.png'))
+    eval('plot_vs_gt_' + args.dataset)(vae, dataset_loader.dataset, os.path.join(args.save, 'gt_vs_latent.png'), pbar)
     return vae
 
 
