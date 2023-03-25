@@ -16,7 +16,7 @@ import lib.datasets as dset
 from lib.flows import FactorialNormalizingFlow
 
 from elbo_decomposition import elbo_decomposition
-from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401
+# from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401
 
 
 class MLPEncoder(nn.Module):
