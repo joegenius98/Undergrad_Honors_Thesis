@@ -406,7 +406,7 @@ def main():
 
     # setup visdom for visualization
     if args.visdom:
-        vis = visdom.Visdom(env=args.save, port=4500)
+        vis = visdom.Visdom(env=args.save, port=4500, log_to_filename=f"./vis_logs/{args.save}")
 
     train_elbo = []
 
