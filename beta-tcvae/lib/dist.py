@@ -228,7 +228,7 @@ class Bernoulli(nn.Module):
 
     def log_density(self, sample, params=None):
         presigm_ps = self._check_inputs(sample.size(), params).type_as(sample)
-        p = (F.sigmoid(presigm_ps) + eps) * (1 - 2 * eps)
+        p = (torch.sigmoid(presigm_ps) + eps) * (1 - 2 * eps)
         logp = sample * torch.log(p + eps) + (1 - sample) * torch.log(1 - p + eps)
         return logp
 

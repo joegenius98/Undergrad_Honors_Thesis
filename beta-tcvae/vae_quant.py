@@ -324,7 +324,10 @@ def display_samples(model, x, vis):
     zs = zs[0:3]
     batch_size, z_dim = zs.size()
     xs = []
-    delta = torch.autograd.Variable(torch.linspace(-2, 2, 7), volatile=True).type_as(zs)
+
+    with torch.no_grad():
+        delta = torch.linspace(-2, 2, 7).type_as(zs)
+
     for i in range(z_dim):
         vec = Variable(torch.zeros(z_dim)).view(1, z_dim).expand(7, z_dim).contiguous().type_as(zs)
         vec[:, i] = 1
@@ -382,6 +385,10 @@ def main():
     parser.add_argument('--save', default='test1')
     parser.add_argument('--log_freq', default=200, type=int, help='num iterations per log')
     args = parser.parse_args()
+
+    # set up the saving directory
+    if not os.path.exists(args.save):
+        os.makedirs(args.save)
 
     torch.cuda.set_device(args.gpu)
 
@@ -460,7 +467,7 @@ def main():
 
                 utils.save_checkpoint({
                     'state_dict': vae.state_dict(),
-                    'args': args}, "./checkpoints", iteration)
+                    'args': args}, args.save, iteration)
                 eval('plot_vs_gt_' + args.dataset)(vae, train_loader.dataset,
                     os.path.join(args.save, 'gt_vs_latent_{:05d}.png'.format(iteration)))
 

@@ -5,8 +5,6 @@ import os
 
 
 def save_checkpoint(state, save, curr_iter):
-    if not os.path.exists(save):
-        os.makedirs(save)
     filename = os.path.join(save, f'checkpt_iter_{curr_iter}.pth')
     torch.save(state, filename)
 
