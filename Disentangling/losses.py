@@ -41,16 +41,19 @@ def total_corr(z, z_mean, z_logvar):
     # Compute log prod_l p(z(x_j)_l) = sum_l(log(sum_i(q(z(z_j)_l|x_i)))
     # + constant) for each sample in the batch, which is a vector of size
     # [batch_size,].
-    # log_qz_product = log_qz_prob.exp().sum(dim=1, keepdim=False).log().sum(dim=1, keepdim=False)
-    dim1_maxs = torch.max(log_qz_prob, dim=1, keepdim=True).values
-    log_qz_product = torch.logsumexp(log_qz_prob - dim1_maxs, dim=1).sum(dim=1, keepdim=False)
+    log_qz_product = log_qz_prob.exp().sum(dim=1, keepdim=False).log().sum(dim=1, keepdim=False)
+
+    ## numerically stable, but changes the semantic of total correlation
+
+    # dim1_maxs = torch.max(log_qz_prob, dim=1, keepdim=True).values
+    # log_qz_product = torch.logsumexp(log_qz_prob - dim1_maxs, dim=1).sum(dim=1, keepdim=False)
 
 
     # Compute log(q(z(x_j))) as log(sum_i(q(z(x_j)|x_i))) + constant =
     # log(sum_i(prod_l q(z(x_j)_l|x_i))) + constant.
-    # log_qz = log_qz_prob.sum(dim=2, keepdim=False).exp().sum(dim=1, keepdim=False).log()
-    dim2sumdim1_maxs = torch.max(log_qz_prob.sum(dim=2), dim=1, keepdim=True).values
-    log_qz = torch.logsumexp(log_qz_prob.sum(dim=2) - dim2sumdim1_maxs, dim=1)
+    log_qz = log_qz_prob.sum(dim=2, keepdim=False).exp().sum(dim=1, keepdim=False).log()
+    # dim2sumdim1_maxs = torch.max(log_qz_prob.sum(dim=2), dim=1, keepdim=True).values
+    # log_qz = torch.logsumexp(log_qz_prob.sum(dim=2) - dim2sumdim1_maxs, dim=1)
 
     return torch.abs((log_qz - log_qz_product).mean())
 
