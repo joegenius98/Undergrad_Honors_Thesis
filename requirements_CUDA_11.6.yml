@@ -13,3 +13,4 @@ dependencies:
     - jsonpatch
     - tqdm
     - matplotlib
+    - brewer2mpl
