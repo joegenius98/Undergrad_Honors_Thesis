@@ -229,15 +229,15 @@ class Solver(object):
                 x = cuda(x, self.use_cuda)
                 z_samples, x_recon, mu, logvar = self.net(x)
 
-                # if torch.any(torch.isnan(z_samples)):
-                #     raise ValueError("NaN z_samples")
-                # if torch.any(torch.isnan(x_recon)):
-                #     raise ValueError("NaN x_recon")
-                # if torch.any(torch.isnan(mu)):
-                #     raise ValueError("NaN mu")
-                # if torch.any(torch.isnan(z_samples)):
-                #     raise ValueError("NaN z_samples")
+                if torch.any(torch.isnan(mu)):
+                    raise ValueError("NaN mu")
+                if torch.any(torch.isnan(logvar)):
+                    raise ValueError("NaN logvar")
+                if torch.any(torch.isnan(z_samples)):
+                    raise ValueError("NaN z_samples")
 
+                if torch.any(torch.isnan(x_recon)):
+                    raise ValueError("NaN x_recon")
 
                 """Calculating loss"""
                 recon_loss = reconstruction_loss(x, x_recon, self.decoder_dist)
