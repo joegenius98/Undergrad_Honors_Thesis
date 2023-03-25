@@ -150,7 +150,7 @@ def return_data(args):
     train_data = dset(**train_kwargs)
     train_loader = DataLoader(train_data,
                               batch_size=batch_size,
-                            #   collate_fn=triplet_batch_dSprites,
+                              collate_fn=triplet_batch_dSprites,
                               shuffle=True,
                               num_workers=num_workers,
                               pin_memory=True,
