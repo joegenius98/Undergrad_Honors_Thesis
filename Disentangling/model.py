@@ -8,6 +8,8 @@ import torch.nn.init as init
 
 
 def reparametrize(mu, logvar):
+    # logvar.div(2) --> logsigma
+    # logsigma.exp() --> sigma, aka standard deviation
     std_dev = logvar.div(2).exp()
     # std_dev = logvar.exp() ** 0.5
     # eps = Variable(std_dev.data.new(std_dev.size()).normal_())
