@@ -14,6 +14,7 @@ plt.style.use('ggplot')
 VAR_THRESHOLD = 1e-2
 
 
+@torch.no_grad()
 def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
     dataset_loader = DataLoader(shapes_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
@@ -29,7 +30,7 @@ def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
     for xs in dataset_loader:
         batch_size = xs.size(0)
         # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
-        xs = xs.view(batch_size, 1, 64, 64)
+        xs = xs.view(batch_size, 1, 64, 64).cuda()
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 
@@ -104,6 +105,7 @@ def plot_vs_gt_shapes(vae, shapes_dataset, save, z_inds=None):
     plt.close()
 
 
+@torch.no_grad()
 def plot_vs_gt_faces(vae, faces_dataset, save, z_inds=None):
     dataset_loader = DataLoader(faces_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
@@ -119,7 +121,7 @@ def plot_vs_gt_faces(vae, faces_dataset, save, z_inds=None):
     for xs in dataset_loader:
         batch_size = xs.size(0)
         # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
-        xs = xs.view(batch_size, 1, 64, 64)
+        xs = xs.view(batch_size, 1, 64, 64).cuda()
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 

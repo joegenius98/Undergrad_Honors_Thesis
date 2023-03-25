@@ -82,6 +82,7 @@ def logsumexp(value, dim=None, keepdim=False):
             return m + torch.log(sum_exp)
 
 
+@torch.no_grad()
 def analytical_NLL(qz_params, q_dist, prior_dist, qz_samples=None):
     """Computes the quantities
         1/N sum_n=1^N E_{q(z|x)} [ - log q(z|x) ]
@@ -105,6 +106,7 @@ def analytical_NLL(qz_params, q_dist, prior_dist, qz_samples=None):
     return nlogqz_condx, nlogpz
 
 
+@torch.no_grad()
 def elbo_decomposition(vae, dataset_loader):
     N = len(dataset_loader.dataset)  # number of data samples
     K = vae.z_dim                    # number of latent variables
@@ -113,13 +115,13 @@ def elbo_decomposition(vae, dataset_loader):
 
     print('Computing q(z|x) distributions.')
     # compute the marginal q(z_j|x_n) distributions
-    qz_params = torch.Tensor(N, K, nparams)
+    qz_params = torch.Tensor(N, K, nparams).cuda()
     n = 0
     logpx = 0
     for xs in dataset_loader:
         batch_size = xs.size(0)
         # xs = Variable(xs.view(batch_size, -1, 64, 64).cuda(), volatile=True)
-        xs = xs.view(batch_size, -1, 64, 64)
+        xs = xs.view(batch_size, -1, 64, 64).cuda()
         z_params = vae.encoder.forward(xs).view(batch_size, K, nparams)
         qz_params[n:n + batch_size] = z_params.data
         n += batch_size

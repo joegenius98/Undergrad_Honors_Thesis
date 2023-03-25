@@ -67,6 +67,7 @@ def estimate_entropies(qz_samples, qz_params, q_dist, n_samples=10000, weights=N
     return entropies
 
 
+@torch.no_grad()
 def mutual_info_metric_shapes(vae, shapes_dataset):
     dataset_loader = DataLoader(shapes_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
@@ -82,7 +83,7 @@ def mutual_info_metric_shapes(vae, shapes_dataset):
     for xs in dataset_loader:
         batch_size = xs.size(0)
         # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
-        xs = xs.view(batch_size, 1, 64, 64)
+        xs = xs.view(batch_size, 1, 64, 64).cuda()
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 
@@ -151,6 +152,7 @@ def mutual_info_metric_shapes(vae, shapes_dataset):
     return metric, marginal_entropies, cond_entropies
 
 
+@torch.no_grad()
 def mutual_info_metric_faces(vae, shapes_dataset):
     dataset_loader = DataLoader(shapes_dataset, batch_size=1000, num_workers=1, shuffle=False)
 
@@ -166,7 +168,7 @@ def mutual_info_metric_faces(vae, shapes_dataset):
     for xs in dataset_loader:
         batch_size = xs.size(0)
         # xs = Variable(xs.view(batch_size, 1, 64, 64).cuda(), volatile=True)
-        xs = xs.view(batch_size, 1, 64, 64)
+        xs = xs.view(batch_size, 1, 64, 64).cuda()
         qz_params[n:n + batch_size] = vae.encoder.forward(xs).view(batch_size, vae.z_dim, nparams).data
         n += batch_size
 
