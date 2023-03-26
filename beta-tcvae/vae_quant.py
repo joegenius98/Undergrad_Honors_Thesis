@@ -298,7 +298,8 @@ def setup_data_loaders(args, use_cuda=False):
     kwargs = {'num_workers': 4, 'pin_memory': use_cuda}
     train_loader = DataLoader(dataset=train_set,
         batch_size=args.batch_size, shuffle=True, 
-        collate_fn=augmented_batch if args.use_augment_dataloader else None,
+        collate_fn=augmented_batch if \
+              (hasattr(args, 'use_augment_dataloader') and args.use_augment_dataloader) else None,
         **kwargs)
 
     return train_loader
