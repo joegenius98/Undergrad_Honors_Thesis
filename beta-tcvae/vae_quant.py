@@ -355,17 +355,18 @@ def plot_avg_elbos(iters, avg_elbos, vis, env_name):
                               update=None if win_train_elbo is None else 'append', env=f"{env_name}_lines")
 
 def plot_k_factor_losses(iters, avg_kFactSim_losses, avg_kFactContrast_losses, vis, env_name):
-    global win_k_sim, win_k_contrast
+    # global win_k_sim, win_k_contrast
+    global win_k_sim
 
     win_k_sim = vis.line(X=torch.Tensor(iters), Y=torch.Tensor(avg_kFactSim_losses),
                          opts={'title': 'Running Avg. K-similarity loss vs. iterations', 'markers': True}, win=win_k_sim,
                          update=None if win_k_sim is None else 'append', 
                          env=f"{env_name}_lines")
 
-    win_k_contrast = vis.line(X=torch.Tensor(iters), Y=torch.Tensor(avg_kFactContrast_losses),
-                         opts={'title': 'Running Avg. K-contrastive loss vs. iterations', 'markers': True}, win=win_k_contrast,
-                         update=None if win_k_sim is None else 'append', 
-                         env=f"{env_name}_lines")
+    # win_k_contrast = vis.line(X=torch.Tensor(iters), Y=torch.Tensor(avg_kFactContrast_losses),
+    #                      opts={'title': 'Running Avg. K-contrastive loss vs. iterations', 'markers': True}, win=win_k_contrast,
+    #                      update=None if win_k_sim is None else 'append', 
+    #                      env=f"{env_name}_lines")
 
 
 
@@ -506,7 +507,10 @@ def main():
 
             (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
             elbo_running_mean.update(elbo.mean().item())
-            kSimLoss_running_mean.update(k_sim_loss.item())
+
+            if isinstance(k_sim_loss, torch.Tensor):
+                kSimLoss_running_mean.update(k_sim_loss.item())
+
             optimizer.step()
 
             # report training diagnostics
@@ -514,11 +518,17 @@ def main():
                 logging_iterations.append(iteration)
 
                 avg_elbos.append(elbo_running_mean.avg)
+
+                if kSimLoss_running_mean.val is None:
+                    kSimLoss_running_mean_val_str = 'None'
+                else:
+                    kSimLoss_running_mean_val_str = '%.2f' % kSimLoss_running_mean.val
+
                 pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)\n\
-                           k_sim_loss: %.2f (%.2f)' % (
+                           k_sim_loss: %s (%.2f)' % (
                     iteration, time.time() - batch_time, vae.beta, vae.lamb,
                     elbo_running_mean.val, elbo_running_mean.avg,
-                    kSimLoss_running_mean.val, kSimLoss_running_mean.avg))
+                    kSimLoss_running_mean_val_str, kSimLoss_running_mean.avg))
 
                 vae.eval()
 
