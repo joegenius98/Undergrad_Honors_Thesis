@@ -136,7 +136,7 @@ def mutual_info_metric_shapes(vae, shapes_dataset):
 
         cond_entropies[2] += cond_entropies_i.cpu() / 32
 
-    print('Estimating conditional entropies for pox y.')
+    print('Estimating conditional entropies for pos y.')
     for i in range(32):
         qz_samples_scale = qz_samples[:, :, :, :, i, :].contiguous()
         qz_params_scale = qz_params[:, :, :, :, i, :].contiguous()
@@ -235,11 +235,16 @@ if __name__ == '__main__':
 
     if args.gpu != 0:
         torch.cuda.set_device(args.gpu)
+
     vae, dataset, cpargs = load_model_and_dataset(args.checkpt)
     metric, marginal_entropies, cond_entropies = eval('mutual_info_metric_' + cpargs.dataset)(vae, dataset)
+
     torch.save({
         'metric': metric,
         'marginal_entropies': marginal_entropies,
         'cond_entropies': cond_entropies,
     }, os.path.join(args.save, 'disentanglement_metric.pth'))
+
     print('MIG: {:.2f}'.format(metric))
+    print(f'Marginal entropies: {marginal_entropies}')
+    print(f'Conditional entropies: {cond_entropies}')
