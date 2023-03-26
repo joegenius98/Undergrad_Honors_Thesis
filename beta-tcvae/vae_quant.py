@@ -413,7 +413,7 @@ def main():
     parser.add_argument('--visdom_port', type=int, default=4500, help='visdom port')
 
     parser.add_argument('--save', default='test1')
-    parser.add_argument('--log_freq', default=200, type=int, help='num iterations per log')
+    parser.add_argument('--log_freq', default=200, type=int, help='num iterations per log and model checkpoint')
     parser.add_argument('--checkpt_fp', type=str, default = None, help="filepath of checkpoint to use")
     args = parser.parse_args()
 
