@@ -424,10 +424,17 @@ def main():
     torch.cuda.set_device(args.gpu)
 
     if args.checkpt_fp:
+        print("Loading your checkpoint...")
         # import must stay here to avoid circular import errors
         from metric_helpers.loader import load_model_and_dataset
 
         vae, _, _ = load_model_and_dataset(args.checkpt_fp)
+
+    if args.beta_anneal:
+        print("Beta annealing will occur.")
+
+    if args.lambda_anneal:
+        print("Lambda annealing will occur.")
 
     else:
         # setup the VAE
