@@ -359,7 +359,7 @@ def plot_avg_elbos(iters, avg_elbos, vis, env_name):
                               opts={'title': 'Running Avg. ELBO vs. iterations', 'markers': True}, win=win_train_elbo, 
                               update=None if win_train_elbo is None else 'append', env=f"{env_name}_lines")
 
-def plot_k_factor_losses(iters, avg_kFactSim_losses, avg_kFactContrast_losses, vis, env_name):
+def plot_k_factor_losses(iters, avg_kFactSim_losses, vis, env_name):
     # global win_k_sim, win_k_contrast
     global win_k_sim
 
@@ -481,6 +481,7 @@ def main():
         vis = visdom.Visdom(port=args.visdom_port, log_to_filename=f"./vis_logs/{args.save}")
 
     avg_elbos = []
+    avg_k_sim_losses = []
 
     # training loop
     dataset_size = len(train_loader.dataset)
@@ -530,6 +531,7 @@ def main():
 
             if isinstance(k_sim_loss, torch.Tensor):
                 kSimLoss_running_mean.update(k_sim_loss.item())
+                avg_k_sim_losses.append(k_sim_loss.item())
 
             optimizer.step()
 
@@ -556,6 +558,9 @@ def main():
                 if args.visdom:
                     display_samples(vae, x, vis, args.save, iteration)
                     plot_avg_elbos(logging_iterations, avg_elbos, vis, args.save)
+
+                    if args.use_data_augmenter:
+                        plot_k_factor_losses(logging_iterations, avg_k_sim_losses, vis, args.save)
 
                 utils.save_checkpoint({
                     'state_dict': vae.state_dict(),
