@@ -16,9 +16,11 @@ import lib.datasets as dset
 from lib.flows import FactorialNormalizingFlow
 
 from elbo_decomposition import elbo_decomposition
-from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401
-
+# these are used in an `eval('plot_vs_gt...')` call
+from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
 from tqdm import tqdm 
+from metric_helpers.loader import load_model_and_dataset
+from thesis_losses import contrastive_losses
 
 class MLPEncoder(nn.Module):
     def __init__(self, output_dim):
@@ -202,12 +204,14 @@ class VAE(nn.Module):
         W[M-1, 0] = strat_weight
         return W.log()
 
-    def elbo(self, x, dataset_size):
+    def get_objectives(self, x, dataset_size, num_sim_factors):
+        """Returns the estimated training ELBO, estimated ELBO, and k-factor similiarity loss"""
         # log p(x|z) + log p(z) - log q(z|x)
         batch_size = x.size(0)
         x = x.view(batch_size, 1, 64, 64)
         prior_params = self._get_prior_params(batch_size)
         x_recon, x_params, zs, z_params = self.reconstruct_img(x)
+
         logpx = self.x_dist.log_density(x, params=x_params).view(batch_size, -1).sum(1)
         logpz = self.prior_dist.log_density(zs, params=prior_params).view(batch_size, -1).sum(1)
         logqz_condx = self.q_dist.log_density(zs, params=z_params).view(batch_size, -1).sum(1)
@@ -224,11 +228,11 @@ class VAE(nn.Module):
         )
 
         if not self.mss:
-            # minibatch weighted sampling
+            # minibatch stratified sampling
             logqz_prodmarginals = (logsumexp(_logqz, dim=1, keepdim=False) - math.log(batch_size * dataset_size)).sum(1)
             logqz = (logsumexp(_logqz.sum(2), dim=1, keepdim=False) - math.log(batch_size * dataset_size))
         else:
-            # minibatch stratified sampling
+            # minibatch weighted sampling
             logiw_matrix = Variable(self._log_importance_weight_matrix(batch_size, dataset_size).type_as(_logqz.data))
             logqz = logsumexp(logiw_matrix + _logqz.sum(2), dim=1, keepdim=False)
             logqz_prodmarginals = logsumexp(
@@ -256,7 +260,7 @@ class VAE(nn.Module):
                     self.beta * (logqz - logqz_prodmarginals) - \
                     (1 - self.lamb) * (logqz_prodmarginals - logpz)
 
-        return modified_elbo, elbo.detach()
+        return modified_elbo, elbo.detach(), contrastive_losses(zs, num_sim_factors)
 
 
 def logsumexp(value, dim=None, keepdim=False):
@@ -299,6 +303,7 @@ def setup_data_loaders(args, use_cuda=False):
 # win_test_reco = None
 # win_latent_walk = None
 win_train_elbo = None
+win_k_sim, win_k_contrast = None, None
 
 @torch.no_grad()
 def display_samples(model, x, vis, env_name, curr_iter):
@@ -345,8 +350,22 @@ def display_samples(model, x, vis, env_name, curr_iter):
 def plot_avg_elbos(iters, avg_elbos, vis, env_name):
     global win_train_elbo
     win_train_elbo = vis.line(X=torch.Tensor(iters), Y= torch.Tensor(avg_elbos), 
-                              opts={'markers': True}, win=win_train_elbo, 
+                              opts={'title': 'Running Avg. ELBO vs. iterations', 'markers': True}, win=win_train_elbo, 
                               update=None if win_train_elbo is None else 'append', env=f"{env_name}_lines")
+
+def plot_k_factor_losses(iters, avg_kFactSim_losses, avg_kFactContrast_losses, vis, env_name):
+    global win_k_sim, win_k_contrast
+
+    win_k_sim = vis.line(X=torch.Tensor(iters), Y=torch.Tensor(avg_kFactSim_losses),
+                         opts={'title': 'Running Avg. K-similarity loss vs. iterations', 'markers': True}, win=win_k_sim,
+                         update=None if win_k_sim is None else 'append', 
+                         env=f"{env_name}_lines")
+
+    win_k_contrast = vis.line(X=torch.Tensor(iters), Y=torch.Tensor(avg_kFactContrast_losses),
+                         opts={'title': 'Running Avg. K-contrastive loss vs. iterations', 'markers': True}, win=win_k_contrast,
+                         update=None if win_k_sim is None else 'append', 
+                         env=f"{env_name}_lines")
+
 
 
 def anneal_kl(args, vae, iteration):
@@ -380,12 +399,17 @@ def main():
     parser.add_argument('--exclude-mutinfo', action='store_true')
     parser.add_argument('--beta-anneal', action='store_true')
     parser.add_argument('--lambda-anneal', action='store_true')
+    
+    parser.add_argument('--num_sim_factors', type=int, default=None, help='k: for k-factor similarity loss')
+    parser.add_argument('--augment_factor', type=int, default=None, help='weight of mean-squared err. of k-factor similarity loss')
+
     parser.add_argument('--mss', action='store_true', help='use the improved minibatch estimator')
     parser.add_argument('--conv', action='store_true')
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--visdom', action='store_true', help='whether plotting in visdom is desired')
     parser.add_argument('--save', default='test1')
     parser.add_argument('--log_freq', default=200, type=int, help='num iterations per log')
+    parser.add_argument('--checkpt_fp', type=str, default = None, help="filepath of checkpoint to use")
     args = parser.parse_args()
 
     # set up the saving directory
@@ -394,25 +418,30 @@ def main():
 
     torch.cuda.set_device(args.gpu)
 
-    # data loader
-    train_loader = setup_data_loaders(args, use_cuda=True)
+    if args.checkpt_fp:
+        vae, _, _ = load_model_and_dataset(args.checkpt_fp)
 
-    # setup the VAE
-    if args.dist == 'normal':
-        prior_dist = dist.Normal()
-        q_dist = dist.Normal()
-    elif args.dist == 'laplace':
-        prior_dist = dist.Laplace()
-        q_dist = dist.Laplace()
-    elif args.dist == 'flow':
-        prior_dist = FactorialNormalizingFlow(dim=args.latent_dim, nsteps=32)
-        q_dist = dist.Normal()
+    else:
+        # setup the VAE
+        if args.dist == 'normal':
+            prior_dist = dist.Normal()
+            q_dist = dist.Normal()
+        elif args.dist == 'laplace':
+            prior_dist = dist.Laplace()
+            q_dist = dist.Laplace()
+        elif args.dist == 'flow':
+            prior_dist = FactorialNormalizingFlow(dim=args.latent_dim, nsteps=32)
+            q_dist = dist.Normal()
 
-    vae = VAE(z_dim=args.latent_dim, use_cuda=True, prior_dist=prior_dist, q_dist=q_dist,
-        include_mutinfo=not args.exclude_mutinfo, tcvae=args.tcvae, conv=args.conv, mss=args.mss)
+        vae = VAE(z_dim=args.latent_dim, use_cuda=True, prior_dist=prior_dist, q_dist=q_dist,
+            include_mutinfo=not args.exclude_mutinfo, tcvae=args.tcvae, conv=args.conv, mss=args.mss)
 
     # setup the optimizer
     optimizer = optim.Adam(vae.parameters(), lr=args.learning_rate)
+
+
+    # data loader
+    train_loader = setup_data_loaders(args, use_cuda=True)
 
     # setup visdom for visualization
     if args.visdom:
@@ -430,6 +459,7 @@ def main():
     # initialize loss accumulator
     # elbo_running_mean = utils.RunningAverageMeter()
     elbo_running_mean = utils.AverageMeter()
+    kSimLoss_running_mean = utils.AverageMeter()
 
 
     pbar = tqdm(total=num_iterations)
@@ -450,11 +480,19 @@ def main():
             # wrap the mini-batch in a PyTorch Variable
             x = Variable(x)
             # do ELBO gradient and accumulate loss
-            obj, elbo = vae.elbo(x, dataset_size)
+            obj, elbo, k_sim_loss = vae.get_objectives(x, dataset_size, args.num_sim_factors)
+
             if utils.isnan(obj).any():
                 raise ValueError('NaN spotted in objective.')
-            obj.mean().mul(-1).backward()
+            if utils.isnan(elbo).any():
+                raise ValueError('NaN spotted in elbo')
+            if utils.isnan(k_sim_loss).any():
+                raise ValueError('NaN spotted in k_sim_loss')
+
+
+            (obj.mean().mul(-1) + args.augment_factor * k_sim_loss).backward()
             elbo_running_mean.update(elbo.mean().item())
+            kSimLoss_running_mean.update(k_sim_loss.item())
             optimizer.step()
 
             # report training diagnostics
@@ -462,9 +500,11 @@ def main():
                 logging_iterations.append(iteration)
 
                 avg_elbos.append(elbo_running_mean.avg)
-                pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)' % (
+                pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)\n\
+                           k_sim_loss: %.2f (%.2f)' % (
                     iteration, time.time() - batch_time, vae.beta, vae.lamb,
-                    elbo_running_mean.val, elbo_running_mean.avg))
+                    elbo_running_mean.val, elbo_running_mean.avg,
+                    kSimLoss_running_mean.val, kSimLoss_running_mean.avg))
 
                 vae.eval()
 
