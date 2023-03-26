@@ -11,8 +11,11 @@ image: a PyTorch tensor defined by (# channels, height, width) shape
 """
 
 # 1. rotation
-def random_rotation(image):
+def continuous_random_rotate(image):
     return rotate(image, random.randrange(0, 360))
+
+def discrete_random_rotate(image):
+    return rotate(image, random.choice([90, 180, 270]))
 
 # 2. scaling
 
@@ -123,7 +126,7 @@ def translate_shape(image):
 
 # 4. Flipping (horizontal/vertical) is built-into PyTorch
 
-DSPRITE_AUGMENTATIONS = [random_rotation, shrink_shape_and_pad, translate_shape, hflip, vflip]
+DSPRITE_AUGMENTATIONS = [discrete_random_rotate, continuous_random_rotate, shrink_shape_and_pad, translate_shape, hflip, vflip]
 # TODO: include maybe more in AUGMENTATIONS, 
 # e.g. Gaussian blurring and other standard self-supervised learning augmentations
-AUGMENTATIONS = [random_rotation, shrink_and_pad, hflip, vflip]
+AUGMENTATIONS = [discrete_random_rotate, shrink_and_pad, hflip, vflip]
