@@ -123,7 +123,7 @@ def augmented_batch(batch):
     
     for i in range(batch_size):         
         first_image = batch[i]
-        first_image_augmented = discrete_random_rotate(batch[i + 1])
+        first_image_augmented = discrete_random_rotate(batch[i])
 
         images_batch[2*i, :, :, :] = first_image
         images_batch[2*i+1, :, :, :] = first_image_augmented
