@@ -417,6 +417,8 @@ def main():
     # setup visdom for visualization
     if args.visdom:
         print('Visdom visualization enabled')
+        if not os.path.exists("./vis_logs"):
+            os.mkdir("./vis_logs")
         vis = visdom.Visdom(port=4500, log_to_filename=f"./vis_logs/{args.save}")
 
     avg_elbos = []
