@@ -18,8 +18,10 @@ from lib.flows import FactorialNormalizingFlow
 from elbo_decomposition import elbo_decomposition
 # these are used in an `eval('plot_vs_gt...')` call
 from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
-from tqdm import tqdm 
 from thesis_losses import contrastive_losses
+
+from tqdm import tqdm 
+
 
 class MLPEncoder(nn.Module):
     def __init__(self, output_dim):
@@ -493,8 +495,10 @@ def main():
                 raise ValueError('NaN spotted in objective.')
             if utils.isnan(elbo).any():
                 raise ValueError('NaN spotted in elbo')
-            if utils.isnan(k_sim_loss).any():
-                raise ValueError('NaN spotted in k_sim_loss')
+            
+            if isinstance(k_sim_loss, torch.Tensor): 
+                if utils.isnan(k_sim_loss).any():
+                    raise ValueError('NaN spotted in k_sim_loss')
             
             if augment_factor is None:
                 augment_factor = 0
