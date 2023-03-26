@@ -424,6 +424,10 @@ def main():
     parser.add_argument('--checkpt_fp', type=str, default = None, help="filepath of checkpoint to use")
     args = parser.parse_args()
 
+    # confirm mutual existence of args.
+    if args.use_augment_dataloader:
+        assert args.num_sim_factors and args.augment_factor
+
     # set up the saving directory
     if not os.path.exists(args.save):
         os.makedirs(args.save)
