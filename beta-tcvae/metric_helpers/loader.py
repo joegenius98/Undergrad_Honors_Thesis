@@ -1,7 +1,7 @@
 import torch
 import lib.dist as dist
 import lib.flows as flows
-import vae_quant
+from vae_quant import VAE, setup_data_loaders
 
 
 def load_model_and_dataset(checkpt_filename):
@@ -35,10 +35,10 @@ def load_model_and_dataset(checkpt_filename):
     #     vae.encoder = model.encoder
     #     vae.decoder = model.decoder
     # else:
-    vae = vae_quant.VAE(
+    vae = VAE(
         z_dim=args.latent_dim, use_cuda=True, prior_dist=prior_dist, q_dist=q_dist, conv=args.conv)
     vae.load_state_dict(state_dict, strict=False)
 
     # dataset loader
-    loader = vae_quant.setup_data_loaders(args)
+    loader = setup_data_loaders(args)
     return vae, loader.dataset, args

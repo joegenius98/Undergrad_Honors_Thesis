@@ -19,7 +19,6 @@ from elbo_decomposition import elbo_decomposition
 # these are used in an `eval('plot_vs_gt...')` call
 from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
 from tqdm import tqdm 
-from metric_helpers.loader import load_model_and_dataset
 from thesis_losses import contrastive_losses
 
 class MLPEncoder(nn.Module):
@@ -299,6 +298,9 @@ def setup_data_loaders(args, use_cuda=False):
     return train_loader
 
 
+# import must stay here to avoid circular import errors
+from metric_helpers.loader import load_model_and_dataset
+
 # win_samples = None
 # win_test_reco = None
 # win_latent_walk = None
@@ -406,7 +408,10 @@ def main():
     parser.add_argument('--mss', action='store_true', help='use the improved minibatch estimator')
     parser.add_argument('--conv', action='store_true')
     parser.add_argument('--gpu', type=int, default=0)
+
     parser.add_argument('--visdom', action='store_true', help='whether plotting in visdom is desired')
+    parser.add_argument('--visdom_port', type=int, default=4500, help='visdom port')
+
     parser.add_argument('--save', default='test1')
     parser.add_argument('--log_freq', default=200, type=int, help='num iterations per log')
     parser.add_argument('--checkpt_fp', type=str, default = None, help="filepath of checkpoint to use")
@@ -448,7 +453,7 @@ def main():
         print('Visdom visualization enabled')
         if not os.path.exists("./vis_logs"):
             os.mkdir("./vis_logs")
-        vis = visdom.Visdom(port=4500, log_to_filename=f"./vis_logs/{args.save}")
+        vis = visdom.Visdom(port=args.visdom_port, log_to_filename=f"./vis_logs/{args.save}")
 
     avg_elbos = []
 
