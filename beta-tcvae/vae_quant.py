@@ -325,7 +325,7 @@ def display_samples(model, x, vis, env_name, curr_iter):
         opts={'title': f'recon_iter_{curr_iter}'}, env=f'{env_name}_reconstructions')
 
     # plot latent walks (change one variable while all others stay the same)
-    zs = zs[0:3]
+    zs = zs[0:2]
     batch_size, z_dim = zs.size()
     xs = []
 
@@ -441,6 +441,8 @@ def main():
         vae = VAE(z_dim=args.latent_dim, use_cuda=True, prior_dist=prior_dist, q_dist=q_dist,
             include_mutinfo=not args.exclude_mutinfo, tcvae=args.tcvae, conv=args.conv, mss=args.mss)
 
+    augment_factor = args.augment_factor
+
     # setup the optimizer
     optimizer = optim.Adam(vae.parameters(), lr=args.learning_rate)
 
@@ -493,6 +495,9 @@ def main():
                 raise ValueError('NaN spotted in elbo')
             if utils.isnan(k_sim_loss).any():
                 raise ValueError('NaN spotted in k_sim_loss')
+            
+            if augment_factor is None:
+                augment_factor = 0
 
 
             (obj.mean().mul(-1) + args.augment_factor * k_sim_loss).backward()
