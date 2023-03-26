@@ -1,6 +1,14 @@
 #!/bin/bash
 
-log_dir=${1:-""}
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <port> <log_dir>"
+    exit 1
+fi
+
+port=$1
+log_dir=${2:-""}
+
 [ -d "$log_dir" ] && echo "Directory "$log_dir" exists."
 
 # Check if the log directory exists
