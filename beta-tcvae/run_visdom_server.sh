@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-if [ $# -lt 2 ]; then
+if [ $# -eq 0 ]; then
     echo "Usage: $0 <1. mandatory: port> <2. optional: log_dir>"
     exit 1
 fi
