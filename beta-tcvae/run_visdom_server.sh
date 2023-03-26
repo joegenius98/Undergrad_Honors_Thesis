@@ -2,7 +2,7 @@
 
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <port> <log_dir>"
+    echo "Usage: $0 <1. mandatory: port> <2. optional: log_dir>"
     exit 1
 fi
 
