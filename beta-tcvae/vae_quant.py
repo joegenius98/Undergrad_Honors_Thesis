@@ -430,12 +430,6 @@ def main():
 
         vae, _, _ = load_model_and_dataset(args.checkpt_fp)
 
-    if args.beta_anneal:
-        print("Beta annealing will occur.")
-
-    if args.lambda_anneal:
-        print("Lambda annealing will occur.")
-
     else:
         # setup the VAE
         if args.dist == 'normal':
@@ -450,6 +444,13 @@ def main():
 
         vae = VAE(z_dim=args.latent_dim, use_cuda=True, prior_dist=prior_dist, q_dist=q_dist,
             include_mutinfo=not args.exclude_mutinfo, tcvae=args.tcvae, conv=args.conv, mss=args.mss)
+    
+
+    if args.beta_anneal:
+        print("Beta annealing will occur.")
+
+    if args.lambda_anneal:
+        print("Lambda annealing will occur.")
 
     augment_factor = args.augment_factor
 
