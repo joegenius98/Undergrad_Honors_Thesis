@@ -18,7 +18,9 @@ from lib.flows import FactorialNormalizingFlow
 from elbo_decomposition import elbo_decomposition
 # these are used in an `eval('plot_vs_gt...')` call
 from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
+
 from thesis_losses import contrastive_losses
+from thesis_augmentations import augmented_batch
 
 from tqdm import tqdm 
 
@@ -284,7 +286,6 @@ def logsumexp(value, dim=None, keepdim=False):
         else:
             return m + torch.log(sum_exp)
 
-
 # for loading and batching datasets
 def setup_data_loaders(args, use_cuda=False):
     if args.dataset == 'shapes':
@@ -296,7 +297,10 @@ def setup_data_loaders(args, use_cuda=False):
 
     kwargs = {'num_workers': 4, 'pin_memory': use_cuda}
     train_loader = DataLoader(dataset=train_set,
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+        batch_size=args.batch_size, shuffle=True, 
+        collate_fn=augmented_batch if args.use_augment_dataloader else None,
+        **kwargs)
+
     return train_loader
 
 
@@ -381,7 +385,8 @@ def anneal_kl(args, vae, iteration):
     else:
         vae.lamb = 0
     if args.beta_anneal:
-        vae.beta = min(args.beta, args.beta / warmup_iter * iteration)  # 0 --> 1
+        # vae.beta = min(args.beta, args.beta / warmup_iter * iteration)  # 0 --> 1
+        vae.beta = min(args.beta, 1 / warmup_iter * iteration)
     else:
         vae.beta = args.beta
 
