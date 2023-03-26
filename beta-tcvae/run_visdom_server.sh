@@ -18,11 +18,11 @@ if [ ! -z "$log_dir" ] && [ ! -f "$log_dir" ]; then
 fi
 
 # Start the visdom server
-nohup python -m visdom.server -port $port &> visdom_server.out &
+nohup python -m visdom.server -port $port &> visdom_server_port_$port.out &
 
 # If a log directory is provided, replay the log using Visdom
 if [ ! -z "$log_dir" ] ; then
-  nohup python -c "import visdom; vis = visdom.Visdom(port=$port); vis.replay_log('$log_dir')" &> vis_replay_script.out &
+  nohup python -c "import visdom; vis = visdom.Visdom(port=$port); vis.replay_log('$log_dir')" &> vis_replay_script_port_$port.out &
 fi
 
 
