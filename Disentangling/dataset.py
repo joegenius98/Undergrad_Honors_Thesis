@@ -10,7 +10,7 @@ from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
 # from augmentations import DSPRITE_AUGMENTATIONS
-from augmentations import translate_shape
+from augmentations import discrete_random_rotate
 
 class CustomImageFolder(ImageFolder):
     def __init__(self, root, transform=None):
@@ -46,7 +46,7 @@ def triplet_batch_dSprites(batch):
     
     Keyword arguments:
     batch -- a list of images, its length is batch_size
-    Return: Tensor with shape (batch_size, 3 or 2, num_channels, height, width)
+    Return: Tensor with shape (batch_size, 3 * num_channels, height, width)
     """
 
     # get image dimensions, assuming all images are the same size
@@ -67,7 +67,7 @@ def triplet_batch_dSprites(batch):
             first_image = batch[first_image_index]
             second_image = batch[second_image_index]
             # first_image_augmented = random.choice(DSPRITE_AUGMENTATIONS)(first_image)
-            first_image_augmented = translate_shape(first_image)
+            first_image_augmented = discrete_random_rotate(first_image)
 
             images_batch[3*i, :, :, :] = first_image
             images_batch[3*i+1, :, :, :] = first_image_augmented
@@ -82,7 +82,7 @@ def triplet_batch_dSprites(batch):
         last_idx = batch_size-1
         images_batch[3*last_idx, :, :, :] = batch[batch_size-1]
         # images_batch[3*last_idx+1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
-        images_batch[3*last_idx+1, :, :, :] = translate_shape(batch[batch_size-1])
+        images_batch[3*last_idx+1, :, :, :] = discrete_random_rotate(batch[batch_size-1])
         images_batch[3*last_idx+2, :, :, :] = batch[0] 
 
 
@@ -93,12 +93,42 @@ def triplet_batch_dSprites(batch):
         images_batch = torch.zeros((batch_size * 2, nc, h, w))
         images_batch[0, :, :, :] = batch[0]
         # images_batch[1, :, :, :] = random.choice(DSPRITE_AUGMENTATIONS)(batch[batch_size-1])
-        images_batch[1, :, :, :] = translate_shape(batch[batch_size-1])
+        images_batch[1, :, :, :] = discrete_random_rotate(batch[batch_size-1])
         
         
     return images_batch
     # return images_batch.view((batch_size * 3, nc, h, w))
 
+
+def augmented_batch(batch):
+    """"
+    Translates Joseph Lee's honors thesis idea with data augmentation --> dataloader implementation 
+
+    Proccesses a batch of data sequentially (in the form) of a list
+    to return a batch of pairs (1st image, 1st img. augmented, second image, 2nd img. augmented, etc.)
+    
+    Keyword arguments:
+    batch -- a list of images, its length is batch_size
+    Return: Tensor with shape (batch_size, 2 * num_channels, height, width)
+    """
+
+    # get image dimensions, assuming all images are the same size
+    # and it is number-of-channels (nc) first
+    nc, h, w = batch[0].shape[-3], batch[0].shape[-2], batch[0].shape[-1]
+    batch_size = len(batch)
+
+    # format: (batch_size, 2 for (original, augmented) * num_channels, height, width)
+    # images_batch = torch.zeros((batch_size, 3, nc, h, w))
+    images_batch = torch.zeros((batch_size * 2, nc, h, w))
+    
+    for i in range(batch_size):         
+        first_image = batch[i]
+        first_image_augmented = discrete_random_rotate(batch[i + 1])
+
+        images_batch[2*i, :, :, :] = first_image
+        images_batch[2*i+1, :, :, :] = first_image_augmented
+
+    return images_batch
 
 
 def return_data(args):
