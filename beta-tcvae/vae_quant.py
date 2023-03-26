@@ -559,7 +559,7 @@ def main():
                     display_samples(vae, x, vis, args.save, iteration)
                     plot_avg_elbos(logging_iterations, avg_elbos, vis, args.save)
 
-                    if args.use_data_augmenter:
+                    if args.use_augment_dataloader:
                         plot_k_factor_losses(logging_iterations, avg_k_sim_losses, vis, args.save)
 
                 utils.save_checkpoint({
