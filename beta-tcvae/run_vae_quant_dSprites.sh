@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python vae_quant.py --dataset shapes --beta 8 --tcvae
+nice python vae_quant.py --dataset shapes --beta 8 --tcvae --visdom --mss --exclude-mutinfo --num-epochs 100
