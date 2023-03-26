@@ -298,9 +298,6 @@ def setup_data_loaders(args, use_cuda=False):
     return train_loader
 
 
-# import must stay here to avoid circular import errors
-from metric_helpers.loader import load_model_and_dataset
-
 # win_samples = None
 # win_test_reco = None
 # win_latent_walk = None
@@ -424,6 +421,9 @@ def main():
     torch.cuda.set_device(args.gpu)
 
     if args.checkpt_fp:
+        # import must stay here to avoid circular import errors
+        from metric_helpers.loader import load_model_and_dataset
+
         vae, _, _ = load_model_and_dataset(args.checkpt_fp)
 
     else:
