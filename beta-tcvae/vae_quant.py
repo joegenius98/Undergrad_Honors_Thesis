@@ -504,7 +504,7 @@ def main():
                 augment_factor = 0
 
 
-            (obj.mean().mul(-1) + args.augment_factor * k_sim_loss).backward()
+            (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
             elbo_running_mean.update(elbo.mean().item())
             kSimLoss_running_mean.update(k_sim_loss.item())
             optimizer.step()
