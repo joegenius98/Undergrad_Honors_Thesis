@@ -1,6 +1,6 @@
 import torch
 
-def contrastive_losses(latent_samples: torch.Tensor, k):
+def k_factor_sim_loss(latent_samples: torch.Tensor, k):
     """
     Computes the k-factor consistency loss and contrastive loss for given latent vectors.
     
@@ -25,13 +25,17 @@ def contrastive_losses(latent_samples: torch.Tensor, k):
     if k is None or k == 0:
         return 0
 
-    assert latent_samples.size(0) % 3 == 0
+    # assert latent_samples.size(0) % 3 == 0
+    assert latent_samples.size(0) % 2 == 0
 
     # Separate the vectors into groups
     # images, their respective augmentations, and their respective contrastive other images
-    image_reprs = latent_samples[::3]
-    aug_reprs = latent_samples[1::3]
+    # image_reprs = latent_samples[::3]
+    # aug_reprs = latent_samples[1::3]
     # other_reprs = latent_samples[2::3]
+
+    image_reprs = latent_samples[::2]
+    aug_reprs = latent_samples[1::2]
 
     # k-factor consistency loss
     k_factor_consistency_diffs = image_reprs[:, :k] - aug_reprs[:, :k]

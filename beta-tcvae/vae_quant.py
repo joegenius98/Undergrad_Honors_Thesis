@@ -19,7 +19,7 @@ from elbo_decomposition import elbo_decomposition
 # these are used in an `eval('plot_vs_gt...')` call
 from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
 
-from thesis_losses import contrastive_losses
+from thesis_losses import k_factor_sim_loss
 from thesis_augmentations import augmented_batch
 
 from tqdm import tqdm 
@@ -263,7 +263,7 @@ class VAE(nn.Module):
                     self.beta * (logqz - logqz_prodmarginals) - \
                     (1 - self.lamb) * (logqz_prodmarginals - logpz)
 
-        return modified_elbo, elbo.detach(), contrastive_losses(zs, num_sim_factors)
+        return modified_elbo, elbo.detach(), k_factor_sim_loss(zs, num_sim_factors)
 
 
 def logsumexp(value, dim=None, keepdim=False):
