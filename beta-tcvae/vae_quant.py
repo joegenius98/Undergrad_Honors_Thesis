@@ -402,6 +402,7 @@ def main():
     parser.add_argument('--beta-anneal', action='store_true')
     parser.add_argument('--lambda-anneal', action='store_true')
     
+    parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
     parser.add_argument('--num_sim_factors', type=int, default=None, help='k: for k-factor similarity loss')
     parser.add_argument('--augment_factor', type=int, default=None, help='weight of mean-squared err. of k-factor similarity loss')
 
