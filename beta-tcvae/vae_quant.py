@@ -426,6 +426,7 @@ def main():
 
     # confirm mutual existence of args.
     if args.use_augment_dataloader:
+        print("Using augmentation dataloader")
         assert args.num_sim_factors and args.augment_factor
 
     # set up the saving directory
