@@ -1,6 +1,6 @@
 import torch
 
-def k_factor_sim_loss(latent_samples: torch.Tensor, k):
+def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
     """
     Computes the k-factor consistency loss and contrastive loss for given latent vectors.
     
@@ -19,6 +19,8 @@ def k_factor_sim_loss(latent_samples: torch.Tensor, k):
         tuple: A tuple containing two elements:
             - k_factor_consistency_loss (torch.Tensor): The mean of the sum of 2nd norms for
               the difference between an image's representation and its augmentation representation.
+
+            (Not implemented for now:)
             - contrastive_loss (torch.Tensor): The mean contrastive loss, which encourages the latent
               representations of an image and its augmentation to be different from the other image.
     """
@@ -50,3 +52,33 @@ def k_factor_sim_loss(latent_samples: torch.Tensor, k):
     # return k_factor_consistency_loss, k_factor_contrastive_loss
     return k_factor_consistency_loss
 
+
+def k_factor_sim_losses_params(means: torch.Tensor, logsigmas: torch.Tensor, k):
+    """Similar as above but except using the Gaussian distribution params.
+    instead of the samples themselves
+    
+    Keyword arguments:
+    means -- a (batch_size, z_dim) Tensor containing the encoder-predicted means of the inputs
+    logsigmas -- a (batch_size, z_dim) Tensor containig the encoder-predicted log(std. dev.) of the inputs
+    """
+    if k is None or k == 0:
+        return 0
+    
+    assert means.size(0) % 2 == 0 and logsigmas.size(0) % 2 == 0
+
+    img_repr_means_k = means[::2, :k]
+    aug_repr_means_k = means[1::2, :k]
+
+    img_repr_logvars_k = logsigmas[::2, :k]
+    aug_repr_logvars_k = logsigmas[1::2, :k]
+
+    mean_diffs_k = img_repr_means_k - aug_repr_means_k
+    logvar_diffs_k = img_repr_logvars_k - aug_repr_logvars_k
+
+    mean_diff_norms_k = torch.norm(mean_diffs_k, p=2, dim=1)
+    logvar_diff_norms_k = torch.norm(logvar_diffs_k, p=2, dim=1)
+
+    return mean_diff_norms_k + logvar_diff_norms_k
+
+
+    
