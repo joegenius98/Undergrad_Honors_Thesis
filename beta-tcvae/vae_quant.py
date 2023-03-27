@@ -408,9 +408,11 @@ def main():
     parser.add_argument('--beta-anneal', action='store_true')
     parser.add_argument('--lambda-anneal', action='store_true')
     
+    # honors thesis concepts
     parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
     parser.add_argument('--num_sim_factors', type=int, default=None, help='k: for k-factor similarity loss')
     parser.add_argument('--augment_factor', type=int, default=None, help='weight of mean-squared err. of k-factor similarity loss')
+    # end
 
     parser.add_argument('--mss', action='store_true', help='use the improved minibatch estimator')
     parser.add_argument('--conv', action='store_true')
@@ -487,13 +489,17 @@ def main():
     dataset_size = len(train_loader.dataset)
     num_iterations = len(train_loader) * args.num_epochs
     iteration = 0
-    # initialize loss accumulator
+
+    # initialize objective term accumulators
     # elbo_running_mean = utils.RunningAverageMeter()
     elbo_running_mean = utils.AverageMeter()
     kSimLoss_running_mean = utils.AverageMeter()
 
 
+    # visualize training loop
     pbar = tqdm(total=num_iterations)
+
+    # helper for "x" on plots
     logging_iterations = []
 
     while iteration < num_iterations:
@@ -503,36 +509,45 @@ def main():
 
             batch_time = time.time()
             vae.train()
+
+            # gradually adjust weights for total correlation and dim.-wise KL div.
             anneal_kl(args, vae, iteration)
+
+            # reset gradient and update params. with new gradient
             optimizer.zero_grad()
             # transfer to GPU
-            # x = x.cuda(async=True)
             x = x.cuda()
             # wrap the mini-batch in a PyTorch Variable
             x = Variable(x)
             # do ELBO gradient and accumulate loss
             obj, elbo, k_sim_loss = vae.get_objectives(x, dataset_size, args.num_sim_factors)
 
+            # numerical stability checks
             if utils.isnan(obj).any():
                 raise ValueError('NaN spotted in objective.')
             if utils.isnan(elbo).any():
                 raise ValueError('NaN spotted in elbo')
             
+            # torch.Tensor indicates honors thesis concepts/args. were specified
+            # Otherwise, it is returned as a mere 0
             if isinstance(k_sim_loss, torch.Tensor): 
                 if utils.isnan(k_sim_loss).any():
                     raise ValueError('NaN spotted in k_sim_loss')
             
+            # if honors thesis concepts/args. were not specified, simply just
+            # proceeed normally, treating my weighted k_sim_loss as 0
             if augment_factor is None:
                 augment_factor = 0
 
-
             (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
+            
+            # Keep track of ongoing average of objective metrics
             elbo_running_mean.update(elbo.mean().item())
 
             if isinstance(k_sim_loss, torch.Tensor):
                 kSimLoss_running_mean.update(k_sim_loss.item())
-                avg_k_sim_losses.append(k_sim_loss.item())
 
+            # adjust params. accr. to gradient and optimizer (e.g. Adam)
             optimizer.step()
 
             # report training diagnostics
@@ -540,17 +555,18 @@ def main():
                 logging_iterations.append(iteration)
 
                 avg_elbos.append(elbo_running_mean.avg)
+                avg_k_sim_losses.append(kSimLoss_running_mean.avg)
 
                 if kSimLoss_running_mean.val is None:
-                    kSimLoss_running_mean_val_str = 'None'
+                    curr_k_sim_loss = 'None'
                 else:
-                    kSimLoss_running_mean_val_str = '%.2f' % kSimLoss_running_mean.val
+                    curr_k_sim_loss = '%.2f' % kSimLoss_running_mean.val
 
-                pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f)\n\
+                pbar.write('[iteration %03d] time: %.2f \tbeta %.2f \tlambda %.2f training ELBO: %.4f (%.4f) \t\
                            k_sim_loss: %s (%.2f)' % (
                     iteration, time.time() - batch_time, vae.beta, vae.lamb,
                     elbo_running_mean.val, elbo_running_mean.avg,
-                    kSimLoss_running_mean_val_str, kSimLoss_running_mean.avg))
+                    curr_k_sim_loss, kSimLoss_running_mean.avg))
 
                 vae.eval()
 
