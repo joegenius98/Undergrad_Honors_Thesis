@@ -352,11 +352,19 @@ def display_samples(model, x, vis, env_name, curr_iter):
     delta = torch.linspace(-2, 2, 7).type_as(zs)
 
     for i in range(z_dim):
+        # vec: 0.0's, shape (7, z_dim)
         vec = Variable(torch.zeros(z_dim)).view(1, z_dim).expand(7, z_dim).contiguous().type_as(zs)
+
+        # set the z_dim value to the appropriate z_dim index
         vec[:, i] = 1
+        # delta[:, None] broadcasts delta to (7, 1) shape
+        # we now have a column with the current z_dim val. we are traversing
         vec = vec * delta[:, None]
+
         zs_delta = zs.clone().view(batch_size, 1, z_dim)
         zs_delta[:, :, i] = 0
+        # e.g. shapes (2,1,10) and (1, 7, 10) --> (2, 7, 10)
+        # 2 from chosen batch size, 7 from len. of traversal, 10 from num. z dims.
         zs_walk = zs_delta + vec[None]
         xs_walk = model.decoder.forward(zs_walk.view(-1, z_dim)).sigmoid()
         xs.append(xs_walk)
