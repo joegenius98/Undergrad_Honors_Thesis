@@ -13,7 +13,7 @@ def reparametrize(mu, logvar):
     std_dev = logvar.div(2).exp()
     # std_dev = logvar.exp() ** 0.5
     # eps = Variable(std_dev.data.new(std_dev.size()).normal_())
-    eps = torch.randn_like(std_dev)
+    eps = torch.randn_like(std_dev, requires_grad=True)
     return mu + std_dev*eps
 
 
