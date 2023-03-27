@@ -78,7 +78,7 @@ def k_factor_sim_losses_params(means: torch.Tensor, logsigmas: torch.Tensor, k):
     mean_diff_norms_k = torch.norm(mean_diffs_k, p=2, dim=1)
     logvar_diff_norms_k = torch.norm(logvar_diffs_k, p=2, dim=1)
 
-    return mean_diff_norms_k + logvar_diff_norms_k
+    return torch.mean(mean_diff_norms_k) + torch.mean(logvar_diff_norms_k)
 
 
     
