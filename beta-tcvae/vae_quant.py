@@ -19,7 +19,8 @@ from elbo_decomposition import elbo_decomposition
 # these are used in an `eval('plot_vs_gt...')` call
 from plot_latent_vs_true import plot_vs_gt_shapes, plot_vs_gt_faces  # noqa: F401; 
 
-from thesis_losses import k_factor_sim_loss
+# from thesis_losses import k_factor_sim_loss_samples
+from thesis_losses import k_factor_sim_losses_params
 from thesis_augmentations import augmented_batch
 
 from tqdm import tqdm 
@@ -263,7 +264,9 @@ class VAE(nn.Module):
                     self.beta * (logqz - logqz_prodmarginals) - \
                     (1 - self.lamb) * (logqz_prodmarginals - logpz)
 
-        return modified_elbo, elbo.detach(), k_factor_sim_loss(zs, num_sim_factors)
+        # return modified_elbo, elbo.detach(), k_factor_sim_loss_samples(zs, num_sim_factors)
+        return modified_elbo, elbo.detach(), \
+        k_factor_sim_losses_params(z_params.select(-1,0), z_params.select(-1, 1), num_sim_factors)
 
 
 def logsumexp(value, dim=None, keepdim=False):
@@ -324,9 +327,19 @@ def display_samples(model, x, vis, env_name, curr_iter):
     test_imgs = x[:50, :]
     _, reco_imgs, zs, _ = model.reconstruct_img(test_imgs)
     reco_imgs = reco_imgs.sigmoid()
+
+    # concat. the two sets of 50 images --> (2, 50, 64, 64)
+    # imagine you have two rows, 50 columns. (Each entry is an image.)
+    # A row represents either the set of input images or the set of reconstructed images. 
+
+    # Now you transpose this table so you have 50 rows, two columns, 
+    # where each new row consist of an image and its attempted reconstruction.
+    # Therefore, an image and its reconstruction sit next to each other.
+    # final shape: (50, 2, 64, 64)
     test_reco_imgs = torch.cat([
         test_imgs.view(1, -1, 64, 64), reco_imgs.view(1, -1, 64, 64)], 0).transpose(0, 1)
 
+    # We will need to respect the 1 channel, so it's (100, 1, 64, 64)
     vis.images(
         test_reco_imgs.contiguous().view(-1, 1, 64, 64).data.cpu(), 10, 2,
         opts={'title': f'recon_iter_{curr_iter}'}, env=f'{env_name}_reconstructions')
