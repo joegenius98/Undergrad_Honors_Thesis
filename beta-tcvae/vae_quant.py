@@ -562,7 +562,8 @@ def main():
                 augment_factor = 0
 
             # (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
-            obj.mean().mul(-1).backward()
+            loss_with_kReg = obj.mean().mul(-1) + augment_factor * k_sim_loss
+            loss_with_kReg.backward()
             
             # Keep track of ongoing average of objective metrics
             elbo_running_mean.update(elbo.mean().item())
