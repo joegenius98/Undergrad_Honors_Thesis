@@ -223,6 +223,7 @@ class VAE(nn.Module):
         elbo = logpx + logpz - logqz_condx
 
         if self.beta == 1 and self.include_mutinfo and self.lamb == 0:
+            print("You're using beta = 1, which excludes TC!")
             return elbo, elbo.detach()
 
         # compute log q(z) ~= log 1/(NM) sum_m=1^M q(z|x_m) = - log(MN) + logsumexp_m(q(z|x_m))
@@ -260,6 +261,7 @@ class VAE(nn.Module):
                     self.beta * (logqz - logqz_prodmarginals) - \
                     (1 - self.lamb) * (logqz_prodmarginals - logpz)
             else:
+                print("Right loss!")
                 modified_elbo = logpx - \
                     self.beta * (logqz - logqz_prodmarginals) - \
                     (1 - self.lamb) * (logqz_prodmarginals - logpz)
@@ -560,7 +562,8 @@ def main():
             if augment_factor is None:
                 augment_factor = 0
 
-            (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
+            # (obj.mean().mul(-1) + augment_factor * k_sim_loss).backward()
+            obj.mean().mul(-1).backward()
             
             # Keep track of ongoing average of objective metrics
             elbo_running_mean.update(elbo.mean().item())
