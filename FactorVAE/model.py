@@ -68,8 +68,8 @@ class FactorVAE1(nn.Module):
             View((-1, 2*self.z_dim)) # B, 2*z_dim
         )
         self.decode = nn.Sequential(
-            View((-1, 2*z_dim, 1, 1)), # B, 2*z_dim, 1, 1
-            nn.Conv2d(self.z_dim, 128, 1),
+            View((-1, self.z_dim, 1, 1)), # B, z_dim, 1, 1
+            nn.Conv2d(self.z_dim, 128, 1), # B, 128, 1, 1
             nn.ReLU(True),
             nn.ConvTranspose2d(128, 64, 4), # B, 64, 4, 4
             nn.ReLU(True),
