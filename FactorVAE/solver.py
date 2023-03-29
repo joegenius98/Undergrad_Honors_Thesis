@@ -114,8 +114,7 @@ class Solver(object):
                 vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss
 
                 self.optim_VAE.zero_grad()
-                # vae_loss.backward(retain_graph=True)
-                vae_loss.backward()
+                vae_loss.backward(retain_graph=True)
                 self.optim_VAE.step()
 
                 x_true2 = x_true2.to(self.device)

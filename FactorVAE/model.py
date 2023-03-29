@@ -103,7 +103,7 @@ class FactorVAE1(nn.Module):
         print(f"stats shape: {stats.shape}")
         mu = stats[:, :self.z_dim]
         logvar = stats[:, self.z_dim:]
-        z = self.reparametrize(mu, logvar)
+        z = self.reparametrize(mu, logvar).clone()
 
         if no_dec:
             return z.squeeze()
