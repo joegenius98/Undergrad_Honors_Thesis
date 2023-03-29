@@ -108,15 +108,18 @@ class Solver(object):
                 vae_recon_loss = recon_loss(x_true1, x_recon)
                 vae_kld = kl_divergence(mu, logvar)
 
-                D_z = self.D(z)
-                vae_tc_loss = (D_z[:, :1] - D_z[:, 1:]).mean()
+                D_z_for_vae_loss = self.D(z)
+                vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss
+
 
                 self.optim_VAE.zero_grad()
                 vae_loss.backward(retain_graph=True)
                 self.optim_VAE.step()
 
+                # detach z to prevent updating VAE params. (would cause an err. anyway)
+                D_z_for_discrim_loss = self.D(z.detach())
                 x_true2 = x_true2.to(self.device)
                 z_prime = self.VAE(x_true2, no_dec=True)
                 print(f"z_prime shape: {z_prime.shape}")
@@ -124,8 +127,7 @@ class Solver(object):
                 z_pperm = permute_dims(z_prime).detach()
                 print(f"z_pperm shape: {z_pperm.shape}")
                 D_z_pperm = self.D(z_pperm)
-                # detach D_z b/c we don't want to update VAE params. (would throw an error anyway)
-                D_tc_loss = 0.5*(F.cross_entropy(D_z.detach(), zeros) + F.cross_entropy(D_z_pperm, ones))
+                D_tc_loss = 0.5*(F.cross_entropy(D_z_for_discrim_loss, zeros) + F.cross_entropy(D_z_pperm, ones))
 
                 self.optim_D.zero_grad()
                 D_tc_loss.backward()
