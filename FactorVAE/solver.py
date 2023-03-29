@@ -8,6 +8,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from torchvision.utils import make_grid, save_image
+torch.autograd.set_detect_anomaly(True)
 
 from utils import DataGather, mkdirs, grid2gif
 from ops import recon_loss, kl_divergence, permute_dims
