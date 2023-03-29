@@ -153,7 +153,7 @@ class Solver(object):
 
                 if self.viz_on and (self.global_iter%self.viz_ra_iter == 0):
                     self.image_gather.insert(true=x_true1.data.cpu(),
-                                             recon=F.sigmoid(x_recon).data.cpu())
+                                             recon=torch.sigmoid(x_recon).data.cpu())
                     self.visualize_recon()
                     self.image_gather.flush()
 
@@ -321,7 +321,7 @@ class Solver(object):
                 z = z_ori.clone()
                 for val in interpolation:
                     z[:, row] = val
-                    sample = F.sigmoid(decoder(z)).data
+                    sample = torch.sigmoid(decoder(z)).data
                     samples.append(sample)
                     gifs.append(sample)
             samples = torch.cat(samples, dim=0).cpu()
@@ -337,7 +337,7 @@ class Solver(object):
             for i, key in enumerate(Z.keys()):
                 for j, val in enumerate(interpolation):
                     save_image(tensor=gifs[i][j].cpu(),
-                               filename=os.path.join(output_dir, '{}_{}.jpg'.format(key, j)),
+                               fp=os.path.join(output_dir, '{}_{}.jpg'.format(key, j)),
                                nrow=self.z_dim, pad_value=1)
 
                 grid2gif(str(os.path.join(output_dir, key+'*.jpg')),
