@@ -100,7 +100,6 @@ class FactorVAE1(nn.Module):
 
     def forward(self, x, no_dec=False):
         stats = self.encode(x)
-        print(f"stats shape: {stats.shape}")
         mu = stats[:, :self.z_dim]
         logvar = stats[:, self.z_dim:]
         z = self.reparametrize(mu, logvar)
