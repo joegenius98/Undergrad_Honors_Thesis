@@ -136,7 +136,7 @@ class Solver(object):
                     self.save_checkpoint(self.global_iter)
 
                 if self.viz_on and (self.global_iter%self.viz_ll_iter == 0):
-                    soft_D_z = F.softmax(D_z, 1)[:, :1].detach()
+                    soft_D_z = F.softmax(D_z_for_vae_loss, 1)[:, :1].detach()
                     soft_D_z_pperm = F.softmax(D_z_pperm, 1)[:, :1].detach()
                     D_acc = ((soft_D_z >= 0.5).sum() + (soft_D_z_pperm < 0.5).sum()).float()
                     D_acc /= 2*self.batch_size
