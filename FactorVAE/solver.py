@@ -119,7 +119,9 @@ class Solver(object):
 
                 x_true2 = x_true2.to(self.device)
                 z_prime = self.VAE(x_true2, no_dec=True)
+                print(f"z_prime shape: {z_prime.shape}")
                 z_pperm = permute_dims(z_prime).detach()
+                print(f"z_pperm shape: {z_pperm.shape}")
                 D_z_pperm = self.D(z_pperm)
                 D_tc_loss = 0.5*(F.cross_entropy(D_z, zeros) + F.cross_entropy(D_z_pperm, ones))
 
