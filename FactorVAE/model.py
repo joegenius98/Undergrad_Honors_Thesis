@@ -37,36 +37,49 @@ class Discriminator(nn.Module):
         return self.net(z).squeeze()
 
 
+class View(nn.Module):
+    def __init__(self, size):
+        super(View, self).__init__()
+        self.size = size
+
+    def forward(self, tensor):
+        return tensor.view(self.size)
+
+
 class FactorVAE1(nn.Module):
     """Encoder and Decoder architecture for 2D Shapes data."""
     def __init__(self, z_dim=10):
         super(FactorVAE1, self).__init__()
         self.z_dim = z_dim
         self.encode = nn.Sequential(
-            nn.Conv2d(1, 32, 4, 2, 1),
+            # Conv2d param. format
+            # in_channels, out_channels, kernel_size, stride, padding
+            nn.Conv2d(1, 32, 4, 2, 1), # B, 32, 32, 32
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),
+            nn.Conv2d(32, 32, 4, 2, 1), # B, 32, 16, 16
             nn.ReLU(True),
-            nn.Conv2d(32, 64, 4, 2, 1),
+            nn.Conv2d(32, 64, 4, 2, 1), # B, 64, 8, 8
             nn.ReLU(True),
-            nn.Conv2d(64, 64, 4, 2, 1),
+            nn.Conv2d(64, 64, 4, 2, 1), # B, 64, 4, 4
             nn.ReLU(True),
-            nn.Conv2d(64, 128, 4, 1),
+            nn.Conv2d(64, 128, 4, 1), # B, 128, 1, 1
             nn.ReLU(True),
-            nn.Conv2d(128, 2*z_dim, 1)
+            nn.Conv2d(128, 2*z_dim, 1), # B, 2*z_dim, 1, 1
+            View((-1, 2*self.z_dim)) # B, 2*z_dim
         )
         self.decode = nn.Sequential(
-            nn.Conv2d(z_dim, 128, 1),
+            View((-1, 2*z_dim, 1, 1)), # B, 2*z_dim, 1, 1
+            nn.Conv2d(self.z_dim, 128, 1),
             nn.ReLU(True),
-            nn.ConvTranspose2d(128, 64, 4),
+            nn.ConvTranspose2d(128, 64, 4), # B, 64, 4, 4
             nn.ReLU(True),
-            nn.ConvTranspose2d(64, 64, 4, 2, 1),
+            nn.ConvTranspose2d(64, 64, 4, 2, 1), # B, 64, 8, 8
             nn.ReLU(True),
-            nn.ConvTranspose2d(64, 32, 4, 2, 1),
+            nn.ConvTranspose2d(64, 32, 4, 2, 1), # B, 32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),
+            nn.ConvTranspose2d(32, 32, 4, 2, 1), # B, 32, 32, 32
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 1, 4, 2, 1),
+            nn.ConvTranspose2d(32, 1, 4, 2, 1), # B, 1, 64, 64
         )
         self.weight_init()
 
