@@ -96,15 +96,12 @@ class Solver(object):
         out = False
         while not out:
             for x_true1, x_true2 in self.data_loader:
-                print(f"x_true1 shape: {x_true1.shape}")
-                print(f"x_true2 shape: {x_true2.shape}")
 
                 self.global_iter += 1
                 self.pbar.update(1)
 
                 x_true1 = x_true1.to(self.device)
                 x_recon, mu, logvar, z = self.VAE(x_true1)
-                print(f"Recon,mu,logvar,z: {x_recon.shape, mu.shape, logvar.shape, z.shape}")
                 vae_recon_loss = recon_loss(x_true1, x_recon)
                 vae_kld = kl_divergence(mu, logvar)
 
@@ -122,10 +119,8 @@ class Solver(object):
                 D_z_for_discrim_loss = self.D(z.detach())
                 x_true2 = x_true2.to(self.device)
                 z_prime = self.VAE(x_true2, no_dec=True)
-                print(f"z_prime shape: {z_prime.shape}")
                 # detach b/c we don't want to update VAE params.
                 z_pperm = permute_dims(z_prime).detach()
-                print(f"z_pperm shape: {z_pperm.shape}")
                 D_z_pperm = self.D(z_pperm)
                 D_tc_loss = 0.5*(F.cross_entropy(D_z_for_discrim_loss, zeros) + F.cross_entropy(D_z_pperm, ones))
 
