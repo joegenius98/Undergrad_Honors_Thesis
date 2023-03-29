@@ -96,11 +96,15 @@ class Solver(object):
         out = False
         while not out:
             for x_true1, x_true2 in self.data_loader:
+                print(f"x_true1 shape: {x_true1.shape}")
+                print(f"x_true2 shape: {x_true2.shape}")
+
                 self.global_iter += 1
                 self.pbar.update(1)
 
                 x_true1 = x_true1.to(self.device)
                 x_recon, mu, logvar, z = self.VAE(x_true1)
+                print(f"Recon,mu,logvar,z: {x_recon.shape, mu.shape, logvar.shape, z.shape}")
                 vae_recon_loss = recon_loss(x_true1, x_recon)
                 vae_kld = kl_divergence(mu, logvar)
 
