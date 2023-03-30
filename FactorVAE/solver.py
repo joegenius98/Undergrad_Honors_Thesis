@@ -1,4 +1,9 @@
-"""solver.py"""
+"""
+solver.py
+
+To help you understand this code, I made many comments
+on `solver_light.py` in the Disentangling folder of this GitHub repo.
+"""
 
 import os
 import visdom
@@ -65,9 +70,14 @@ class Solver(object):
         self.win_id = dict(D_z='win_D_z', recon='win_recon', kld='win_kld', acc='win_acc')
         self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'acc')
         self.image_gather = DataGather('true', 'recon')
+
+        # Visdom visualization and logging
         if self.viz_on:
+            if not os.path.exists("./vis_logs"):
+                os.mkdir("./vis_logs")
             self.viz_port = args.viz_port
-            self.viz = visdom.Visdom(port=self.viz_port)
+            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
+
             self.viz_ll_iter = args.viz_ll_iter
             self.viz_la_iter = args.viz_la_iter
             self.viz_ra_iter = args.viz_ra_iter
