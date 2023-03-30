@@ -112,7 +112,7 @@ class Solver(object):
                 print("Visdom line plot windows initialized")
             
             assert all([getattr(self, self.win_id[win_id]) is not None for win_id in self.win_id])
-            print(f"self.win_D_z: {self.win_D_z}")
+            print(f"type self.win_D_z: {type(self.win_D_z)} {self.win_D_z}")
 
             
 
