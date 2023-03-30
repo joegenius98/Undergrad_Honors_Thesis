@@ -101,7 +101,7 @@ class Solver(object):
                     self.viz_init()
                     print("Visdom line plot windows initialized")
                 else:
-                    assert self.win_D_z is not None, "self.win_D_z should have been loaded from the last checkpoint"
+                    assert self.win_D_z, "self.win_D_z should have been loaded from the last checkpoint"
 
             # in case we can't verify a window exists with the server, we just move on
             # If a window does indeed exist and the server can't verify, then we just simply append to them.
