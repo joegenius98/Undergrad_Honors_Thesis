@@ -54,6 +54,17 @@ class CustomTensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 
+class TensorDataset(Dataset):
+    def __init__(self, data_tensor):
+        self.data_tensor = data_tensor
+
+    def __getitem__(self, index):
+        return self.data_tensor[index]
+
+    def __len__(self):
+        return self.data_tensor.size(0)
+
+
 def return_data(args):
     name = args.dataset
     dset_dir = args.dset_dir
