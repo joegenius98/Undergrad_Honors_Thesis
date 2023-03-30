@@ -10,7 +10,7 @@ from utils import str2bool
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-init_seed = 1
+init_seed = 2
 torch.manual_seed(init_seed)
 torch.cuda.manual_seed(init_seed)
 np.random.seed(init_seed)
