@@ -11,16 +11,17 @@ from utils import str2bool
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-def set_seed(seed):
+def set_seed(seed, cuda):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    if cuda:
+        torch.cuda.manual_seed(seed)
     
 
 
 def main(args):
-    set_seed(args.seed)
+    set_seed(args.seed, args.cuda)
 
     net = Solver(args)
     net.train()
