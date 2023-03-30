@@ -94,17 +94,22 @@ class Solver(object):
             self.viz_ra_iter = args.viz_ra_iter
             self.viz_ta_iter = args.viz_ta_iter
 
-            win_exist = self.viz.win_exists(env=self.name+'/lines', win=self.win_id['D_z'])
+            win_exist = self.viz.win_exists(env=self.name+'_lines', win=self.win_id['D_z'])
             # server legitimately verifies window does not exist
             if win_exist is not None:
                 if not win_exist:
                     self.viz_init()
+                    print("Visdom line plot windows initialized")
                 else:
                     assert self.win_D_z is not None, "self.win_D_z should have been loaded from the last checkpoint"
 
             # in case we can't verify a window exists with the server, we just move on
             # If a window does indeed exist and the server can't verify, then we just simply append to them.
             # Otherwise if a windows does not exist, we can just start from scratch.
+
+            if self.win_D_z is None:
+                self.viz_init()
+                print("Visdom line plot windows initialized")
 
             
 
@@ -231,7 +236,7 @@ class Solver(object):
 
         self.win_D_z = self.viz.line(X=iters,
                       Y=soft_D_zs,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_z'],
                       update='append',
                       opts=dict(
@@ -241,7 +246,7 @@ class Solver(object):
 
         self.win_recon = self.viz.line(X=iters,
                       Y=recon,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['recon'],
                       update='append',
                       opts=dict(
@@ -250,7 +255,7 @@ class Solver(object):
 
         self.win_D_acc = self.viz.line(X=iters,
                       Y=D_acc,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_acc'],
                       update='append',
                       opts=dict(
@@ -259,7 +264,7 @@ class Solver(object):
 
         self.win_kld = self.viz.line(X=iters,
                       Y=kld,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['kld'],
                       update='append',
                       opts=dict(
@@ -268,7 +273,7 @@ class Solver(object):
 
         self.win_vae_tc = self.viz.line(X=iters,
                       Y=vae_tcs,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['vae_tc'],
                       update='append',
                       opts=dict(
@@ -277,7 +282,7 @@ class Solver(object):
 
         self.win_D_tc = self.viz.line(X=iters,
                       Y=D_tcs,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_tc'],
                       update='append',
                       opts=dict(
@@ -386,7 +391,7 @@ class Solver(object):
                     gifs.append(sample)
             samples = torch.cat(samples, dim=0).cpu()
             title = '{}_latent_traversal(iter:{})'.format(key, self.global_iter)
-            self.viz.images(samples, env=self.name+'/traverse',
+            self.viz.images(samples, env=self.name+'_traverse',
                             opts=dict(title=title), nrow=len(interpolation))
 
         if self.output_save:
@@ -406,10 +411,11 @@ class Solver(object):
         self.net_mode(train=True)
 
     def viz_init(self):
+        print("Visdom line plot windows being instantiated")
         zero_init = torch.zeros([1])
         self.win_D_z = self.viz.line(X=zero_init,
                       Y=torch.stack([zero_init, zero_init], -1),
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_z'],
                       opts=dict(
                         xlabel='iteration',
@@ -418,7 +424,7 @@ class Solver(object):
 
         self.win_recon = self.viz.line(X=zero_init,
                       Y=zero_init,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['recon'],
                       opts=dict(
                         xlabel='iteration',
@@ -426,7 +432,7 @@ class Solver(object):
 
         self.win_D_acc = self.viz.line(X=zero_init,
                       Y=zero_init,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_acc'],
                       opts=dict(
                         xlabel='iteration',
@@ -434,7 +440,7 @@ class Solver(object):
 
         self.win_kld = self.viz.line(X=zero_init,
                       Y=zero_init,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['kld'],
                       opts=dict(
                         xlabel='iteration',
@@ -442,7 +448,7 @@ class Solver(object):
 
         self.win_vae_tc = self.viz.line(X=zero_init,
                       Y=zero_init,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['vae_tc'],
                       opts=dict(
                         xlabel='iteration',
@@ -450,7 +456,7 @@ class Solver(object):
 
         self.win_D_tc = self.viz.line(X=zero_init,
                       Y=zero_init,
-                      env=self.name+'/lines',
+                      env=self.name+'_lines',
                       win=self.win_id['D_tc'],
                       opts=dict(
                         xlabel='iteration',
