@@ -110,6 +110,8 @@ class Solver(object):
             if self.win_D_z is None:
                 self.viz_init()
                 print("Visdom line plot windows initialized")
+            
+            assert all([getattr(self, self.win_id[win_id]) is not None for win_id in self.win_id])
 
             
 
