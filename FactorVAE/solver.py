@@ -107,12 +107,12 @@ class Solver(object):
             # If a window does indeed exist and the server can't verify, then we just simply append to them.
             # Otherwise if a windows does not exist, we can just start from scratch.
 
-            if self.win_D_z is None:
+            # check for None or empty string (empty str. could come from checkpoint load)
+            if not self.win_D_z:
                 self.viz_init()
                 print("Visdom line plot windows initialized")
             
-            assert all([getattr(self, self.win_id[win_id]) is not None for win_id in self.win_id])
-            print(f"type self.win_D_z: {type(self.win_D_z)} {self.win_D_z}")
+            assert all([getattr(self, self.win_id[win_id]) for win_id in self.win_id])
 
             
 
