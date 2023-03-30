@@ -3,6 +3,7 @@
 import argparse
 import numpy as np
 import torch
+import random 
 
 from solver import Solver
 from utils import str2bool
@@ -10,13 +11,17 @@ from utils import str2bool
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
 
-init_seed = 2
-torch.manual_seed(init_seed)
-torch.cuda.manual_seed(init_seed)
-np.random.seed(init_seed)
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    
 
 
 def main(args):
+    set_seed(args.seed)
+
     net = Solver(args)
     net.train()
 
@@ -25,6 +30,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Factor-VAE')
 
     parser.add_argument('--name', default='main', type=str, help='name of the experiment')
+    parser.add_argument('--seed', default='main', default=1, type=int, help='torch and numpy random generator seed of the experiment')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
     parser.add_argument('--max_iter', default=1e6, type=float, help='maximum training iteration')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
