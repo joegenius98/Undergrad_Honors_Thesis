@@ -19,7 +19,8 @@ from tqdm import tqdm
 # from model import BetaVAE_H, BetaVAE_B, ContrastiveVAE_L
 from model import FactorVAE1
 # from factmodel import FactorVAE1
-from dataset import CustomTensorDataset
+# from dataset import CustomTensorDataset
+from dataset import TensorDataset
 
 import os
 import sys
@@ -329,7 +330,7 @@ data = np.load(root, encoding='bytes')
 data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
 train_kwargs = {'data_tensor': data}
 
-shapes_dataset = CustomTensorDataset(**train_kwargs)
+shapes_dataset = TensorDataset(**train_kwargs)
 
 
 # In[7]:
@@ -354,13 +355,9 @@ vae.cuda()
 
 
 if os.path.isfile(file_path):
-    print('Checkpoint loaded')
     checkpoint = torch.load(file_path)  # , map_location=torch.device('cpu'))
-    if model_name.lower() == 'factvae':
-        raise ValueError("FactorVAE not supported")
-        # vae.load_state_dict(checkpoint['model_states']['VAE'])
-    else:
-        vae.load_state_dict(checkpoint['model_states']['net'])
+    vae.load_state_dict(checkpoint['model_states']['VAE'])
+    print('Checkpoint loaded')
 
 
 # In[10]:
@@ -384,14 +381,8 @@ for i, xs in enumerate(dataset_loader):
     print(i + 1, len(dataset_loader), end='\r')
     batch_size = xs.size(0)
     # xs = Variable(xs.view(batch_size, 1, 64, 64), volatile=True)
-    if model_name == 'factvae':
-        raise ValueError("FactorVAE is not supported")
-        # qz_params[n:n + batch_size] = vae.encode.forward(xs.cuda()).view(
-        #     batch_size, nparams, vae.z_dim).transpose(1, 2).data
-    else:
-        qz_params[n:n + batch_size] = vae.encoder.forward(xs.cuda()).view(
-            batch_size, nparams, vae.z_dim).transpose(1, 2).data
-
+    qz_params[n:n + batch_size] = vae.encode.forward(xs.cuda()).view(
+    batch_size, nparams, vae.z_dim).transpose(1, 2).data
     n += batch_size
 
 
