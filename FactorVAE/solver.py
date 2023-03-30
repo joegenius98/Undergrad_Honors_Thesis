@@ -67,9 +67,20 @@ class Solver(object):
 
         # Visdom
         self.viz_on = args.viz_on
-        self.win_id = dict(D_z='win_D_z', recon='win_recon', kld='win_kld', acc='win_acc')
-        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'acc')
+        self.win_id = dict(D_z='win_D_z', recon='win_recon', kld='win_kld', D_acc='win_D_acc', 
+                           vae_tc='win_vae_tc', D_tc='win_D_tc')
+        self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
+            self.win_vae_tc, self.win_D_tc = (None,) * len(self.win_id)
+
+        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_tc')
         self.image_gather = DataGather('true', 'recon')
+
+        # Checkpoint
+        self.ckpt_dir = os.path.join(args.ckpt_dir, args.name)
+        self.ckpt_save_iter = args.ckpt_save_iter
+        mkdirs(self.ckpt_dir)
+        if args.ckpt_load:
+            self.load_checkpoint(args.ckpt_load)
 
         # Visdom visualization and logging
         if self.viz_on:
@@ -82,15 +93,20 @@ class Solver(object):
             self.viz_la_iter = args.viz_la_iter
             self.viz_ra_iter = args.viz_ra_iter
             self.viz_ta_iter = args.viz_ta_iter
-            if not self.viz.win_exists(env=self.name+'/lines', win=self.win_id['D_z']):
-                self.viz_init()
 
-        # Checkpoint
-        self.ckpt_dir = os.path.join(args.ckpt_dir, args.name)
-        self.ckpt_save_iter = args.ckpt_save_iter
-        mkdirs(self.ckpt_dir)
-        if args.ckpt_load:
-            self.load_checkpoint(args.ckpt_load)
+            win_exist = self.viz.win_exists(env=self.name+'/lines', win=self.win_id['D_z'])
+            # server legitimately verifies window does not exist
+            if win_exist is not None:
+                if not win_exist:
+                    self.viz_init()
+                else:
+                    assert self.win_D_z is not None, "self.win_D_z should have been loaded from the last checkpoint"
+
+            # in case we can't verify a window exists with the server, we just move on
+            # If a window does indeed exist and the server can't verify, then we just simply append to them.
+            # Otherwise if a windows does not exist, we can just start from scratch.
+
+            
 
         # Output(latent traverse GIF)
         self.output_dir = os.path.join(args.output_dir, args.name)
@@ -155,7 +171,9 @@ class Solver(object):
                                             soft_D_z_pperm=soft_D_z_pperm.mean().item(),
                                             recon=vae_recon_loss.item(),
                                             kld=vae_kld.item(),
-                                            acc=D_acc.item())
+                                            D_acc=D_acc.item(),
+                                            vae_tc=vae_tc_loss.item(),
+                                            D_tc=D_tc_loss.item())
 
                 if self.viz_on and (self.global_iter%self.viz_la_iter == 0):
                     self.visualize_line()
@@ -191,17 +209,27 @@ class Solver(object):
         self.viz.images(sample, env=self.name+'/recon_image',
                         opts=dict(title=str(self.global_iter)))
 
+        if self.output_save:
+            output_dir = os.path.join(self.output_dir, str(self.global_iter))
+            os.makedirs(output_dir, exist_ok=True)
+            save_image(tensor=sample, fp=os.path.join(output_dir, 'recon.jpg'), 
+                       pad_value=1)
+
+
     def visualize_line(self):
         data = self.line_gather.data
         iters = torch.Tensor(data['iter'])
         recon = torch.Tensor(data['recon'])
         kld = torch.Tensor(data['kld'])
-        D_acc = torch.Tensor(data['acc'])
+        D_acc = torch.Tensor(data['D_acc'])
         soft_D_z = torch.Tensor(data['soft_D_z'])
         soft_D_z_pperm = torch.Tensor(data['soft_D_z_pperm'])
         soft_D_zs = torch.stack([soft_D_z, soft_D_z_pperm], -1)
 
-        self.viz.line(X=iters,
+        vae_tcs = torch.Tensor(data['vae_tc'])
+        D_tcs = torch.Tensor(data['D_tc'])
+
+        self.win_D_z = self.viz.line(X=iters,
                       Y=soft_D_zs,
                       env=self.name+'/lines',
                       win=self.win_id['D_z'],
@@ -210,7 +238,8 @@ class Solver(object):
                         xlabel='iteration',
                         ylabel='D(.)',
                         legend=['D(z)', 'D(z_perm)']))
-        self.viz.line(X=iters,
+
+        self.win_recon = self.viz.line(X=iters,
                       Y=recon,
                       env=self.name+'/lines',
                       win=self.win_id['recon'],
@@ -218,15 +247,17 @@ class Solver(object):
                       opts=dict(
                         xlabel='iteration',
                         ylabel='reconstruction loss',))
-        self.viz.line(X=iters,
+
+        self.win_D_acc = self.viz.line(X=iters,
                       Y=D_acc,
                       env=self.name+'/lines',
-                      win=self.win_id['acc'],
+                      win=self.win_id['D_acc'],
                       update='append',
                       opts=dict(
                         xlabel='iteration',
                         ylabel='discriminator accuracy',))
-        self.viz.line(X=iters,
+
+        self.win_kld = self.viz.line(X=iters,
                       Y=kld,
                       env=self.name+'/lines',
                       win=self.win_id['kld'],
@@ -234,6 +265,25 @@ class Solver(object):
                       opts=dict(
                         xlabel='iteration',
                         ylabel='kl divergence',))
+
+        self.win_vae_tc = self.viz.line(X=iters,
+                      Y=vae_tcs,
+                      env=self.name+'/lines',
+                      win=self.win_id['vae_tc'],
+                      update='append',
+                      opts=dict(
+                        xlabel='iteration',
+                        ylabel='Total Corr. (VAE)',))
+
+        self.win_D_tc = self.viz.line(X=iters,
+                      Y=D_tcs,
+                      env=self.name+'/lines',
+                      win=self.win_id['D_tc'],
+                      update='append',
+                      opts=dict(
+                        xlabel='iteration',
+                        ylabel='Total Corr. (Discriminator)',))
+
 
     def visualize_traverse(self, limit=3, inter=2/3, loc=-1):
         self.net_mode(train=False)
@@ -357,7 +407,7 @@ class Solver(object):
 
     def viz_init(self):
         zero_init = torch.zeros([1])
-        self.viz.line(X=zero_init,
+        self.win_D_z = self.viz.line(X=zero_init,
                       Y=torch.stack([zero_init, zero_init], -1),
                       env=self.name+'/lines',
                       win=self.win_id['D_z'],
@@ -365,27 +415,46 @@ class Solver(object):
                         xlabel='iteration',
                         ylabel='D(.)',
                         legend=['D(z)', 'D(z_perm)']))
-        self.viz.line(X=zero_init,
+
+        self.win_recon = self.viz.line(X=zero_init,
                       Y=zero_init,
                       env=self.name+'/lines',
                       win=self.win_id['recon'],
                       opts=dict(
                         xlabel='iteration',
                         ylabel='reconstruction loss',))
-        self.viz.line(X=zero_init,
+
+        self.win_D_acc = self.viz.line(X=zero_init,
                       Y=zero_init,
                       env=self.name+'/lines',
-                      win=self.win_id['acc'],
+                      win=self.win_id['D_acc'],
                       opts=dict(
                         xlabel='iteration',
                         ylabel='discriminator accuracy',))
-        self.viz.line(X=zero_init,
+
+        self.win_kld = self.viz.line(X=zero_init,
                       Y=zero_init,
                       env=self.name+'/lines',
                       win=self.win_id['kld'],
                       opts=dict(
                         xlabel='iteration',
                         ylabel='kl divergence',))
+
+        self.win_vae_tc = self.viz.line(X=zero_init,
+                      Y=zero_init,
+                      env=self.name+'/lines',
+                      win=self.win_id['vae_tc'],
+                      opts=dict(
+                        xlabel='iteration',
+                        ylabel='Total Corr. (VAE)',))
+
+        self.win_D_tc = self.viz.line(X=zero_init,
+                      Y=zero_init,
+                      env=self.name+'/lines',
+                      win=self.win_id['D_tc'],
+                      opts=dict(
+                        xlabel='iteration',
+                        ylabel='Total Corr. (Discriminator)',))
 
     def net_mode(self, train):
         if not isinstance(train, bool):
@@ -402,11 +471,16 @@ class Solver(object):
                         'VAE':self.VAE.state_dict()}
         optim_states = {'optim_D':self.optim_D.state_dict(),
                         'optim_VAE':self.optim_VAE.state_dict()}
+        # save all the Visdom line window states
+        win_states={win_id: getattr(self, self.win_id[win_id]) for win_id in self.win_id}
+
         states = {'iter':self.global_iter,
                   'model_states':model_states,
-                  'optim_states':optim_states}
+                  'optim_states':optim_states,
+                  'win_states':win_states}
 
         filepath = os.path.join(self.ckpt_dir, str(ckptname))
+
         with open(filepath, 'wb+') as f:
             torch.save(states, f)
         if verbose:
@@ -437,6 +511,10 @@ class Solver(object):
             self.pbar.update(self.global_iter)
             if verbose:
                 self.pbar.write("=> loaded checkpoint '{} (iter {})'".format(filepath, self.global_iter))
+            
+            # get all Visdom window states
+            for win_id in checkpoint['win_states']:
+                setattr(self, f"win_{win_id}", checkpoint['win_states'][win_id])
         else:
             if verbose:
                 self.pbar.write("=> no checkpoint found at '{}'".format(filepath))
