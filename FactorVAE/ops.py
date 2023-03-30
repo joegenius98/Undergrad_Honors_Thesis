@@ -20,9 +20,16 @@ def permute_dims(z):
 
     B, _ = z.size()
     perm_z = []
+    # z_j is the tensor of all the latent vals. of a particular dimension
+    # z.split(1, 1) gets a tuple of one slice along dimension 1 in sequence
+    # each tuple containing a tensor of shape (batch_size, 1)
     for z_j in z.split(1, 1):
+        # random ordering of [0, 1, 2, ..., B - 1]
         perm = torch.randperm(B).to(z.device)
+        # reorder z_j accr. to perm
         perm_z_j = z_j[perm]
+        # each item in list is shape (batch_size, 1) to be later concatenated
+        # along axis 1
         perm_z.append(perm_z_j)
 
     return torch.cat(perm_z, 1)
