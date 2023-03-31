@@ -122,7 +122,7 @@ def return_data(args):
         data = np.load(root, encoding='latin1')
         data = torch.from_numpy(data['imgs']).unsqueeze(1).float()
         train_kwargs = {'data_tensor':data}
-        dset = CustomTensorDataset
+        dset = TensorDataset if args.use_augment_dataloader else CustomTensorDataset
     else:
         raise NotImplementedError
 
