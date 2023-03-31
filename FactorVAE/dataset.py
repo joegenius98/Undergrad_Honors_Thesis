@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
+from augmentations import discrete_random_rotate
 
 
 def is_power_of_2(num):
@@ -65,6 +66,37 @@ class TensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 
+def augmented_batch(batch):
+    """"
+    Translates Joseph Lee's honors thesis idea with data augmentation --> dataloader implementation 
+
+    Proccesses a batch of data sequentially (in the form) of a list
+    to return a batch of pairs (1st image, 1st img. augmented, second image, 2nd img. augmented, etc.)
+    
+    Keyword arguments:
+    batch -- a list of images, its length is batch_size
+    Return: Tensor with shape (batch_size, 2 * num_channels, height, width)
+    """
+
+    # get image dimensions, assuming all images are the same size
+    # and it is number-of-channels (nc) first
+    nc, h, w = batch[0].shape[-3], batch[0].shape[-2], batch[0].shape[-1]
+    batch_size = len(batch)
+
+    # format: (batch_size, 2 for (original, augmented) * num_channels, height, width)
+    # images_batch = torch.zeros((batch_size, 3, nc, h, w))
+    images_batch = torch.zeros((batch_size * 2, nc, h, w))
+    
+    for i in range(batch_size):         
+        first_image = batch[i]
+        first_image_augmented = discrete_random_rotate(batch[i])
+
+        images_batch[2*i, :, :, :] = first_image
+        images_batch[2*i+1, :, :, :] = first_image_augmented
+
+    return images_batch
+
+
 def return_data(args):
     name = args.dataset
     dset_dir = args.dset_dir
@@ -98,6 +130,7 @@ def return_data(args):
     train_data = dset(**train_kwargs)
     train_loader = DataLoader(train_data,
                               batch_size=batch_size,
+                              collate_fn=augmented_batch,
                               shuffle=True,
                               num_workers=num_workers,
                               pin_memory=True,
