@@ -20,6 +20,8 @@ from ops import recon_loss, kl_divergence, permute_dims
 from model import FactorVAE1, FactorVAE2, Discriminator
 from dataset import return_data
 
+from thesis_losses import k_factor_sim_losses_params
+
 
 class Solver(object):
     def __init__(self, args):
@@ -37,6 +39,7 @@ class Solver(object):
         self.dataset = args.dataset
         self.batch_size = args.batch_size
         self.data_loader = return_data(args)
+        self.use_augment_dataloader = args.use_augment_dataloader
 
         # Networks & Optimizers
         self.z_dim = args.z_dim
@@ -49,6 +52,15 @@ class Solver(object):
         self.lr_D = args.lr_D
         self.beta1_D = args.beta1_D
         self.beta2_D = args.beta2_D
+
+        # Honors thesis idea
+        self.augment_factor = 0
+        self.num_sim_factors = None
+
+        if self.use_augment_dataloader:
+            self.augment_factor = args.augment_factor 
+            self.num_sim_factors = args.num_sim_factors
+
 
         if args.dataset == 'dsprites':
             self.VAE = FactorVAE1(self.z_dim).to(self.device)
@@ -68,11 +80,12 @@ class Solver(object):
         # Visdom
         self.viz_on = args.viz_on
         self.win_id = dict(D_z='win_D_z', recon='win_recon', kld='win_kld', D_acc='win_D_acc', 
-                           vae_tc='win_vae_tc', D_tc='win_D_tc')
-        self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
-            self.win_vae_tc, self.win_D_tc = (None,) * len(self.win_id)
+                           vae_tc='win_vae_tc', D_tc='win_D_tc', k_sim_loss='win_k_sim_loss')
 
-        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_tc')
+        self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
+            self.win_vae_tc, self.win_D_tc, self.win_k_sim_loss = (None,) * len(self.win_id)
+
+        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_tc', 'k_sim_loss')
         self.image_gather = DataGather('true', 'recon')
 
         # Checkpoint
@@ -121,6 +134,7 @@ class Solver(object):
         self.output_save = args.output_save
         mkdirs(self.output_dir)
 
+
     def train(self):
         self.net_mode(train=True)
 
@@ -142,12 +156,13 @@ class Solver(object):
                 D_z_for_vae_loss = self.D(z)
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
-                vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss
-
+                k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
+                vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
 
                 self.optim_VAE.zero_grad()
                 vae_loss.backward(retain_graph=True)
                 self.optim_VAE.step()
+
 
                 # detach z to prevent updating VAE params. (would cause an err. anyway)
                 D_z_for_discrim_loss = self.D(z.detach())
@@ -163,8 +178,10 @@ class Solver(object):
                 self.optim_D.step()
 
                 if self.global_iter%self.print_iter == 0:
-                    self.pbar.write('[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_tc_loss:{:.3f}'.format(
-                        self.global_iter, vae_recon_loss.item(), vae_kld.item(), vae_tc_loss.item(), D_tc_loss.item()))
+                    print_str = '[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_tc_loss:{:.3f} k_sim_loss:{:.3f}'
+                    self.pbar.write(print_str.format(
+                        self.global_iter, vae_recon_loss.item(), vae_kld.item(), vae_tc_loss.item(), D_tc_loss.item()), 
+                        k_sim_loss.item())
 
                 if self.global_iter%self.ckpt_save_iter == 0:
                     self.save_checkpoint(self.global_iter)
@@ -181,7 +198,8 @@ class Solver(object):
                                             kld=vae_kld.item(),
                                             D_acc=D_acc.item(),
                                             vae_tc=vae_tc_loss.item(),
-                                            D_tc=D_tc_loss.item())
+                                            D_tc=D_tc_loss.item(),
+                                            k_sim_loss=k_sim_loss.item())
 
                 if self.viz_on and (self.global_iter%self.viz_la_iter == 0):
                     self.visualize_line()
@@ -237,6 +255,8 @@ class Solver(object):
         vae_tcs = torch.Tensor(data['vae_tc'])
         D_tcs = torch.Tensor(data['D_tc'])
 
+        k_sim_losses = torch.Tensor(data['k_sim_loss'])
+
         self.win_D_z = self.viz.line(X=iters,
                       Y=soft_D_zs,
                       env=self.name+'_lines',
@@ -291,6 +311,10 @@ class Solver(object):
                       opts=dict(
                         xlabel='iteration',
                         ylabel='Total Corr. (Discriminator)',))
+        
+        self.win_k_sim_loss = self.viz.line(X=iters, Y=k_sim_losses,
+                    env=f'{self.name}_lines', win=self.win_id['k_sim_loss'], update='append',
+                    opts={'xlabel': 'iteration', 'ylabel': 'k-factor similarity loss'})
 
 
     def visualize_traverse(self, limit=3, inter=2/3, loc=-1):
@@ -464,6 +488,14 @@ class Solver(object):
                       opts=dict(
                         xlabel='iteration',
                         ylabel='Total Corr. (Discriminator)',))
+
+        self.win_k_sim_loss = self.viz.line(X=zero_init,
+                      Y=zero_init,
+                      env=self.name+'_lines',
+                      win=self.win_id['k_sim_loss'],
+                      opts=dict(
+                        xlabel='iteration',
+                        ylabel='k-factor similarity loss',))
 
     def net_mode(self, train):
         if not isinstance(train, bool):
