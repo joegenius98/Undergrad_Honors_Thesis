@@ -107,19 +107,6 @@ class Solver(object):
             self.viz_ra_iter = args.viz_ra_iter
             self.viz_ta_iter = args.viz_ta_iter
 
-            win_exist = self.viz.win_exists(env=self.name+'_lines', win=self.win_id['D_z'])
-            # server legitimately verifies window does not exist
-            if win_exist is not None:
-                if not win_exist:
-                    self.viz_init()
-                    print("Visdom line plot windows initialized")
-                else:
-                    assert self.win_D_z, "self.win_D_z should have been loaded from the last checkpoint"
-
-            # in case we can't verify a window exists with the server, we just move on
-            # If a window does indeed exist and the server can't verify, then we just simply append to them.
-            # Otherwise if a windows does not exist, we can just start from scratch.
-
             # check for None or empty string (empty str. could come from checkpoint load)
             if not self.win_D_z:
                 self.viz_init()
@@ -496,7 +483,7 @@ class Solver(object):
                       opts=dict(
                         xlabel='iteration',
                         ylabel='k-factor similarity loss',))
-
+        
     def net_mode(self, train):
         if not isinstance(train, bool):
             raise ValueError('Only bool type is supported. True|False')
