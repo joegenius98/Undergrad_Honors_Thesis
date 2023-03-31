@@ -125,8 +125,14 @@ class Solver(object):
     def train(self):
         self.net_mode(train=True)
 
-        ones = torch.ones(self.batch_size, dtype=torch.long, device=self.device)
-        zeros = torch.zeros(self.batch_size, dtype=torch.long, device=self.device)
+        ones, zeros = None, None
+        if not self.use_augment_dataloader:
+            ones = torch.ones(self.batch_size, dtype=torch.long, device=self.device)
+            zeros = torch.zeros(self.batch_size, dtype=torch.long, device=self.device)
+        else:
+            ones = torch.ones(self.batch_size * 2, dtype=torch.long, device=self.device)
+            zeros = torch.zeros(self.batch_size * 2, dtype=torch.long, device=self.device)
+
 
         out = False
         while not out:
@@ -176,8 +182,13 @@ class Solver(object):
                 if self.viz_on and (self.global_iter%self.viz_ll_iter == 0):
                     soft_D_z = F.softmax(D_z_for_vae_loss, 1)[:, :1].detach()
                     soft_D_z_pperm = F.softmax(D_z_pperm, 1)[:, :1].detach()
+
                     D_acc = ((soft_D_z >= 0.5).sum() + (soft_D_z_pperm < 0.5).sum()).float()
-                    D_acc /= 2*self.batch_size
+                    if self.use_augment_dataloader:
+                        D_acc /= 4*self.batch_size
+                    else:
+                        D_acc /= 2*self.batch_size
+
                     self.line_gather.insert(iter=self.global_iter,
                                             soft_D_z=soft_D_z.mean().item(),
                                             soft_D_z_pperm=soft_D_z_pperm.mean().item(),
