@@ -53,7 +53,7 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
     return k_factor_consistency_loss
 
 
-def k_factor_sim_losses_params(means: torch.Tensor, logsigmas: torch.Tensor, k):
+def k_factor_sim_losses_params(means: torch.Tensor, logvars: torch.Tensor, k):
     """Similar as above but except using the Gaussian distribution params.
     instead of the samples themselves
     
@@ -64,13 +64,13 @@ def k_factor_sim_losses_params(means: torch.Tensor, logsigmas: torch.Tensor, k):
     if k is None or k == 0:
         return 0
     
-    assert means.size(0) % 2 == 0 and logsigmas.size(0) % 2 == 0
+    assert means.size(0) % 2 == 0 and logvars.size(0) % 2 == 0
 
     img_repr_means_k = means[::2, :k]
     aug_repr_means_k = means[1::2, :k]
 
-    img_repr_logvars_k = logsigmas[::2, :k]
-    aug_repr_logvars_k = logsigmas[1::2, :k]
+    img_repr_logvars_k = logvars[::2, :k]
+    aug_repr_logvars_k = logvars[1::2, :k]
 
     mean_diffs_k = img_repr_means_k - aug_repr_means_k
     logvar_diffs_k = img_repr_logvars_k - aug_repr_logvars_k
