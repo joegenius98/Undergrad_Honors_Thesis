@@ -23,6 +23,9 @@ def set_seed(seed, cuda):
 def main(args):
     set_seed(args.seed, args.cuda)
 
+    if args.use_augment_dataloader:
+        assert args.num_sim_factors and args.augment_factor
+
     net = Solver(args)
     net.train()
 
@@ -44,6 +47,13 @@ if __name__ == "__main__":
     parser.add_argument('--lr_D', default=1e-4, type=float, help='learning rate of the discriminator')
     parser.add_argument('--beta1_D', default=0.5, type=float, help='beta1 parameter of the Adam optimizer for the discriminator')
     parser.add_argument('--beta2_D', default=0.9, type=float, help='beta2 parameter of the Adam optimizer for the discriminator')
+    
+    #### contrastive loss hyperparameters
+    parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
+    parser.add_argument('--num_sim_factors', default=None, type=int,
+                        help='number of factors to encourage to similar in value in image representation and its augmentation representation')
+    parser.add_argument('--augment_factor', default=None, type=float,
+                        help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')
 
     parser.add_argument('--dset_dir', default='data', type=str, help='dataset directory')
     parser.add_argument('--dataset', default='CelebA', type=str, help='dataset name')
