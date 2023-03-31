@@ -130,7 +130,7 @@ def return_data(args):
     train_data = dset(**train_kwargs)
     train_loader = DataLoader(train_data,
                               batch_size=batch_size,
-                              collate_fn=augmented_batch,
+                              collate_fn=augmented_batch if args.use_augment_dataloader else None,
                               shuffle=True,
                               num_workers=num_workers,
                               pin_memory=True,
