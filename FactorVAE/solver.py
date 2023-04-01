@@ -83,7 +83,7 @@ class Solver(object):
                            vae_tc='win_vae_tc', D_loss='win_D_loss', k_sim_loss='win_k_sim_loss')
 
         self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
-            self.win_vae_tc, self.win_D_tc, self.win_k_sim_loss = (None,) * len(self.win_id)
+            self.win_vae_tc, self.win_D_loss, self.win_k_sim_loss = (None,) * len(self.win_id)
 
         self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_loss', 'k_sim_loss')
         self.image_gather = DataGather('true', 'recon')
@@ -301,7 +301,7 @@ class Solver(object):
                         xlabel='iteration',
                         ylabel='Total Corr. (VAE)',))
 
-        self.win_D_tc = self.viz.line(X=iters,
+        self.win_D_loss = self.viz.line(X=iters,
                       Y=D_losses,
                       env=self.name+'_lines',
                       win=self.win_id['D_loss'],
@@ -479,7 +479,7 @@ class Solver(object):
                         xlabel='iteration',
                         ylabel='Total Corr. (VAE)',))
 
-        self.win_D_tc = self.viz.line(X=zero_init,
+        self.win_D_loss = self.viz.line(X=zero_init,
                       Y=zero_init,
                       env=self.name+'_lines',
                       win=self.win_id['D_loss'],
