@@ -80,12 +80,12 @@ class Solver(object):
         # Visdom
         self.viz_on = args.viz_on
         self.win_id = dict(D_z='win_D_z', recon='win_recon', kld='win_kld', D_acc='win_D_acc', 
-                           vae_tc='win_vae_tc', D_tc='win_D_tc', k_sim_loss='win_k_sim_loss')
+                           vae_tc='win_vae_tc', D_loss='win_D_loss', k_sim_loss='win_k_sim_loss')
 
         self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
             self.win_vae_tc, self.win_D_tc, self.win_k_sim_loss = (None,) * len(self.win_id)
 
-        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_tc', 'k_sim_loss')
+        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_loss', 'k_sim_loss')
         self.image_gather = DataGather('true', 'recon')
 
         # Checkpoint
@@ -164,16 +164,16 @@ class Solver(object):
                 # detach b/c we don't want to update VAE params.
                 z_pperm = permute_dims(z_prime).detach()
                 D_z_pperm = self.D(z_pperm)
-                D_tc_loss = 0.5*(F.cross_entropy(D_z_for_discrim_loss, zeros) + F.cross_entropy(D_z_pperm, ones))
+                D_loss = 0.5*(F.cross_entropy(D_z_for_discrim_loss, zeros) + F.cross_entropy(D_z_pperm, ones))
 
                 self.optim_D.zero_grad()
-                D_tc_loss.backward()
+                D_loss.backward()
                 self.optim_D.step()
 
                 if self.global_iter%self.print_iter == 0:
-                    print_str = '[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_tc_loss:{:.3f} k_sim_loss:{:.3f}'
+                    print_str = '[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_loss:{:.3f} k_sim_loss:{:.3f}'
                     self.pbar.write(print_str.format(
-                        self.global_iter, vae_recon_loss.item(), vae_kld.item(), vae_tc_loss.item(), D_tc_loss.item(), 
+                        self.global_iter, vae_recon_loss.item(), vae_kld.item(), vae_tc_loss.item(), D_loss.item(), 
                         k_sim_loss.item()))
 
                 if self.global_iter%self.ckpt_save_iter == 0:
@@ -196,7 +196,7 @@ class Solver(object):
                                             kld=vae_kld.item(),
                                             D_acc=D_acc.item(),
                                             vae_tc=vae_tc_loss.item(),
-                                            D_tc=D_tc_loss.item(),
+                                            D_loss=D_loss.item(),
                                             k_sim_loss=k_sim_loss.item())
 
                 if self.viz_on and (self.global_iter%self.viz_la_iter == 0):
@@ -251,7 +251,7 @@ class Solver(object):
         soft_D_zs = torch.stack([soft_D_z, soft_D_z_pperm], -1)
 
         vae_tcs = torch.Tensor(data['vae_tc'])
-        D_tcs = torch.Tensor(data['D_tc'])
+        D_losses = torch.Tensor(data['D_loss'])
 
         k_sim_losses = torch.Tensor(data['k_sim_loss'])
 
@@ -302,9 +302,9 @@ class Solver(object):
                         ylabel='Total Corr. (VAE)',))
 
         self.win_D_tc = self.viz.line(X=iters,
-                      Y=D_tcs,
+                      Y=D_losses,
                       env=self.name+'_lines',
-                      win=self.win_id['D_tc'],
+                      win=self.win_id['D_loss'],
                       update='append',
                       opts=dict(
                         xlabel='iteration',
@@ -482,7 +482,7 @@ class Solver(object):
         self.win_D_tc = self.viz.line(X=zero_init,
                       Y=zero_init,
                       env=self.name+'_lines',
-                      win=self.win_id['D_tc'],
+                      win=self.win_id['D_loss'],
                       opts=dict(
                         xlabel='iteration',
                         ylabel='Total Corr. (Discriminator)',))
