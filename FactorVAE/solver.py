@@ -151,7 +151,7 @@ class Solver(object):
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
-                k_sim_loss = k_factor_sim_loss_samples(z)
+                k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors)
                 vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
 
                 self.optim_VAE.zero_grad()
