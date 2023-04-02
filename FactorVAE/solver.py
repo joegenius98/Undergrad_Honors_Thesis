@@ -487,7 +487,7 @@ class Solver(object):
                       win=self.win_id['D_loss'],
                       opts=dict(
                         xlabel='iteration',
-                        ylabel='Total Corr. (Discriminator)',))
+                        ylabel='Discriminator Loss',))
 
         self.win_k_sim_loss = self.viz.line(X=zero_init,
                       Y=zero_init,
