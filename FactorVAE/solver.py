@@ -20,7 +20,8 @@ from ops import recon_loss, kl_divergence, permute_dims
 from model import FactorVAE1, FactorVAE2, Discriminator
 from dataset import return_data
 
-from thesis_losses import k_factor_sim_losses_params
+# from thesis_losses import k_factor_sim_losses_params
+from thesis_losses import k_factor_sim_loss_samples
 
 
 class Solver(object):
@@ -156,7 +157,8 @@ class Solver(object):
                 D_z_for_vae_loss = self.D(z)
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
-                k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
+                # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
+                k_sim_loss = k_factor_sim_loss_samples(z)
                 vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
 
                 self.optim_VAE.zero_grad()
