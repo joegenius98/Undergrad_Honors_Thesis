@@ -36,21 +36,20 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
     # aug_reprs = latent_samples[1::3]
     # other_reprs = latent_samples[2::3]
 
-    image_reprs = latent_samples[::2]
-    aug_reprs = latent_samples[1::2]
+    image_reprs_k = latent_samples[::2, :k]
+    aug_reprs_k = latent_samples[1::2, :k]
 
     # k-factor consistency loss
-    k_factor_consistency_diffs = image_reprs[:, :k] - aug_reprs[:, :k]
-    k_factor_diff_consistency_norms = torch.norm(k_factor_consistency_diffs, p=2, dim=1)
-    k_factor_consistency_loss = torch.mean(k_factor_diff_consistency_norms)
+    repr_diffs_k = image_reprs_k - aug_reprs_k 
+    repr_diff_norms_k = torch.norm(repr_diffs_k, p=2, dim=1)
 
     # # k-factor contrastive loss
     # k_factor_contrastive_diffs = image_reprs[:, :k] - other_reprs[:, :k]
     # k_factor_contrastive_norms = torch.norm(k_factor_contrastive_diffs, p=2, dim=1)
     # k_factor_contrastive_loss = torch.mean(k_factor_contrastive_norms)
-
     # return k_factor_consistency_loss, k_factor_contrastive_loss
-    return k_factor_consistency_loss
+
+    return torch.mean(repr_diff_norms_k)
 
 
 def k_factor_sim_losses_params(means: torch.Tensor, logvars: torch.Tensor, k):
