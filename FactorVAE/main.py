@@ -8,8 +8,10 @@ import random
 from solver import Solver
 from utils import str2bool
 
+# promotes as much reproducibility as possible
 torch.backends.cudnn.enabled = True
-torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
 def set_seed(seed, cuda):
     random.seed(seed)
