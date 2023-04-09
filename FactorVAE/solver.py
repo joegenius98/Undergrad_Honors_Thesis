@@ -86,7 +86,8 @@ class Solver(object):
         self.win_D_z, self.win_recon, self.win_kld, self.win_D_acc, \
             self.win_vae_tc, self.win_D_loss, self.win_k_sim_loss = (None,) * len(self.win_id)
 
-        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'kld', 'D_acc', 'vae_tc', 'D_loss', 'k_sim_loss')
+        self.line_gather = DataGather('iter', 'soft_D_z', 'soft_D_z_pperm', 'recon', 'total_kld', 'dim_wise_kld', 'mean_kld', \
+                                      'D_acc', 'vae_tc', 'D_loss', 'k_sim_loss')
         self.image_gather = DataGather('true', 'recon')
 
         # Checkpoint
@@ -145,14 +146,14 @@ class Solver(object):
                 x_true1 = x_true1.to(self.device)
                 x_recon, mu, logvar, z = self.VAE(x_true1)
                 vae_recon_loss = recon_loss(x_true1, x_recon)
-                vae_kld = kl_divergence(mu, logvar)
+                total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
                 D_z_for_vae_loss = self.D(z)
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
                 k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors)
-                vae_loss = vae_recon_loss + vae_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
+                vae_loss = vae_recon_loss + total_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
 
                 self.optim_VAE.zero_grad()
                 vae_loss.backward(retain_graph=True)
@@ -175,7 +176,7 @@ class Solver(object):
                 if self.global_iter%self.print_iter == 0:
                     print_str = '[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_loss:{:.3f} k_sim_loss:{:.3f}'
                     self.pbar.write(print_str.format(
-                        self.global_iter, vae_recon_loss.item(), vae_kld.item(), vae_tc_loss.item(), D_loss.item(), 
+                        self.global_iter, vae_recon_loss.item(), total_kld.item(), vae_tc_loss.item(), D_loss.item(), 
                         k_sim_loss.item()))
 
                 if self.global_iter%self.ckpt_save_iter == 0:
@@ -195,7 +196,10 @@ class Solver(object):
                                             soft_D_z=soft_D_z.mean().item(),
                                             soft_D_z_pperm=soft_D_z_pperm.mean().item(),
                                             recon=vae_recon_loss.item(),
-                                            kld=vae_kld.item(),
+                                            total_kld=total_kld.data,
+                                            dim_wise_kld=dim_wise_kld.data,
+                                            mean_kld=mean_kld.data,
+                                            dim_wise_kld=dim_wise_kld.data,
                                             D_acc=D_acc.item(),
                                             vae_tc=vae_tc_loss.item(),
                                             D_loss=D_loss.item(),
@@ -246,7 +250,13 @@ class Solver(object):
         data = self.line_gather.data
         iters = torch.Tensor(data['iter'])
         recon = torch.Tensor(data['recon'])
-        kld = torch.Tensor(data['kld'])
+
+        # kld = torch.Tensor(data['kld'])
+        total_klds = torch.stack(data['total_kld'])
+        dim_wise_klds = torch.stack(data['dim_wise_kld'])
+        mean_klds = torch.stack(data['mean_kld'])
+        klds = torch.cat([dim_wise_klds, mean_klds, total_klds], 1)
+
         D_acc = torch.Tensor(data['D_acc'])
         soft_D_z = torch.Tensor(data['soft_D_z'])
         soft_D_z_pperm = torch.Tensor(data['soft_D_z_pperm'])
@@ -286,7 +296,7 @@ class Solver(object):
                         ylabel='discriminator accuracy',))
 
         self.win_kld = self.viz.line(X=iters,
-                      Y=kld,
+                      Y=klds,
                       env=self.name+'_lines',
                       win=self.win_id['kld'],
                       update='append',

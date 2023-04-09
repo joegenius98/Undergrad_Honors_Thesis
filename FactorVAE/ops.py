@@ -11,8 +11,13 @@ def recon_loss(x, x_recon):
 
 
 def kl_divergence(mu, logvar):
-    kld = -0.5*(1+logvar-mu**2-logvar.exp()).sum(1).mean(0, keepdim=True)
-    return kld
+    klds = -0.5*(1+logvar-mu**2-logvar.exp())
+
+    total_kld = klds.sum(1).mean(0, keepdim=True)
+    dim_wise_kld = klds.mean(0)
+    mean_kld = klds.mean(1).mean(0, True)
+
+    return total_kld, dim_wise_kld, mean_kld
 
 
 def permute_dims(z):
