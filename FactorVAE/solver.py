@@ -199,7 +199,6 @@ class Solver(object):
                                             total_kld=total_kld.data,
                                             dim_wise_kld=dim_wise_kld.data,
                                             mean_kld=mean_kld.data,
-                                            dim_wise_kld=dim_wise_kld.data,
                                             D_acc=D_acc.item(),
                                             vae_tc=vae_tc_loss.item(),
                                             D_loss=D_loss.item(),
