@@ -44,4 +44,3 @@ nice python main.py --seed 5 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --num_sim_factors 5 --augment_factor 1 \
  --name fVAE_k5_seed5 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 100_000
-
