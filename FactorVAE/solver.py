@@ -256,8 +256,6 @@ class Solver(object):
         mean_klds = torch.stack(data['mean_kld'])
         klds = torch.cat([dim_wise_klds, mean_klds, total_klds], 1)
 
-        print(klds.shape)
-
         D_acc = torch.Tensor(data['D_acc'])
         soft_D_z = torch.Tensor(data['soft_D_z'])
         soft_D_z_pperm = torch.Tensor(data['soft_D_z_pperm'])
