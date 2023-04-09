@@ -174,10 +174,10 @@ class Solver(object):
                 self.optim_D.step()
 
                 if self.global_iter%self.print_iter == 0:
-                    print_str = '[{}] vae_recon_loss:{:.3f} vae_kld:{:.3f} vae_tc_loss:{:.3f} D_loss:{:.3f} k_sim_loss:{:.3f}'
+                    print_str = '[{}] vae_recon_loss:{:.3f} tot_kld:{:.3f} mean_kld: {:.3f} vae_tc_loss:{:.3f} D_loss:{:.3f} k_sim_loss:{:.3f}'
                     self.pbar.write(print_str.format(
-                        self.global_iter, vae_recon_loss.item(), total_kld.item(), vae_tc_loss.item(), D_loss.item(), 
-                        k_sim_loss.item()))
+                        self.global_iter, vae_recon_loss.item(), total_kld.item(), mean_kld.item(), 
+                        vae_tc_loss.item(), D_loss.item(), k_sim_loss.item()))
 
                 if self.global_iter%self.ckpt_save_iter == 0:
                     self.save_checkpoint(self.global_iter)
@@ -255,6 +255,8 @@ class Solver(object):
         dim_wise_klds = torch.stack(data['dim_wise_kld'])
         mean_klds = torch.stack(data['mean_kld'])
         klds = torch.cat([dim_wise_klds, mean_klds, total_klds], 1)
+
+        print(klds.shape)
 
         D_acc = torch.Tensor(data['D_acc'])
         soft_D_z = torch.Tensor(data['soft_D_z'])
