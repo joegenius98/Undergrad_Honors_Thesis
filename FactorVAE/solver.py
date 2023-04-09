@@ -477,7 +477,7 @@ class Solver(object):
                         ylabel='discriminator accuracy',))
 
         self.win_kld = self.viz.line(X=zero_init,
-                      Y=zero_init,
+                      Y=torch.stack([zero_init] * 12, -1),
                       env=self.name+'_lines',
                       win=self.win_id['kld'],
                       opts=dict(
