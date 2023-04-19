@@ -58,6 +58,7 @@ class Solver(object):
         self.augment_factor = 0
         self.num_sim_factors = None
 
+        self.use_sort_strategy = args.use_sort_strategy
         if self.use_augment_dataloader:
             self.augment_factor = args.augment_factor 
             self.num_sim_factors = args.num_sim_factors
@@ -152,7 +153,36 @@ class Solver(object):
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
-                k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors)
+                k_sim_loss = 0
+                precedence_idxs = None
+
+
+                # choose the first k legitimate factors of variation, from lowest to highest KL div.
+                # if k > # of legitimate factors, then just head over to the illegitimate/constant ones, from highest-->lowest KL div.
+                # (just in case factors with KL div. < 0.5 are still siginificant, then we want to prioritize the remaining legit. factors)
+                if self.use_sort_strategy:
+                    # partition between semantic factors of variation and constants (0.5 KL Div. threshold, may change later)
+                    sig_z_idxs = torch.nonzero(dim_wise_kld >= 0.5).squeeze()
+                    const_z_idxs = torch.nonzero(dim_wise_kld < 0.5).squeeze()
+
+                    # significant KL div. values and unsignificant (down to the micrometer, usually) KL div. values
+                    # micro. can also just mean some small value (even if not a micrometer), e.g. less than 0.5
+                    sig_kls = dim_wise_kld[sig_z_idxs]
+                    micro_kls = dim_wise_kld[const_z_idxs]
+
+                    # sort each subset of idxs. while keeping track of the original indices relative to `dim_wise_kld`
+                    # sort the significant z indices in increasing order, and the insignificant ones in decreasing order
+                    sig_z_idxs_sorted = sig_z_idxs[torch.argsort(sig_kls)]
+                    const_z_idxs_sorted = const_z_idxs[torch.argsort(micro_kls, descending=True)]
+
+                    precedence_idxs = torch.cat([sig_z_idxs_sorted, const_z_idxs_sorted])
+                    k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors, precedence_idxs)
+
+                # no strategy; just go with selecting the first k indices
+                else:
+                    k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors)
+
+
                 vae_loss = vae_recon_loss + total_kld + self.gamma*vae_tc_loss + self.augment_factor * k_sim_loss
 
                 self.optim_VAE.zero_grad()
@@ -175,9 +205,15 @@ class Solver(object):
 
                 if self.global_iter%self.print_iter == 0:
                     print_str = '[{}] vae_recon_loss:{:.3f} tot_kld:{:.3f} mean_kld: {:.3f} vae_tc_loss:{:.3f} D_loss:{:.3f} k_sim_loss:{:.3f}'
-                    self.pbar.write(print_str.format(
+
+                    formatted_str = print_str.format(
                         self.global_iter, vae_recon_loss.item(), total_kld.item(), mean_kld.item(), 
-                        vae_tc_loss.item(), D_loss.item(), k_sim_loss.item()))
+                        vae_tc_loss.item(), D_loss.item(), k_sim_loss.item())
+                    
+                    if self.use_sort_strategy:
+                        formatted_str += f'k idxs: {precedence_idxs[:self.num_sim_factors]}'
+
+                    self.pbar.write(formatted_str)
 
                 if self.global_iter%self.ckpt_save_iter == 0:
                     self.save_checkpoint(self.global_iter)
