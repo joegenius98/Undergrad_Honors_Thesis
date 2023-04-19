@@ -14,7 +14,10 @@ def kl_divergence(mu, logvar):
     klds = -0.5*(1+logvar-mu**2-logvar.exp())
 
     total_kld = klds.sum(1).mean(0, keepdim=True)
+
+    # without keepdim=True, dim_wise_kld is a 1D torch obj. instead of 2D
     dim_wise_kld = klds.mean(0)
+
     mean_kld = klds.mean(1).mean(0, True)
 
     return total_kld, dim_wise_kld, mean_kld
