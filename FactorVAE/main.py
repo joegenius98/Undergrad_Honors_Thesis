@@ -29,7 +29,7 @@ def main(args):
         augmentations = ['random rotate 90, 180, or 270 degs.', 'dSprite random x/y translation']
         assert args.num_sim_factors and args.augment_factor
         assert args.num_sim_factors <= args.z_dim
-        print(f"Using augmentation(s) {augmentations[args.augment_choice]} with:")
+        print(f"Using augmentation(s) {augmentations[args.augment_choice - 1]} with:")
         print(f"k = {args.num_sim_factors}, a = {args.augment_factor}")
     
     if args.use_sort_strategy:
