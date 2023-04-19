@@ -126,7 +126,7 @@ def translate_shape(image):
 
 # 4. Flipping (horizontal/vertical) is built-into PyTorch
 
-DSPRITE_AUGMENTATIONS = [discrete_random_rotate, continuous_random_rotate, shrink_shape_and_pad, translate_shape, hflip, vflip]
+# DSPRITE_AUGMENTATIONS = [discrete_random_rotate, continuous_random_rotate, shrink_shape_and_pad, translate_shape, hflip, vflip]
 # TODO: include maybe more in AUGMENTATIONS, 
 # e.g. Gaussian blurring and other standard self-supervised learning augmentations
-AUGMENTATIONS = [discrete_random_rotate, shrink_and_pad, hflip, vflip]
+# AUGMENTATIONS = [discrete_random_rotate, shrink_and_pad, hflip, vflip]

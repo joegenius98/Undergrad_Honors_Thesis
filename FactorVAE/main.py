@@ -52,6 +52,12 @@ if __name__ == "__main__":
     
     #### contrastive loss hyperparameters
     parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
+    parser.add_argument('--augment_choice', default=1, type=int, choices=range(1,3), help=\
+                        """
+                        1 - discrete random rotation (90, 180, 270)
+                        2 - random x/y position translation (specific to dSprites)
+                        """
+                        )
     parser.add_argument('--num_sim_factors', default=None, type=int,
                         help='number of factors to encourage to similar in value in image representation and its augmentation representation')
     parser.add_argument('--augment_factor', default=None, type=float,

@@ -8,7 +8,10 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from augmentations import discrete_random_rotate
+from augmentations import discrete_random_rotate, translate_shape
+
+arg_to_augmentation = {1: discrete_random_rotate, 2: translate_shape}
+chosen_augmentation = None
 
 
 def is_power_of_2(num):
@@ -123,7 +126,8 @@ def augmented_batch(batch):
     
     for i in range(batch_size):         
         first_image = batch[i]
-        first_image_augmented = discrete_random_rotate(batch[i])
+        # first_image_augmented = discrete_random_rotate(batch[i])
+        first_image_augmented = chosen_augmentation(batch[i])
 
         images_batch[2*i, :, :, :] = first_image
         images_batch[2*i+1, :, :, :] = first_image_augmented
@@ -180,6 +184,11 @@ def return_data(args):
         dset = ThesisTensorDataset if args.use_augment_dataloader else CustomTensorDataset
     else:
         raise NotImplementedError
+    
+    if args.use_augment_dataloader:
+        global chosen_augmentation
+        assert type(args.augment_choice) == int
+        chosen_augmentation = arg_to_augmentation[args.augment_choice]
 
 
     train_data = dset(**train_kwargs)
