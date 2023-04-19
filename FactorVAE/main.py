@@ -27,6 +27,7 @@ def main(args):
 
     if args.use_augment_dataloader:
         assert args.num_sim_factors and args.augment_factor
+        assert args.num_sim_factors <= args.z_dim
 
     net = Solver(args)
     net.train()
