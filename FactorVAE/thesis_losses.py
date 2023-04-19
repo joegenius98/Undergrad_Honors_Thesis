@@ -1,6 +1,6 @@
 import torch
 
-def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
+def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k, idx_order=None):
     """
     Computes the k-factor consistency loss and contrastive loss for given latent vectors.
     
@@ -12,8 +12,13 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
         latent_samples (torch.Tensor): A PyTorch Tensor of shape (batch_size, number_of_latent_dimensions),
                                        containing the latent vectors for images, their augmentations, 
                                        and other randomly selected images. Its .size(0) must be a factor of 3
+
         k: how many factors to encourage to be similar for an image's representation and the representation
         of an image's augmentation
+
+        idx_order: informs which k factors to select (as opposed to selecting just the first k indices) based
+        on a strategy (e.g. sorting based on dimwise KL Div. values)
+
 
     Returns:
         tuple: A tuple containing two elements:
@@ -36,12 +41,23 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
     # aug_reprs = latent_samples[1::3]
     # other_reprs = latent_samples[2::3]
 
-    image_reprs_k = latent_samples[::2, :k]
-    aug_reprs_k = latent_samples[1::2, :k]
+    image_reprs_k, aug_reprs_k = None, None
+
+    if idx_order:
+        image_reprs_k = latent_samples[::2, idx_order[:k]]
+        aug_reprs_k = latent_samples[::2, idx_order[:k]]
+    else:
+        image_reprs_k = latent_samples[::2, :k]
+        aug_reprs_k = latent_samples[1::2, :k]
 
     # k-factor consistency loss
     repr_diffs_k = image_reprs_k - aug_reprs_k 
-    repr_diff_norms_k = torch.norm(repr_diffs_k, p=2, dim=1)
+
+    # 2nd norm.
+    # repr_diff_norms_k = torch.norm(repr_diffs_k, p=2, dim=1)
+
+    # squared error 
+    repr_diff_norms_k = torch.sum(repr_diffs_k ** 2, dim = 1)
 
     # # k-factor contrastive loss
     # k_factor_contrastive_diffs = image_reprs[:, :k] - other_reprs[:, :k]
@@ -49,6 +65,7 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k):
     # k_factor_contrastive_loss = torch.mean(k_factor_contrastive_norms)
     # return k_factor_consistency_loss, k_factor_contrastive_loss
 
+    # mean 2nd norm. or mean squared error
     return torch.mean(repr_diff_norms_k)
 
 
