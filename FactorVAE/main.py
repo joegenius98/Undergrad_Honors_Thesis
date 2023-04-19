@@ -60,6 +60,13 @@ if __name__ == "__main__":
                         )
     parser.add_argument('--num_sim_factors', default=None, type=int,
                         help='number of factors to encourage to similar in value in image representation and its augmentation representation')
+    parser.add_argument('--use_sort_strategy', action='store_true', help=\
+                        '''
+                        instead of selecting the first k indices, where k = num_sim_factors,
+                        you can choose tackle the factors that have a KL divergence above 0.5 (may put a threshold arg. later)
+                        in increasing order first, and then if k is greater than the number of latent vars.
+                        whose KL divergences are above 0.5, then tackle the ones below that threshold in decreasing order
+                        ''')
     parser.add_argument('--augment_factor', default=None, type=float,
                         help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')
 
