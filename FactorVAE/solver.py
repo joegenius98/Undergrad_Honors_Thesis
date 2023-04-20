@@ -153,7 +153,7 @@ class Solver(object):
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
-                k_sim_loss = torch.Tensor([0.0], device=self.device)
+                k_sim_loss = torch.Tensor([0.0]).to(self.device)
                 precedence_idxs = None
 
 
