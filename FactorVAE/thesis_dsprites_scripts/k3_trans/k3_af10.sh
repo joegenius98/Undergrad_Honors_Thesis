@@ -1,4 +1,4 @@
-/bin/sh
+#! /bin/sh
 
 nice python main.py --seed 1 \
  --dataset dsprites --num_workers 4 --batch_size 64 \
