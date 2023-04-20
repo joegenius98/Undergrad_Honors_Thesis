@@ -239,7 +239,7 @@ class Solver(object):
                                             D_acc=D_acc.item(),
                                             vae_tc=vae_tc_loss.item(),
                                             D_loss=D_loss.item(),
-                                            k_sim_loss=k_sim_loss.item())
+                                            k_sim_loss=k_sim_loss.item() if isinstance(k_sim_loss, torch.Tensor) else 0)
 
                 if self.viz_on and (self.global_iter%self.viz_la_iter == 0):
                     self.visualize_line()
