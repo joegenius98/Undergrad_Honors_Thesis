@@ -162,8 +162,8 @@ class Solver(object):
                 # (just in case factors with KL div. < 0.5 are still siginificant, then we want to prioritize the remaining legit. factors)
                 if self.use_sort_strategy:
                     # partition between semantic factors of variation and constants (0.5 KL Div. threshold, may change later)
-                    sig_z_idxs = torch.nonzero(dim_wise_kld >= 0.5).squeeze()
-                    const_z_idxs = torch.nonzero(dim_wise_kld < 0.5).squeeze()
+                    sig_z_idxs = torch.nonzero(dim_wise_kld >= 0.5).flatten()
+                    const_z_idxs = torch.nonzero(dim_wise_kld < 0.5).flatten()
 
                     # significant KL div. values and unsignificant (down to the micrometer, usually) KL div. values
                     # micro. can also just mean some small value (even if not a micrometer), e.g. less than 0.5
