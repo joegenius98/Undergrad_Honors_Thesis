@@ -582,7 +582,7 @@ class Solver(object):
                     self.pbar.write("=> no checkpoint found")
                 return
 
-            ckpts = [int(ckpt) for ckpt in ckpts]
+            ckpts = [int(ckpt) for ckpt in ckpts if 'MIG' not in ckpt]
             ckpts.sort(reverse=True)
             ckptname = str(ckpts[0])
 
