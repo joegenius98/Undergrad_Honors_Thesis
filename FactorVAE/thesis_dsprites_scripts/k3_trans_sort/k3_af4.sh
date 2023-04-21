@@ -16,7 +16,7 @@ nice python main.py --seed 1 \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
- --use_augment_dataloader --num_sim_factors 3 --use_sort_strategy --augment_choice 2 --augment_factor 4 \
+ --use_augment_dataloader --augment_choice 2 --use_sort_strategy --num_sim_factors 3 --augment_factor 4 \
  --name trans_sort_k3_af4_seed1 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 2 \
@@ -25,7 +25,7 @@ nice python main.py --seed 2 \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
- --use_augment_dataloader --num_sim_factors 3 --use_sort_strategy --augment_choice 2 --augment_factor 4 \
+ --use_augment_dataloader --augment_choice 2 --use_sort_strategy --num_sim_factors 3 --augment_factor 4 \
  --name trans_sort_k3_af4_seed2 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 3 \
@@ -34,7 +34,7 @@ nice python main.py --seed 3 \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
- --use_augment_dataloader --num_sim_factors 3 --use_sort_strategy --augment_choice 2 --augment_factor 4 \
+ --use_augment_dataloader --augment_choice 2 --use_sort_strategy --num_sim_factors 3 --augment_factor 4 \
  --name trans_sort_k3_af4_seed3 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 4 \
@@ -43,7 +43,7 @@ nice python main.py --seed 4 \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
- --use_augment_dataloader --num_sim_factors 3 --use_sort_strategy --augment_choice 2 --augment_factor 4 \
+ --use_augment_dataloader --augment_choice 2 --use_sort_strategy --num_sim_factors 3 --augment_factor 4 \
  --name trans_sort_k3_af4_seed4 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 5 \
@@ -52,5 +52,5 @@ nice python main.py --seed 5 \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
- --use_augment_dataloader --num_sim_factors 3 --use_sort_strategy --augment_choice 2 --augment_factor 4 \
+ --use_augment_dataloader --augment_choice 2 --use_sort_strategy --num_sim_factors 3 --augment_factor 4 \
  --name trans_sort_k3_af4_seed5 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
