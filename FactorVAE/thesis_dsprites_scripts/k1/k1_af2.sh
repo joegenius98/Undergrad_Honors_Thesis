@@ -4,7 +4,7 @@ port=$1
 sh check_port.sh $port
 exit_status=$?
 
-if [$exit_status -eq 1]
+if [ $exit_status -eq 1 ]
 then
   exit 1
 fi
