@@ -1,7 +1,7 @@
 #! /bin/sh
 
 port=$1
-sh ../check_port.sh $port
+sh check_port.sh $port
 exit_status=$?
 
 if [$exit_status -eq 1]
