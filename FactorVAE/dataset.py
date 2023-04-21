@@ -8,9 +8,9 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from augmentations import discrete_random_rotate, translate_shape
+from augmentations import discrete_random_rotate, translate_shape, horizontal_flip, vertical_flip
 
-arg_to_augmentation = {1: discrete_random_rotate, 2: translate_shape}
+arg_to_augmentation = {1: discrete_random_rotate, 2: translate_shape, 3: horizontal_flip, 4: vertical_flip}
 chosen_augmentation = None
 
 

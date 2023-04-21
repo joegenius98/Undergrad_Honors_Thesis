@@ -9,7 +9,10 @@ Parameters
 ----------
 image: a PyTorch tensor defined by (# channels, height, width) shape
 """
-
+AUGMENT_DESCRIPTIONS = ['Discrete rotation counter-clockwise (90, 180, 270 degs.)',
+                        'Translate dSprite randomly in x/y positions',
+                        'Horizontal flip',
+                        'Vertical flip']
 # 1. rotation
 def continuous_random_rotate(image):
     return rotate(image, random.randrange(0, 360))
@@ -125,6 +128,11 @@ def translate_shape(image):
 
 
 # 4. Flipping (horizontal/vertical) is built-into PyTorch
+def horizontal_flip(image):
+    return hflip(image)
+
+def vertical_flip(image):
+    return vflip(image)
 
 # DSPRITE_AUGMENTATIONS = [discrete_random_rotate, continuous_random_rotate, shrink_shape_and_pad, translate_shape, hflip, vflip]
 # TODO: include maybe more in AUGMENTATIONS, 
