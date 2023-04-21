@@ -7,6 +7,7 @@ import random
 
 from solver import Solver
 from utils import str2bool
+from augmentations import AUGMENT_DESCRIPTIONS
 
 # promotes as much reproducibility as possible
 torch.backends.cudnn.enabled = True
@@ -26,7 +27,6 @@ def main(args):
     set_seed(args.seed, args.cuda)
 
     if args.use_augment_dataloader:
-        from augmentations import AUGMENT_DESCRIPTIONS
 
         assert args.num_sim_factors and args.augment_factor
         assert args.num_sim_factors <= args.z_dim
@@ -60,11 +60,8 @@ if __name__ == "__main__":
     
     #### contrastive loss hyperparameters
     parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
-    parser.add_argument('--augment_choice', default=1, type=int, choices=range(1,3), help=\
-                        """
-                        1 - discrete random rotation (90, 180, 270)
-                        2 - random x/y position translation (specific to dSprites)
-                        """
+    parser.add_argument('--augment_choice', default=1, type=int, choices=range(1, len(AUGMENT_DESCRIPTIONS)+1), help=\
+                        "\n".join(f"{i+1}. {AUGMENT_DESCRIPTIONS[i]}" for i in range(len(AUGMENT_DESCRIPTIONS)))
                         )
     parser.add_argument('--num_sim_factors', default=None, type=int,
                         help='number of factors to encourage to similar in value in image representation and its augmentation representation')
