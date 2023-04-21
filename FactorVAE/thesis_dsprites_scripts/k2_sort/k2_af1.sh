@@ -1,5 +1,15 @@
 #! /bin/sh
 
+port=$1
+sh check_port.sh $port
+exit_status=$?
+
+if [ $exit_status -eq 1 ]
+then
+  exit 1
+fi
+
+
 nice python main.py --seed 1 \
  --dataset dsprites --num_workers 4 --batch_size 64 \
  --output_save True --viz_on True --viz_port 4517 \
