@@ -9,6 +9,10 @@ from solver import Solver
 from utils import str2bool
 from augmentations import AUGMENT_DESCRIPTIONS
 
+import os
+# ensure that NVIDIA-SMI ordering is same as PyTorch's GPU ID ordering
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+
 # promotes as much reproducibility as possible
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = False
@@ -25,9 +29,9 @@ def set_seed(seed, cuda):
 
 def main(args):
     set_seed(args.seed, args.cuda)
+    if args.cuda: torch.cuda.set_device(args.gpu)
 
     if args.use_augment_dataloader:
-
         assert args.num_sim_factors and args.augment_factor
         assert args.num_sim_factors <= args.z_dim
         print(f"Using augmentation(s) {AUGMENT_DESCRIPTIONS[args.augment_choice - 1]} with:")
@@ -46,6 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--name', default='main', type=str, help='name of the experiment')
     parser.add_argument('--seed', default=1, type=int, help='torch and numpy random generator seed of the experiment')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
+    parser.add_argument('--gpu', default=0, type=int, help='gpu id, same ordering from running `nvidia-smi`')
     parser.add_argument('--max_iter', default=1e6, type=float, help='maximum training iteration')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
 
