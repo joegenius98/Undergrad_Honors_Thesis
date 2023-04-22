@@ -13,9 +13,13 @@ then
 fi
 
 # Check if visualization port is NOT being used by Visdom
-process_id=$(lsof -i :"$1" -t)
-if [ -z "$process_id" ] || ! ps -p "$process_id" -o cmd | grep -q "visdom.server"
-then
-  echo "Please select a port being used for a Visdom server"
-  exit 1
-fi
+process_ids=$(lsof -i :"$1" -t)
+for pid in $process_ids; do
+  if [! -z "$pid" ] && ps -p "$process_id" -o cmd | grep -q "visdom.server"
+  then
+      exit 0
+  fi
+done
+
+echo "Please select a port being used for a Visdom server"
+exit 1
