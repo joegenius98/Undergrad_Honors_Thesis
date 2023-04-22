@@ -12,5 +12,6 @@ dependencies:
     - visdom
     - jsonpatch
     - tqdm
+    - pandas=1.4.2
     - matplotlib
     - brewer2mpl
