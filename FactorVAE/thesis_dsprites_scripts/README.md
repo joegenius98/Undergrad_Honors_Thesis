@@ -4,4 +4,4 @@ errors while running `main.py`.
 
 e.g.
 
-`sh thesis_dsprites_scripts/k3/k3_af1.sh`
+`sh thesis_dsprites_scripts/k3/k3_af1.sh [visdom port] [gpu id from nvidia-smi command]`
