@@ -9,9 +9,16 @@ then
   exit 1
 fi
 
+gpu=$2
+if [ -z $gpu ]
+then
+  echo "Please input GPU id (accr. to nvidia-smi ordering)"
+  exit 1
+fi
+
 
 nice python main.py --seed 1 \
- --dataset dsprites --num_workers 4 --batch_size 64 \
+ --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
  --output_save True --viz_on True --viz_port $port \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
@@ -20,7 +27,7 @@ nice python main.py --seed 1 \
  --name rot_k1_af4_seed1 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 2 \
- --dataset dsprites --num_workers 4 --batch_size 64 \
+ --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
  --output_save True --viz_on True --viz_port $port \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
@@ -29,7 +36,7 @@ nice python main.py --seed 2 \
  --name rot_k1_af4_seed2 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 3 \
- --dataset dsprites --num_workers 4 --batch_size 64 \
+ --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
  --output_save True --viz_on True --viz_port $port \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
@@ -38,7 +45,7 @@ nice python main.py --seed 3 \
  --name rot_k1_af4_seed3 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 4 \
- --dataset dsprites --num_workers 4 --batch_size 64 \
+ --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
  --output_save True --viz_on True --viz_port $port \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
@@ -47,7 +54,7 @@ nice python main.py --seed 4 \
  --name rot_k1_af4_seed4 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 5 \
- --dataset dsprites --num_workers 4 --batch_size 64 \
+ --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
  --output_save True --viz_on True --viz_port $port \
  --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
  --max_iter 7e5 --print_iter 5000 \
