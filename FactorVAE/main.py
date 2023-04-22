@@ -29,7 +29,10 @@ def set_seed(seed, cuda):
 
 def main(args):
     set_seed(args.seed, args.cuda)
-    if args.cuda: torch.cuda.set_device(args.gpu)
+    if args.cuda: 
+        assert torch.cuda.device_count() > 0, "Please use a machine with at least one CUDA-compatible GPU"
+        assert 0 <= args.gpu <= torch.cuda.device_count() - 1, "gpu id is out of bounds"
+        torch.cuda.set_device(args.gpu)
 
     if args.use_augment_dataloader:
         assert args.num_sim_factors and args.augment_factor
