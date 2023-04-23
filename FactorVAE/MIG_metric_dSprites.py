@@ -355,7 +355,13 @@ vae.cuda()
 
 
 if os.path.isfile(file_path):
-    checkpoint = torch.load(file_path)  # , map_location=torch.device('cpu'))
+    try:
+        checkpoint = torch.load(file_path)  # , map_location=torch.device('cpu'))
+    # the checkpoint may have stored GPU id info.; so when running on a computer
+    # with less GPUs, a RuntimeError would occur
+    except RuntimeError:
+        checkpoint = torch.load(file_path, torch.device('cuda:0'))
+
     vae.load_state_dict(checkpoint['model_states']['VAE'])
     print('Checkpoint loaded')
 
