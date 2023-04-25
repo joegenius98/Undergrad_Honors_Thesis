@@ -6,8 +6,10 @@ on `solver_light.py` in the Disentangling folder of this GitHub repo.
 """
 
 import os
+import csv
 import visdom
 from tqdm import tqdm
+from pathlib import Path
 
 import torch
 import torch.optim as optim
@@ -28,6 +30,7 @@ class Solver(object):
     def __init__(self, args):
         # Misc
         use_cuda = args.cuda and torch.cuda.is_available()
+        self.seed = args.seed
         self.device = 'cuda' if use_cuda else 'cpu'
         self.name = args.name
         self.max_iter = int(args.max_iter)
@@ -123,6 +126,64 @@ class Solver(object):
         self.output_dir = os.path.join(args.output_dir, args.name)
         self.output_save = args.output_save
         mkdirs(self.output_dir)
+
+        # graph data directory
+        self.graph_data_dir_fp = Path(__file__) / args.graph_data_dir
+        if not self.graph_data_dir_fp.exists():
+            self.graph_data_dir_fp.mkdir()
+
+        self.graph_data_subdir_fp = self.graph_data_dir_fp / f'{self.name}'
+        if not self.graph_data_subdir_fp.exists(): self.graph_data_subdir_fp.mkdir()
+        self.init_graph_data_loggers()
+    
+
+    def init_graph_data_loggers(self):
+        # create and initialize the loggers
+        recon_loss_csv_fp = self.graph_data_subdir_fp / 'recon_loss.csv'
+        kl_div_csv_fp = self.graph_data_subdir_fp / 'kl_divs.csv'
+        k_sim_loss_csv_fp = self.graph_data_subdir_fp / 'k_sim_loss.csv'
+        discrim_acc_csv_fp = self.graph_data_subdir_fp / 'discrim_acc.csv'
+        total_corr_csv_fp = self.graph_data_subdir_fp / 'total_corr.csv'
+
+        # newline='' prevents a blank line between every row
+        self.recon_loss_logger = csv.writer(open(recon_loss_csv_fp, 'w', newline=''), delimiter=',')
+        self.kl_div_logger = csv.writer(open(kl_div_csv_fp, 'w', newline=''), delimiter=',')
+        self.k_sim_loss_logger = csv.writer(open(k_sim_loss_csv_fp, 'w', newline=''), delimiter=',')
+        self.discrim_acc_logger = csv.writer(open(discrim_acc_csv_fp, 'w', newline=''), delimiter=',')
+        self.total_corr_logger = csv.writer(open(total_corr_csv_fp, 'w', newline=''), delimiter=',')
+
+        scalar_metric_header = ['iteration', f'seed{self.seed}']
+        kl_div_header = ['iteration'] + [f'z{i}_seed{self.seed}' for i in range(1, 11)] + \
+            [f'mean_seed{self.seed}', f'total_seed{self.seed}']
+
+        self.recon_loss_logger.writerow(scalar_metric_header)
+        self.k_sim_loss_logger.writerow(scalar_metric_header)
+        self.discrim_acc_logger.writerow(scalar_metric_header)
+        self.total_corr_logger.writerow(scalar_metric_header)
+
+        self.kl_div_logger.writerow(kl_div_header)
+
+
+    
+    def log_graph_data(self, recon_loss, kl_divs, k_sim_loss, discrim_acc, total_corr):
+        """Logs the graph data every self.viz_ll_iter iterations
+        
+        Keyword arguments:
+        recon_loss (float) -- reconstruction loss
+        kl_divs (list[float]) -- 
+            per minibatch: averaged dimension-wise KL divergences + total average KL div. + average 
+            sum-of-dimensions KL divergence
+        k_sim_loss -- regularization term based on self.num_sim_factors (aka "k") and self.augment_factor 
+        discrim_acc (float) -- discriminator accuracy
+        total_corr (float) -- estimated total correlation by the discriminator
+        """
+        
+        self.recon_loss_logger.writerow([f'{self.global_iter}', f'{round(recon_loss, 3)}'])
+        self.kl_div_logger.writerow([f'{self.global_iter}'] + [f'{round(kld, 3)}' for kld in kl_divs])
+        self.k_sim_loss_logger.writerow([f'{self.global_iter}', f'{round(k_sim_loss, 3)}'])
+        self.discrim_acc_logger.writerow([f'{self.global_iter}', f'{round(discrim_acc, 3)}'])
+        self.total_corr_logger.writerow([f'{self.global_iter}', f'{round(total_corr, 3)}'])
+
 
 
     def train(self):
@@ -241,6 +302,13 @@ class Solver(object):
                                             vae_tc=vae_tc_loss.item(),
                                             D_loss=D_loss.item(),
                                             k_sim_loss=k_sim_loss.item())
+                
+                if self.global_iter % self.viz_ll_iter == 0:
+                    kl_divs = [*list(dim_wise_kld.detach().cpu().numpy()), mean_kld.item(), total_kld.item()]
+                    self.log_graph_data(recon_loss.item(),
+                                        kl_divs,
+                                        k_sim_loss.item(), D_acc.item(), vae_tc_loss.item())
+
 
                 if self.viz_on and (self.global_iter%self.viz_la_iter == 0):
                     self.visualize_line()
