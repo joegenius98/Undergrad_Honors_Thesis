@@ -5,9 +5,17 @@ from pathlib import Path
 import csv
 # load recon.loss, ..., data
 import sys 
-assert len(sys.argv) == 2, "Please input just a folder name"
+assert len(sys.argv) == 3,\
+"""
+Please input just a folder name and then a seed number for the KL div. plot.
+The seed is assumed to be an integer between 1-5 inclusive, where the KL div. data enumerates 
+seed 1 data first, then seed 2, all the way up until seed 5. 
+If you use other seeds, please modify this code or make another script.
+"""
 
 folder_fp = Path(__file__).parent / sys.argv[1]
+kl_div_seed = int(sys.argv[2])
+assert 1 <= kl_div_seed <= 5
 
 """1. Obtain the data"""
 # reconstruction losses
@@ -39,70 +47,94 @@ tc = np.genfromtxt(folder_fp / 'total_corr.csv', delimiter=',', skip_header=1)
 
 
 """2. Parse the data out"""
-
-# recon.
-x_recon = recon_losses[:, 0]
-y_recon_avg = np.mean(recon_losses[:, 1:], axis = 1)
-error_recon = np.std(recon_losses[:, 1:], axis = 1)
-y_recon_lower = y_recon_avg - error_recon
-y_recon_upper = y_recon_avg + error_recon
-
-
-
 # kl div.
+# indexing scheme for obtaining the right seed data for the KL div. csv:
+"""
+when there is only one seed, we could do:
+# dimwise_klds = kl_divs[:, 1:11]
+# mean_kld = kl_divs[:, 11]
+# total_kld = kl_divs[:, 12]
+
+When extending beyond though, we get the following sequence
+[1, 10], 11, 12
+[13, 22], 23, 24
+[25, 34], 35, 36
+
+12 is the factor we can multiply by to get the right indices
+"""
 x_kl = kl_divs[:, 0]
-dimwise_klds = kl_divs[:, 1:11]
-mean_kld = kl_divs[:, 11]
-total_kld = kl_divs[:, 12]
+
+z0_idx = 1 + 12 * (kl_div_seed - 1)
+mean_idx = 11 + 12 * (kl_div_seed - 1)
+total_idx = 12 + 12 * (kl_div_seed - 1)
+
+dimwise_klds = kl_divs[:, z0_idx:mean_idx]
+mean_kld = kl_divs[:, mean_idx]
+total_kld = kl_divs[:, total_idx]
 
 
 
-# k-factor similarity loss
-x_ksl = k_sim_losses[:, 0]
-y_ksl = np.mean(k_sim_losses[:, 1:], axis = 1)
-error_ksl = np.std(k_sim_losses[:, 1:], axis = 1)
-y_ksl_lower = y_ksl - error_ksl
-y_ksl_upper = y_ksl + error_ksl
 
-
-# discrim. acc.
-x_discrim = discrim_accs[:, 0]
-y_discrim = np.mean(discrim_accs[:, 1:], axis = 1)
-error_discrim = np.std(discrim_accs[:, 1:], axis = 1)
-y_discrim_lower = y_discrim - error_discrim
-y_discrim_upper = y_discrim + error_discrim
-
-# total corr.
-x_tc = tc[:, 0]
-y_tc = np.mean(tc[:, 1:], axis = 1)
-error_tc = np.std(tc[:, 1:], axis = 1)
-y_tc_lower = y_tc - error_tc
-y_tc_higher = y_tc + error_tc
-
-
-
+plt.tight_layout()
 
 """#. Plotting the data"""
+def plot_scalar_metric(save_name, data, x_label, y_label, y_limits=None, tick_interval=None):
+    """Plots any non-vector-based (e.g. dimenwion-wise KL divergence) metric
+    data (np.ndarray): contains iterations as the first column and 1 or more columns
+    afterwards (e.g. 5 columns for 5 seeds)"""
+    x = data[:, 0]
+    y_avg = np.mean(data[:, 1:], axis = 1)
+    error = np.std(data[:, 1:], axis = 1)
+    y_lower = y_avg - error
+    y_upper = y_avg + error
+    
+    fig, ax = plt.subplots()
 
-# recon. losses
-fig, ax = plt.subplots()
-ax.plot(x_recon, y_recon_avg, color='blue', label='avg.')
-ax.fill_between(x_recon, y_recon_lower, y_recon_upper, color='lightblue', alpha=0.5, label='standard deviation')
+    # non-zero error check (there may be cases where only one seed's value is being plotted instead)
+    if error.any():
+        ax.plot(x, y_avg, color='blue', label='avg.')
+        ax.fill_between(x, y_lower, y_upper, color='lightblue', alpha=0.5, label='standard deviation')
+        ax.legend(prop={'size': 11})
+    else:
+        ax.plot(x, y_avg, color='blue')
 
-ax.set_xlabel('Training steps', fontsize=14)
-ax.set_ylabel('Reconstruction Loss', fontsize=14)
-plt.ylim(10, 150)
+    if tick_interval:
+        ax.yaxis.set_ticks(np.arange(*y_limits, tick_interval))
 
-ax.legend(prop={'size': 11})
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
+    ax.set_xlabel(x_label, fontsize=14)
+    ax.set_ylabel(y_label, fontsize=14)
+
+    # manually specified lower and upper limits for vertical axis
+    if y_limits:
+        ax.set_ylim(*y_limits)
+    # automatically find the lower and upper limits instead of the vertical axis,
+    # without consideration of outliers
+    else:
+        y_limits = [np.percentile(y_lower, 0.7), np.percentile(y_upper, 99.3)]
+        y_range = y_limits[1] - y_limits[0]
+        y_limits[0] -= 0.1 * y_range
+        y_limits[1] += 0.1 * y_range
+        ax.set_ylim(*y_limits)
+    
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
+    ax.tick_params(labelsize=14)
+
+    ax.grid()
+    fig.savefig(folder_fp / f'{save_name}.pdf', bbox_inches='tight', dpi=600)
 
 
-plt.tick_params(labelsize=14)
-# plt.grid(True)
-plt.grid()
-plt.tight_layout()
-fig.savefig(folder_fp / 'recon_loss.pdf', bbox_inches='tight', dpi=600)
 
+plot_scalar_metric(save_name='recon_loss', data=recon_losses, 
+                   x_label='Training Steps', y_label='Reconstruction Loss')
+
+plot_scalar_metric(save_name='k_sim_loss', data=k_sim_losses, 
+                   x_label='Training Steps', y_label='k-Factor Similarity Loss')
+
+plot_scalar_metric(save_name='discrim_acc', data=discrim_accs, 
+                   x_label='Training Steps', y_label='Discriminator Accuracy')
+
+plot_scalar_metric(save_name='total_corr', data=tc, 
+                   x_label='Training Steps', y_label='Estimated TC')
 
 
 # kl div.
@@ -121,77 +153,14 @@ ax.set_xlabel('Training steps', fontsize=15)
 ax.set_ylabel('KL Divergence', fontsize=15)
 
 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
-plt.ylim(0, 22)
-ax.yaxis.set_ticks(np.arange(0, 22, 2))
+# plt.ylim(0, 26)
+# ax.yaxis.set_ticks(np.arange(0, 26, 2))
+# plt.autoscale()
+
+ax.set_ylim(bottom=0, top=np.percentile(total_kld, 99.3))
 
 
-plt.tick_params(labelsize=15)
-plt.legend(loc='upper left', prop={'size': 10.5})
-plt.grid()
-plt.tight_layout()
+ax.tick_params(labelsize=15)
+ax.legend(loc='upper left', prop={'size': 10.5})
+ax.grid()
 fig.savefig(folder_fp / 'kl_divs.pdf', bbox_inches='tight', dpi=600)
-
-
-
-# k-factor similarity loss
-fig, ax = plt.subplots()
-ax.plot(x_ksl, y_ksl, color='blue', label='avg.')
-ax.fill_between(x_ksl, y_ksl_lower, y_ksl_upper, color='lightblue', alpha=0.5, label='standard deviation')
-
-ax.set_xlabel('Training steps', fontsize=14)
-ax.set_ylabel('K-factor Similarity Loss', fontsize=14)
-ax.yaxis.set_ticks(np.arange(0, 1, 0.1))
-plt.ylim(0, 1)
-
-ax.legend(prop={'size': 11})
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
-
-plt.tick_params(labelsize=14)
-# plt.grid(True)
-plt.grid()
-plt.tight_layout()
-fig.savefig(folder_fp / 'k_sim_loss.pdf', bbox_inches='tight', dpi=600)
-
-
-# discriminator accuracy
-fig, ax = plt.subplots()
-ax.plot(x_discrim, y_discrim, color='blue', label='avg.')
-ax.fill_between(x_discrim, y_discrim_lower, y_discrim_upper, color='lightblue', alpha=0.5, label='standard deviation')
-
-ax.set_xlabel('Training steps', fontsize=14)
-ax.set_ylabel('Discriminator Accuracy', fontsize=14)
-ax.yaxis.set_ticks(np.arange(0, 1, 0.1))
-plt.ylim(0, 1)
-
-ax.legend(prop={'size': 11})
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
-
-plt.tick_params(labelsize=14)
-# plt.grid(True)
-plt.grid()
-plt.tight_layout()
-fig.savefig(folder_fp / 'discrim_acc.pdf', bbox_inches='tight', dpi=600)
-
-
-# total correlation
-fig, ax = plt.subplots()
-ax.plot(x_tc, y_tc, color='blue', label='avg.')
-ax.fill_between(x_tc, y_tc_lower, y_tc_higher, color='lightblue', alpha=0.5, label='standard deviation')
-
-ax.set_xlabel('Training steps', fontsize=14)
-ax.set_ylabel('Estimated Total Corrleation', fontsize=14)
-ax.yaxis.set_ticks(np.arange(0, 1, 0.1))
-plt.ylim(0, 1)
-
-ax.legend(prop={'size': 11})
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
-
-plt.tick_params(labelsize=14)
-# plt.grid(True)
-plt.grid()
-plt.tight_layout()
-fig.savefig(folder_fp / 'total_corr.pdf', bbox_inches='tight', dpi=600)
-
-
-
-
