@@ -110,11 +110,12 @@ if __name__ == "__main__":
     parser.add_argument('--output_save', default=True, type=str2bool, help='whether to save traverse results')
 
     # graph data
-    parser.add_argument('--graphs_dir', default='graphs', type=str, help=\
+    parser.add_argument('--graph_data_dir', default='graphs', type=str, help=\
                         """
                         relative directory to where graph CSV data will be stored, specifically:
                         recon. loss, kl div., k-factor sim. loss, kl divergences (dim.-wise, mean, and total),
-                        discriminator accuracy, and total correlation
+                        discriminator accuracy, and total correlation.
+                        The data logging iteration is the same as `viz_ll_iter`
                         """
                         )
 
