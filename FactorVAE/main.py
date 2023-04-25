@@ -55,8 +55,9 @@ if __name__ == "__main__":
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
     parser.add_argument('--gpu', default=0, type=int, help='gpu id, same ordering from running `nvidia-smi`')
     parser.add_argument('--max_iter', default=1e6, type=float, help='maximum training iteration')
-    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
 
+    # model/optimization hyperparameters
+    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--z_dim', default=10, type=int, help='dimension of the representation z')
     parser.add_argument('--gamma', default=6.4, type=float, help='gamma hyperparameter')
     parser.add_argument('--lr_VAE', default=1e-4, type=float, help='learning rate of the VAE')
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--beta1_D', default=0.5, type=float, help='beta1 parameter of the Adam optimizer for the discriminator')
     parser.add_argument('--beta2_D', default=0.9, type=float, help='beta2 parameter of the Adam optimizer for the discriminator')
     
-    #### contrastive loss hyperparameters
+    # contrastive loss hyperparameters
     parser.add_argument('--use_augment_dataloader', action='store_true', help='whether to load images + their augmentations per batch')
     parser.add_argument('--augment_choice', default=1, type=int, choices=range(1, len(AUGMENT_DESCRIPTIONS)+1), help=\
                         "\n".join(f"{i+1}. {AUGMENT_DESCRIPTIONS[i]}" for i in range(len(AUGMENT_DESCRIPTIONS)))
@@ -83,11 +84,13 @@ if __name__ == "__main__":
     parser.add_argument('--augment_factor', default=None, type=float,
                         help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')
 
+    # dataset hyperparameters
     parser.add_argument('--dset_dir', default='data', type=str, help='dataset directory')
     parser.add_argument('--dataset', default='CelebA', type=str, help='dataset name')
     parser.add_argument('--image_size', default=64, type=int, help='image size. now only (64,64) is supported')
     parser.add_argument('--num_workers', default=2, type=int, help='dataloader num_workers')
 
+    # visualization hyperparameters
     parser.add_argument('--viz_on', default=True, type=str2bool, help='enable visdom visualization')
     parser.add_argument('--viz_port', default=8097, type=int, help='visdom port number')
     parser.add_argument('--viz_ll_iter', default=1000, type=int, help='visdom line data logging iter')
@@ -97,12 +100,23 @@ if __name__ == "__main__":
 
     parser.add_argument('--print_iter', default=500, type=int, help='print losses iter')
 
+    # checkpoint hyperparameters
     parser.add_argument('--ckpt_dir', default='checkpoints', type=str, help='checkpoint directory')
     parser.add_argument('--ckpt_load', default=None, type=str, help='checkpoint name to load')
     parser.add_argument('--ckpt_save_iter', default=10000, type=int, help='checkpoint save iter')
 
+    # output for reconstruction images and/or latent traversals
     parser.add_argument('--output_dir', default='outputs', type=str, help='output directory')
     parser.add_argument('--output_save', default=True, type=str2bool, help='whether to save traverse results')
+
+    # graph data
+    parser.add_argument('--graphs_dir', default='graphs', type=str, help=\
+                        """
+                        relative directory to where graph CSV data will be stored, specifically:
+                        recon. loss, kl div., k-factor sim. loss, kl divergences (dim.-wise, mean, and total),
+                        discriminator accuracy, and total correlation
+                        """
+                        )
 
     args = parser.parse_args()
 
