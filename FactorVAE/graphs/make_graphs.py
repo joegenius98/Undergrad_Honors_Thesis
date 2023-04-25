@@ -62,16 +62,6 @@ When extending beyond though, we get the following sequence
 
 12 is the factor we can multiply by to get the right indices
 """
-x_kl = kl_divs[:, 0]
-
-z0_idx = 1 + 12 * (kl_div_seed - 1)
-mean_idx = 11 + 12 * (kl_div_seed - 1)
-total_idx = 12 + 12 * (kl_div_seed - 1)
-
-dimwise_klds = kl_divs[:, z0_idx:mean_idx]
-mean_kld = kl_divs[:, mean_idx]
-total_kld = kl_divs[:, total_idx]
-
 
 
 
@@ -138,29 +128,45 @@ plot_scalar_metric(save_name='total_corr', data=tc,
 
 
 # kl div.
-cmap = plt.get_cmap('tab10')
-colors = [cmap(i) for i in range(10)]
+def plot_kl_div(data, y_limits=None, tick_interval=None):
+    x_kl = data[:, 0]
 
-fig, ax = plt.subplots()
+    z1_idx = 1 + 12 * (kl_div_seed - 1)
+    mean_idx = 11 + 12 * (kl_div_seed - 1)
+    total_idx = 12 + 12 * (kl_div_seed - 1)
 
-for i in range(10):
-    dim_kld = dimwise_klds[:, i]
-    ax.plot(x_kl, dim_kld, color=colors[i], label=kld_headers[i + 1], lw=2.5)
+    dimwise_klds = data[:, z1_idx:mean_idx]
+    mean_kld = data[:, mean_idx]
+    total_kld = data[:, total_idx]
 
-ax.plot(x_kl, mean_kld , color='black', label='mean', lw=2.5)
-ax.plot(x_kl, total_kld , color='black', label='total', lw=2.5)
-ax.set_xlabel('Training steps', fontsize=15) 
-ax.set_ylabel('KL Divergence', fontsize=15)
+    cmap = plt.get_cmap('tab10')
+    colors = [cmap(i) for i in range(10)]
 
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
-# plt.ylim(0, 26)
-# ax.yaxis.set_ticks(np.arange(0, 26, 2))
-# plt.autoscale()
+    fig, ax = plt.subplots()
 
-ax.set_ylim(bottom=0, top=np.percentile(total_kld, 99.3))
+    for i in range(10):
+        dim_kld = dimwise_klds[:, i]
+        ax.plot(x_kl, dim_kld, color=colors[i], label=kld_headers[z1_idx + i], lw=2.5)
 
+    ax.plot(x_kl, mean_kld , color='black', label=kld_headers[mean_idx], lw=2.5)
+    ax.plot(x_kl, total_kld , color='black', label=kld_headers[total_idx], lw=2.5)
+    ax.set_xlabel('Training Steps', fontsize=15) 
+    ax.set_ylabel('KL Divergence', fontsize=15)
 
-ax.tick_params(labelsize=15)
-ax.legend(loc='upper left', prop={'size': 10.5})
-ax.grid()
-fig.savefig(folder_fp / 'kl_divs.pdf', bbox_inches='tight', dpi=600)
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{int(x/1000)}K'))
+    ax.tick_params(labelsize=14)
+
+    if y_limits:
+        ax.set_ylim(*y_limits)
+    else:
+        ax.set_ylim(bottom=0, top=np.percentile(total_kld, 99.3))
+
+    if tick_interval:
+        ax.yaxis.set_ticks(np.arange(*y_limits, tick_interval))
+
+    ax.legend(loc='upper left', prop={'size': 10.5})
+    ax.grid()
+    fig.savefig(folder_fp / 'kl_divs.pdf', bbox_inches='tight', dpi=600)
+
+plot_kl_div(kl_divs, y_limits=(0, 22), tick_interval=2)
+
