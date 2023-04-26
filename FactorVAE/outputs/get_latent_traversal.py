@@ -5,7 +5,9 @@ containing a snapshot of all the latent dim
 Code is borrowed from `combine_gif.py` in `plot_fig/Disentangle"""
 """Guidance: 
 `python get_latent_traversal.py [dir. with latent traversal snapshot imgs.] [latent index] [latent index] ...
-e.g. `python get_latent_traversal.py ./fVAE_k1_af2/seed5/700000 8 4 5 2 3`
+each [latent index] must start from 1 INSTEAD OF starting from 0
+
+e.g. `python get_latent_traversal.py ./fVAE_k1_af2/seed5/700000 2 4 5 1 10`
 
 Each latent traversal snapshot img. is basically like:
 
@@ -91,9 +93,9 @@ if __name__ == '__main__':
     assert any(sys.argv[2] in str(fp) for fp in base_fp.glob('*')), "3rd argument should be a substring of several files"
     
     for arg in sys.argv[3:]:
-        assert arg.isdigit(), "3rd argument and above should be the set of latent dim. indices"
+        assert arg.isdigit(), "3rd argument and above should be the set of latent dim. indices, each index starting from 1"
     
 
-    combineImages(base_fp, sys.argv[2], [int(x) for x in sys.argv[3:]])
+    combineImages(base_fp, sys.argv[2], [int(x) - 1 for x in sys.argv[3:]])
     # combineImages('fixed_ellipse', [0,1,2,3,4,5,6,7,8,9])
     # combineImages('fixed_ellipse', [5, 1, 2, 6, 3])
