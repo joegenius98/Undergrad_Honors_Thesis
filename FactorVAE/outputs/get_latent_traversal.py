@@ -77,8 +77,9 @@ def combineImages(base_fp, name_initial, indices):
     for index in indices:
         for image in images:
             sliced_img = image[:, :, (index * width):((index + 1) * width - padding)]
-            print(sliced_img.shape)
+            # print(sliced_img.shape)
             allt.append(sliced_img)
+
     save_image(tensor=torch.tensor(np.stack(allt)), fp=base_fp/f'{name_initial}_combined.jpg', nrow=steps, pad_value=1)
 
 
