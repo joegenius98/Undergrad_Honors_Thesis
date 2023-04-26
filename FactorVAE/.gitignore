@@ -1,7 +1,8 @@
 __pycache__
 checkpoints
-outputs
+outputs/*
 vis_logs
 graphs/*
 !graphs/README.md
 !graphs/make_graphs.py
+!outputs/get_latent_traversal.py
