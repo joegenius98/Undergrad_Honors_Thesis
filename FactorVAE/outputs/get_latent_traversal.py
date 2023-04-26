@@ -4,7 +4,34 @@ containing a snapshot of all the latent dim
 
 Code is borrowed from `combine_gif.py` in `plot_fig/Disentangle"""
 """Guidance: 
-`python get_latent_traversal.py [experiment name dir.] [iteration subdir.] [latent index] [latent index] ..."""
+`python get_latent_traversal.py [dir. with latent traversal snapshot imgs.] [latent index] [latent index] ...
+Each latent traversal snapshot img. is basically like:
+
+
+            ------------------       ------------------
+            |z_1 = [const. val]| ... |z_n = [const. val]|
+            ------------------       ------------------
+
+ and the idea to basically grab each index (from 1 to n inclusive) across all these images,
+ and have the final result be so that each row is like:
+
+
+                 ----------       ---------
+                |z_x = -1.5| ... |z_x = 1.5|
+                 ----------       ---------
+                 ----------       ---------
+                |z_y = -1.5| ... |z_y = 1.5|
+                 ----------       ---------
+                    .               .   
+                    .               .
+                    .               .
+                 ----------       ---------
+                |z_n = -1.5| ... |z_n = 1.5|
+                 ----------       ---------
+
+where x, y, ..., n are the chosen latent dimension indices from user arguments
+"""
+
 
 import numpy as np
 import torch
@@ -50,19 +77,19 @@ def combineImages(base_fp, name_initial, indices):
 
 
 if __name__ == '__main__':
-    assert len(sys.argv[1:]) >= 4 
+    assert len(sys.argv[1:]) >= 3
     
-    base_fp = Path(__file__).parent / sys.argv[1] / sys.argv[2]
-    assert base_fp.exists(), "Please insert two args: experiment directory and iteration num. subdirectory"
+    base_fp = Path(__file__).parent / sys.argv[1]
+    assert base_fp.exists(), "Please insert relative directory to search in for latent traversal snapshot img. files"
 
     # the third user argument should be found as a substring in the name of several files,
     # depending on the latent dimensionality, in `base_fp`
-    assert any(sys.argv[3] in str(fp) for fp in base_fp.glob('*')), "3rd argument should be a substring of several files"
+    assert any(sys.argv[2] in str(fp) for fp in base_fp.glob('*')), "3rd argument should be a substring of several files"
     
-    for arg in sys.argv[4:]:
+    for arg in sys.argv[3:]:
         assert arg.isdigit(), "4th argument and above should be the set of latent dim. indices"
     
 
-    combineImages(base_fp, sys.argv[3], [int(x) for x in sys.argv[4:]])
+    combineImages(base_fp, sys.argv[3], [int(x) for x in sys.argv[3:]])
     # combineImages('fixed_ellipse', [0,1,2,3,4,5,6,7,8,9])
     # combineImages('fixed_ellipse', [5, 1, 2, 6, 3])
