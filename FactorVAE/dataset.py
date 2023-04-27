@@ -8,9 +8,10 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from augmentations import discrete_random_rotate, translate_shape, horizontal_flip, vertical_flip
+# from augmentations import discrete_random_rotate, translate_shape, horizontal_flip, vertical_flip
+from augmentations import ARG_TO_AUGMENTATION
 
-arg_to_augmentation = {1: discrete_random_rotate, 2: translate_shape, 3: horizontal_flip, 4: vertical_flip}
+# arg_to_augmentation = {1: discrete_random_rotate, 2: translate_shape, 3: horizontal_flip, 4: vertical_flip}
 chosen_augmentation = None
 
 
@@ -153,7 +154,6 @@ def augmented_batch_2tuple(lst_3_tup_data_pts):
     assert len(aug_batch) == len(rand_batch)
 
     return aug_batch, rand_batch
-    
 
 
 def return_data(args):
@@ -188,7 +188,7 @@ def return_data(args):
     if args.use_augment_dataloader:
         global chosen_augmentation
         assert type(args.augment_choice) == int
-        chosen_augmentation = arg_to_augmentation[args.augment_choice]
+        chosen_augmentation = ARG_TO_AUGMENTATION[args.augment_choice]
 
 
     train_data = dset(**train_kwargs)
