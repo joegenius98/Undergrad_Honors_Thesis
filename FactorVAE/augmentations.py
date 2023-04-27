@@ -9,11 +9,6 @@ Parameters
 ----------
 image: a PyTorch tensor defined by (# channels, height, width) shape
 """
-AUGMENT_DESCRIPTIONS = ['Discrete rotation counter-clockwise (90, 180, 270 degs.)',
-                        'Translate dSprite randomly in x/y positions',
-                        'Horizontal flip',
-                        'Vertical flip']
-
 
 # 1. rotation
 def continuous_random_rotate(image):
@@ -149,4 +144,14 @@ def gaussian_noise(image: torch.Tensor):
 # TODO: include maybe more in AUGMENTATIONS, 
 # e.g. Gaussian blurring and other standard self-supervised learning augmentations
 # AUGMENTATIONS = [discrete_random_rotate, shrink_and_pad, hflip, vflip]
-ARG_TO_AUGMENTATION = {1: discrete_random_rotate, 2: translate_shape, 3: horizontal_flip, 4: vertical_flip}
+ARG_TO_AUGMENTATION = {1: discrete_random_rotate, 
+                       2: translate_shape, 3: horizontal_flip, 4: vertical_flip, 
+                       5:gaussian_noise}
+
+AUGMENT_DESCRIPTIONS = ['Discrete rotation counter-clockwise (90, 180, 270 degs.)',
+                        'Translate dSprite randomly in x/y positions',
+                        'Horizontal flip',
+                        'Vertical flip',
+                        'Gaussian/random noise']
+
+assert len(ARG_TO_AUGMENTATION) == len(AUGMENT_DESCRIPTIONS)
