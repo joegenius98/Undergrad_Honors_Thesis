@@ -106,6 +106,38 @@ class TensorDataset(Dataset):
         return self.data_tensor.size(0)
 
 
+class ThesisImageFolder(ImageFolder):
+    def __init__(self, root, transform=None):
+        super(ThesisImageFolder, self).__init__(root, transform)
+        self.indices = range(len(self))
+
+    def __getitem__(self, index1):
+        index2 = random.choice(self.indices)
+        while index2 == index1: 
+            index2 = random.choice(self.indices)
+
+        index3 = random.choice(self.indices)
+        while index3 == index2 or index3 == index1: 
+            index3 = random.choice(self.indices)
+
+
+        path1 = self.imgs[index1][0]
+        path2 = self.imgs[index2][0]
+        path3 = self.imgs[index3][0]
+
+        img1 = self.loader(path1)
+        img2 = self.loader(path2)
+        img3 = self.loader(path3)
+
+        if self.transform is not None:
+            img1 = self.transform(img1)
+            img2 = self.transform(img2)
+            img3 = self.transform(img3)
+
+        return img1, img2, img3
+
+
+
 def augmented_batch(batch):
     """"
     Proccesses a batch of data sequentially (in the form) of an iterable
@@ -164,6 +196,8 @@ def return_data(args):
     image_size = args.image_size
     assert image_size == 64, 'currently only image size of 64 is supported'
 
+    # .toTensor() shifts (height, width, num_channels) --> (num_channels, height, width)
+    # and re-scales RGB values to be [0, 1]. 
     transform = transforms.Compose([
         transforms.Resize((image_size, image_size)),
         transforms.ToTensor(),])

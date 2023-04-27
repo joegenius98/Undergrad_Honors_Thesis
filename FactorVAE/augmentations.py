@@ -136,6 +136,15 @@ def horizontal_flip(image):
 def vertical_flip(image):
     return vflip(image)
 
+# 5. Random noise
+def gaussian_noise(image: torch.Tensor):
+    std_dev = 0.1 * (image.max() - image.min())
+
+    noisy_img = image + torch.randn(image.shape) * std_dev
+    noisy_img = torch.clamp(noisy_img, 0, 1)
+    return noisy_img
+
+
 # DSPRITE_AUGMENTATIONS = [discrete_random_rotate, continuous_random_rotate, shrink_shape_and_pad, translate_shape, hflip, vflip]
 # TODO: include maybe more in AUGMENTATIONS, 
 # e.g. Gaussian blurring and other standard self-supervised learning augmentations
