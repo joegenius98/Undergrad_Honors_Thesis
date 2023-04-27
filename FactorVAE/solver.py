@@ -305,7 +305,7 @@ class Solver(object):
                 
                 if self.global_iter % self.viz_ll_iter == 0:
                     kl_divs = [*list(dim_wise_kld.detach().cpu().numpy()), mean_kld.item(), total_kld.item()]
-                    self.log_graph_data(recon_loss.item(),
+                    self.log_graph_data(vae_recon_loss.item(),
                                         kl_divs,
                                         k_sim_loss.item(), D_acc.item(), vae_tc_loss.item())
 
