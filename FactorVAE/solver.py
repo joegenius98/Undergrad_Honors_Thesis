@@ -116,7 +116,7 @@ class Solver(object):
             # check for None or empty string (empty str. could come from checkpoint load)
             if not self.win_D_z:
                 self.viz_init()
-                print("Visdom line plot windows initialized")
+                self.pbar.write("Visdom line plot windows initialized")
             
             assert all([getattr(self, self.win_id[win_id]) for win_id in self.win_id])
 
@@ -553,7 +553,7 @@ class Solver(object):
         self.net_mode(train=True)
 
     def viz_init(self):
-        print("Visdom line plot windows being instantiated")
+        self.pbar.write("Visdom line plot windows being instantiated")
         zero_init = torch.zeros([1])
         self.win_D_z = self.viz.line(X=zero_init,
                       Y=torch.stack([zero_init, zero_init], -1),
