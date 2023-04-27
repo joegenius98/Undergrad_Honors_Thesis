@@ -16,6 +16,7 @@ then
   exit 1
 fi
 
+dset="dpsrites"
 k=1
 af=1
 aug="rand"
@@ -24,7 +25,7 @@ aug_i=5
 for seed in {1..5}
 do
     nice python main.py --seed $seed \
-    --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
+    --dataset $dset --num_workers 4 --batch_size 64 --gpu $gpu \
     --output_save True --viz_on True --viz_port $port \
     --viz_ll_iter 1000 --viz_la_iter 5000 --viz_ra_iter 50000 --viz_ta_iter 50000 \
     --max_iter 7e5 --print_iter 5000 \
