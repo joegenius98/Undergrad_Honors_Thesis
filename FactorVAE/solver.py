@@ -6,6 +6,8 @@ on `solver_light.py` in the Disentangling folder of this GitHub repo.
 """
 
 import os
+import sys
+import io
 import csv
 import visdom
 from tqdm import tqdm
@@ -25,6 +27,12 @@ from dataset import return_data
 
 # from thesis_losses import k_factor_sim_losses_params
 from thesis_losses import k_factor_sim_loss_samples
+
+
+# Create a custom stream that redirects output to tqdm.write method
+class TqdmStream(io.StringIO):
+    def write(self, buf):
+        tqdm.write(buf.strip())
 
 
 class Solver(object):
@@ -111,8 +119,13 @@ class Solver(object):
             # visdom.Visdom prints out "Setting up a new session ...", which makes the tqdm progress bar
             # print out twice instead of once; so I redirect that "Setting up..." string printout
             # onto self.pbar.write("Setting up a new session ...")
-            with contextlib.redirect_stdout(self.pbar.write):
-                self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
+
+            old_stdout = sys.stdout 
+            sys.stdout = TqdmStream()
+
+            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
+
+            sys.stdout = old_stdout
 
             self.viz_ll_iter = args.viz_ll_iter
             self.viz_la_iter = args.viz_la_iter
