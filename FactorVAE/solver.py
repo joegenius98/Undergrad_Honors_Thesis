@@ -9,6 +9,7 @@ import os
 import csv
 import visdom
 from tqdm import tqdm
+import contextlib
 from pathlib import Path
 
 import torch
@@ -106,7 +107,12 @@ class Solver(object):
             if not os.path.exists("./vis_logs"):
                 os.mkdir("./vis_logs")
             self.viz_port = args.viz_port
-            self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
+
+            # visdom.Visdom prints out "Setting up a new session ...", which makes the tqdm progress bar
+            # print out twice instead of once; so I redirect that "Setting up..." string printout
+            # onto self.pbar.write("Setting up a new session ...")
+            with contextlib.redirect_stdout(self.pbar.write):
+                self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
 
             self.viz_ll_iter = args.viz_ll_iter
             self.viz_la_iter = args.viz_la_iter
