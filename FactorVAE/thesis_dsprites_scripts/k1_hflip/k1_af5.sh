@@ -24,7 +24,7 @@ nice python main.py --seed 1 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --augment_choice 3 --num_sim_factors 1 --augment_factor 5 \
- --name hflip_af5_seed1_fVAE --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
+ --name hflip_k1_af5_seed1 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 2 \
  --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
@@ -33,7 +33,7 @@ nice python main.py --seed 2 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --augment_choice 3 --num_sim_factors 1 --augment_factor 5 \
- --name hflip_af5_seed2_fVAE --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
+ --name hflip_k1_af5_seed2 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 3 \
  --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
@@ -42,7 +42,7 @@ nice python main.py --seed 3 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --augment_choice 3 --num_sim_factors 1 --augment_factor 5 \
- --name hflip_af5_seed3_fVAE --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
+ --name hflip_k1_af5_seed3 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 4 \
  --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
@@ -51,7 +51,7 @@ nice python main.py --seed 4 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --augment_choice 3 --num_sim_factors 1 --augment_factor 5 \
- --name hflip_af5_seed4_fVAE --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
+ --name hflip_k1_af5_seed4 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
 
 nice python main.py --seed 5 \
  --dataset dsprites --num_workers 4 --batch_size 64 --gpu $gpu \
@@ -60,4 +60,4 @@ nice python main.py --seed 5 \
  --max_iter 7e5 --print_iter 5000 \
  --lr_VAE 1e-4 --beta1_VAE 0.9 --beta2_VAE 0.999 --lr_D 1e-4 --beta1_D 0.5 --beta2_D 0.9 \
  --use_augment_dataloader --augment_choice 3 --num_sim_factors 1 --augment_factor 5 \
- --name hflip_af5_seed5_fVAE --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
+ --name hflip_k1_af5_seed5 --z_dim 10 --gamma 10 --ckpt_load last --ckpt_save_iter 175_000
