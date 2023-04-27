@@ -16,7 +16,7 @@ then
   exit 1
 fi
 
-dset="dpsrites"
+dset="dsprites"
 k=1
 af=1
 aug="rand"
