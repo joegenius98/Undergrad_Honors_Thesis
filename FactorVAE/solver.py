@@ -128,7 +128,7 @@ class Solver(object):
         mkdirs(self.output_dir)
 
         # graph data directory
-        self.graph_data_dir_fp = Path(__file__) / args.graph_data_dir
+        self.graph_data_dir_fp = Path(__file__).parent / args.graph_data_dir
         if not self.graph_data_dir_fp.exists():
             self.graph_data_dir_fp.mkdir()
 
