@@ -205,11 +205,11 @@ def return_data(args):
     if name.lower() == 'celeba':
         root = os.path.join(dset_dir, 'CelebA')
         train_kwargs = {'root':root, 'transform':transform}
-        dset = CustomImageFolder
+        dset = ThesisImageFolder if args.use_augment_dataloader else CustomImageFolder
     elif name.lower() == '3dchairs':
         root = os.path.join(dset_dir, '3DChairs')
         train_kwargs = {'root':root, 'transform':transform}
-        dset = CustomImageFolder
+        dset = ThesisImageFolder if args.use_augment_dataloader else CustomImageFolder
     elif name.lower() == 'dsprites':
         root = os.path.join(dset_dir, 'dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz')
         data = np.load(root, encoding='latin1')
