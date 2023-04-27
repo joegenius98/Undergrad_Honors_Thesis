@@ -146,7 +146,7 @@ def gaussian_noise(image: torch.Tensor):
 # AUGMENTATIONS = [discrete_random_rotate, shrink_and_pad, hflip, vflip]
 ARG_TO_AUGMENTATION = {1: discrete_random_rotate, 
                        2: translate_shape, 3: horizontal_flip, 4: vertical_flip, 
-                       5:gaussian_noise}
+                       5: gaussian_noise}
 
 AUGMENT_DESCRIPTIONS = ['Discrete rotation counter-clockwise (90, 180, 270 degs.)',
                         'Translate dSprite randomly in x/y positions',
