@@ -6,12 +6,10 @@ on `solver_light.py` in the Disentangling folder of this GitHub repo.
 """
 
 import os
-import sys
-import io
+import logging
 import csv
 import visdom
 from tqdm import tqdm
-import contextlib
 from pathlib import Path
 
 import torch
@@ -29,10 +27,11 @@ from dataset import return_data
 from thesis_losses import k_factor_sim_loss_samples
 
 
-# Create a custom stream that redirects output to tqdm.write method
-class TqdmStream(io.StringIO):
-    def write(self, buf):
-        tqdm.write(buf.strip())
+# Create a custom logging handler that writes messages to tqdm.write
+class TqdmLoggingHandler(logging.Handler):
+    def emit(self, record):
+        msg = self.format(record)
+        tqdm.write(msg.strip())
 
 
 class Solver(object):
@@ -117,15 +116,16 @@ class Solver(object):
             self.viz_port = args.viz_port
 
             # visdom.Visdom prints out "Setting up a new session ...", which makes the tqdm progress bar
-            # print out twice instead of once; so I redirect that "Setting up..." string printout
-            # onto self.pbar.write("Setting up a new session ...")
-
-            old_stdout = sys.stdout 
-            sys.stdout = TqdmStream()
+            # print out twice instead of once; so I redirect that "Setting up..." logger print out
+            # onto tqdm.write("Setting up a new session ...") (code assistance provided by ChatGPT)
+            
+            handler = TqdmLoggingHandler()
+            logging.getLogger().addHandler(handler)
 
             self.viz = visdom.Visdom(port=self.viz_port, log_to_filename=f"./vis_logs/{self.name}")
 
-            sys.stdout = old_stdout
+            logging.getLogger().removeHandler(handler)
+
 
             self.viz_ll_iter = args.viz_ll_iter
             self.viz_la_iter = args.viz_la_iter
