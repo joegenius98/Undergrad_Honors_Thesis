@@ -37,8 +37,10 @@ def main(args):
     if args.use_augment_dataloader:
         assert args.num_sim_factors and args.augment_factor
         assert args.num_sim_factors <= args.z_dim
-        print(f"Using augmentation(s) {AUGMENT_DESCRIPTIONS[args.augment_choice - 1]} with:")
+        print(f"Using augmentation(s) {AUGMENT_DESCRIPTIONS[args.augment_choice - 1]} with: ", end='')
         print(f"k = {args.num_sim_factors}, a = {args.augment_factor}")
+
+        print(f"Denoising: {args.denoise}")
     
     if args.use_sort_strategy:
         print("Using sorting strategy for k-factor similarity loss")
@@ -83,6 +85,13 @@ if __name__ == "__main__":
                         ''')
     parser.add_argument('--augment_factor', default=None, type=float,
                         help='factor of the 2nd norm of diff. btwn. image representation and its augmentation representatoin')
+    
+    # reconstruction loss hyperparameters
+    parser.add_argument('--denoise', action='store_true', help=\
+                        '''
+                        Given the an augmented input, whether to reconstruct the un-augmented/original
+                        For example, given an input with inserted Gaussian noise, whether to reconstruct the denoised
+                        version as opposed to with Gaussian noise''')
 
     # dataset hyperparameters
     parser.add_argument('--dset_dir', default='data', type=str, help='dataset directory')
