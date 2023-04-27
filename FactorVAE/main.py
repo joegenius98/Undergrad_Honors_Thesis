@@ -50,7 +50,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Factor-VAE')
+    parser = argparse.ArgumentParser(description='(k)FactorVAE', formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('--name', default='main', type=str, help='name of the experiment')
     parser.add_argument('--seed', default=1, type=int, help='torch and numpy random generator seed of the experiment')
