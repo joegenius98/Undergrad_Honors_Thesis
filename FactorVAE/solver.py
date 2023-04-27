@@ -74,6 +74,8 @@ class Solver(object):
             self.augment_factor = args.augment_factor 
             self.num_sim_factors = args.num_sim_factors
 
+        self.denoise = args.denoise
+
 
         if args.dataset == 'dsprites':
             self.VAE = FactorVAE1(self.z_dim).to(self.device)
@@ -226,7 +228,7 @@ class Solver(object):
 
                 x_true1 = x_true1.to(self.device)
                 x_recon, mu, logvar, z = self.VAE(x_true1)
-                vae_recon_loss = recon_loss(x_true1, x_recon)
+                vae_recon_loss = recon_loss(x_true1, x_recon, self.dataset.lower(), self.denoise)
                 total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
 
                 D_z_for_vae_loss = self.D(z)

@@ -3,7 +3,7 @@
 import torch
 import torch.nn.functional as F
 
-def recon_loss(x, x_recon, dataset_name, use_noise):
+def recon_loss(x, x_recon, dataset_name, denoise):
     """
     Implements the reconstruction objective/loss term
 
@@ -12,13 +12,12 @@ def recon_loss(x, x_recon, dataset_name, use_noise):
     x (torch.Tensor) - a minibatch
     x_recon (torch.Tensor) - reconstruction of minibatch
     dataset_name (str) - name of training dataset (e.g., 'dsprites', 'celeba') 
-    use_noise: whether random noise augmentation is being applied
-        - use_noise is the motivation for the "gt_x" variable for the ground truth
-        we want to compare "x_recon" against. Unlike for other augmentations, we 
-        do not seek to reconstruct noisy input. Instead, the goal is to denoise.
+    denoise (bool): whether the goal is to reconstruct the augment (False) or to reconstruct
+    the denoised or de-augmented image (True) upon the augmentation input
     """
     loss = None
-    gt_x = x[::2].repeat_interleave(2, dim=0) if use_noise else x
+    # gt stands for "ground truth"
+    gt_x = x[::2].repeat_interleave(2, dim=0) if denoise else x
 
     if dataset_name == 'dsprites':
         n = x.size(0)
