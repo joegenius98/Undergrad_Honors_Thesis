@@ -3,10 +3,30 @@
 import torch
 import torch.nn.functional as F
 
+def recon_loss(x, x_recon, dataset_name, use_noise):
+    """
+    Implements the reconstruction objective/loss term
 
-def recon_loss(x, x_recon):
-    n = x.size(0)
-    loss = F.binary_cross_entropy_with_logits(x_recon, x, reduction='sum').div(n)
+    Parameters
+    ----------
+    x (torch.Tensor) - a minibatch
+    x_recon (torch.Tensor) - reconstruction of minibatch
+    dataset_name (str) - name of training dataset (e.g., 'dsprites', 'celeba') 
+    use_noise: whether random noise augmentation is being applied
+        - use_noise is the motivation for the "gt_x" variable for the ground truth
+        we want to compare "x_recon" against. Unlike for other augmentations, we 
+        do not seek to reconstruct noisy input. Instead, the goal is to denoise.
+    """
+    loss = None
+    gt_x = x[::2].repeat_interleave(2, dim=0) if use_noise else x
+
+    if dataset_name == 'dsprites':
+        n = x.size(0)
+        loss = F.binary_cross_entropy_with_logits(x_recon, gt_x, reduction='sum').div(n)
+    else:
+        x_recon = torch.sigmoid(x_recon)
+        loss = F.mse_loss(x_recon, gt_x, reduction='sum').div(n)
+
     return loss
 
 
