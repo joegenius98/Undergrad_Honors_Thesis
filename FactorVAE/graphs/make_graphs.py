@@ -168,5 +168,5 @@ def plot_kl_div(data, y_limits=None, tick_interval=None):
     ax.grid()
     fig.savefig(folder_fp / 'kl_divs.pdf', bbox_inches='tight', dpi=600)
 
-plot_kl_div(kl_divs, y_limits=(0, 22), tick_interval=2)
+plot_kl_div(kl_divs, (0, 30), 5)
 
