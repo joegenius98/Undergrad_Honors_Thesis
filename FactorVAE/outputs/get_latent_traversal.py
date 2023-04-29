@@ -4,10 +4,10 @@ containing a snapshot of all the latent dim
 
 Code is borrowed from `combine_gif.py` in `plot_fig/Disentangle"""
 """Guidance: 
-`python get_latent_traversal.py [dir. with latent traversal snapshot imgs.] [latent index] [latent index] ...
+`python get_latent_traversal.py [dir. with latent traversal snapshot imgs.] [substr. of files] [latent index] [latent index] ...
 each [latent index] must start from 1 INSTEAD OF starting from 0
 
-e.g. `python get_latent_traversal.py ./fVAE_k1_af2/seed5/700000 2 4 5 1 10`
+e.g. `python get_latent_traversal.py ./fVAE_k1_af2/seed5/700000 fixed_square 2 4 5 1 10`
 
 Each latent traversal snapshot img. is basically like:
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     # the third user argument should be found as a substring in the name of several files,
     # depending on the latent dimensionality, in `base_fp`
-    assert any(sys.argv[2] in str(fp) for fp in base_fp.glob('*')), "3rd argument should be a substring of several files"
+    assert any(sys.argv[2] in str(fp) for fp in base_fp.glob('*')), "2nd argument should be a substring of several files"
     
     for arg in sys.argv[3:]:
         assert arg.isdigit(), "3rd argument and above should be the set of latent dim. indices, each index starting from 1"
