@@ -57,3 +57,11 @@ Why I needed to learn this was to understand how Prof. Shao implemented the late
 1. Shift + V and select all that you want
 2. You can yank or just press `esc` twice
 3. `/\%V[your_search_string]` 
+
+(4) Shell scripting
+
+(5) Literature Review
+- When bogged down by the technical details, making a slides presentation, where each paper gets only one slide, with abstracts, conclusions, advantages, and disadvantages can maintain engagement with the literature. The literature review and processing a new idea in light of it was by far the most challenging part. 
+
+(6) Logging data for visualizations
+- Visdom, CSV filewriting
