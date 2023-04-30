@@ -1,6 +1,9 @@
-# Joseph Lee's W&M Undergrad. Honors Thesis Work
+# kFactorVAE: Self-Supervised Regularization for Better A.I. Disentanglement
 
-Adoption of Prof. Shao's ControlVAE work to investigate better disentanglement methods for more complex datasets compared to `dsprites`
+This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated, notably FactorVA in the `FactorVAE` folder, Beta-VAE from the `Disentangling` folder, and Beta-TCVAE from the `beta-tcvae` folder.
+
+# Reproducing Results
+Head over to the [`thesis_dsprites_scripts`](./FactorVAE/thesis_dsprites_scripts) directory's `README` file.
 
 
 ## Useful Things Learned
