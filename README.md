@@ -65,3 +65,7 @@ Why I needed to learn this was to understand how Prof. Shao implemented the late
 
 (6) Logging data for visualizations
 - Visdom, CSV filewriting
+
+(7) LaTeX
+- Side-by-side plots, images, adjacent text to images to label factors of variation
+- `\input` command to separate out what would otherwise be one giant LaTeX file
