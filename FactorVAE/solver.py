@@ -241,25 +241,9 @@ class Solver(object):
 
                 # if self.global_iter >= 100_000:
 
-                # choose the first k legitimate factors of variation, from lowest to highest KL div.
-                # if k > # of legitimate factors, then just head over to the illegitimate/constant ones, from highest-->lowest KL div.
-                # (just in case factors with KL div. < 0.5 are still siginificant, then we want to prioritize the remaining legit. factors)
+                # choose the first k factors of variation, from lowest to highest KL div.
                 if self.use_sort_strategy:
-                    # partition between semantic factors of variation and constants (0.5 KL Div. threshold, may change later)
-                    sig_z_idxs = torch.nonzero(dim_wise_kld >= 0.5).flatten()
-                    const_z_idxs = torch.nonzero(dim_wise_kld < 0.5).flatten()
-
-                    # significant KL div. values and unsignificant (down to the micrometer, usually) KL div. values
-                    # micro. can also just mean some small value (even if not a micrometer), e.g. less than 0.5
-                    sig_kls = dim_wise_kld[sig_z_idxs]
-                    micro_kls = dim_wise_kld[const_z_idxs]
-
-                    # sort each subset of idxs. while keeping track of the original indices relative to `dim_wise_kld`
-                    # sort the significant z indices in increasing order, and the insignificant ones in decreasing order
-                    sig_z_idxs_sorted = sig_z_idxs[torch.argsort(sig_kls)]
-                    const_z_idxs_sorted = const_z_idxs[torch.argsort(micro_kls, descending=True)]
-
-                    precedence_idxs = torch.cat([sig_z_idxs_sorted, const_z_idxs_sorted])
+                    precedence_idxs = torch.argsort(dim_wise_kld)
                     k_sim_loss = k_factor_sim_loss_samples(z, self.num_sim_factors, precedence_idxs)
 
                 # no strategy; just go with selecting the first k indices
