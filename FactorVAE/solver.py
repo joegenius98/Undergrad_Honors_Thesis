@@ -38,6 +38,8 @@ class Solver(object):
     def __init__(self, args):
         # Misc
         use_cuda = args.cuda and torch.cuda.is_available()
+        self.gpu = args.gpu
+
         self.seed = args.seed
         self.device = 'cuda' if use_cuda else 'cpu'
         self.name = args.name
@@ -662,7 +664,7 @@ class Solver(object):
         filepath = os.path.join(self.ckpt_dir, ckptname)
         if os.path.isfile(filepath):
             with open(filepath, 'rb') as f:
-                checkpoint = torch.load(f)
+                checkpoint = torch.load(f, map_location=torch.cuda.device(self.gpu))
 
             self.global_iter = checkpoint['iter']
             self.VAE.load_state_dict(checkpoint['model_states']['VAE'])
