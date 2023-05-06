@@ -235,7 +235,7 @@ class Solver(object):
                 vae_tc_loss = (D_z_for_vae_loss[:, :1] - D_z_for_vae_loss[:, 1:]).mean()
 
                 # k_sim_loss = k_factor_sim_losses_params(mu, logvar, self.num_sim_factors)
-                k_sim_loss = torch.Tensor([0.0]).to(self.device)
+                k_sim_loss = torch.Tensor([-1.0]).to(self.device)
                 precedence_idxs = None
 
 
@@ -279,7 +279,7 @@ class Solver(object):
                         vae_tc_loss.item(), D_loss.item(), k_sim_loss.item())
                     
                     if self.use_sort_strategy:
-                        formatted_str += f'k idxs: {precedence_idxs[:self.num_sim_factors]}'
+                        formatted_str += f' k idxs: {precedence_idxs[:self.num_sim_factors]}'
 
                     self.pbar.write(formatted_str)
 
