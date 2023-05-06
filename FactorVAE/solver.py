@@ -664,7 +664,7 @@ class Solver(object):
         filepath = os.path.join(self.ckpt_dir, ckptname)
         if os.path.isfile(filepath):
             with open(filepath, 'rb') as f:
-                checkpoint = torch.load(f, map_location=torch.cuda.device(self.gpu))
+                checkpoint = torch.load(f, map_location=torch.device(f'cuda:{self.gpu}'))
 
             self.global_iter = checkpoint['iter']
             self.VAE.load_state_dict(checkpoint['model_states']['VAE'])
