@@ -17,8 +17,8 @@ then
 fi
 
 dset="dsprites"
-k=2
-af=5
+k=1
+af=2
 aug="sort_rot"
 aug_i=1
 
