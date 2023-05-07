@@ -1,9 +1,12 @@
 __pycache__
-checkpoints
+checkpoints/*
 outputs/*
-vis_logs
+vis_logs/*
 graphs/*
 !graphs/README.md
 !graphs/make_graphs.py
 !outputs/get_latent_traversal.py
+!outputs/group_seeds.sh
 !graphs/combine_seeds.py
+!vis_logs/group_seeds.sh
+!checkpoints/group_seeds.sh
