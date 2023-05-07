@@ -12,6 +12,8 @@ Head over to the [`thesis_dsprites_scripts`](./kFactorVAE/thesis_dsprites_script
 # Cleaning up Outputs
 If the [`outputs`](./kFactorVAE/outputs), [`vis_logs`](./kFactorVAE/vis_logs), and/or the [`checkpoints`](./kFactorVAE/checkpoints) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
 
+For the [`graphs`](./graphs) directory, run the Python script `combine_seeds.py` instead.
+
 
 ## Useful Things Learned
 
