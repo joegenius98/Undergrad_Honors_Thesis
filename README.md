@@ -9,6 +9,10 @@ This repo. contains all work conducted for my honors thesis project at William &
 Head over to the [`thesis_dsprites_scripts`](./FactorVAE/thesis_dsprites_scripts) directory's `README` file.
 
 
+# Cleaning up Outputs
+If the [`outputs`](./FactorVAE/outputs), [`vis_logs`](./FactorVAE/vis_logs), and/or the [`checkpoints`](./FactorVAE/checkpoints) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
+
+
 ## Useful Things Learned
 
 This is just for personal memory's sake or for your own benefit too, in case you were curious as to the minor techniques I have acquired. 
