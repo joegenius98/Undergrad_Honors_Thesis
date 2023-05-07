@@ -169,22 +169,30 @@ class Solver(object):
         total_corr_csv_fp = self.graph_data_subdir_fp / 'total_corr.csv'
 
         # newline='' prevents a blank line between every row
-        self.recon_loss_logger = csv.writer(open(recon_loss_csv_fp, 'w', newline=''), delimiter=',')
-        self.kl_div_logger = csv.writer(open(kl_div_csv_fp, 'w', newline=''), delimiter=',')
-        self.k_sim_loss_logger = csv.writer(open(k_sim_loss_csv_fp, 'w', newline=''), delimiter=',')
-        self.discrim_acc_logger = csv.writer(open(discrim_acc_csv_fp, 'w', newline=''), delimiter=',')
-        self.total_corr_logger = csv.writer(open(total_corr_csv_fp, 'w', newline=''), delimiter=',')
+        self.recon_loss_logger = csv.writer(open(recon_loss_csv_fp, 'a', newline=''), delimiter=',')
+        self.kl_div_logger = csv.writer(open(kl_div_csv_fp, 'a', newline=''), delimiter=',')
+        self.k_sim_loss_logger = csv.writer(open(k_sim_loss_csv_fp, 'a', newline=''), delimiter=',')
+        self.discrim_acc_logger = csv.writer(open(discrim_acc_csv_fp, 'a', newline=''), delimiter=',')
+        self.total_corr_logger = csv.writer(open(total_corr_csv_fp, 'a', newline=''), delimiter=',')
 
         scalar_metric_header = ['iteration', f'seed{self.seed}']
         kl_div_header = ['iteration'] + [f'z{i}_seed{self.seed}' for i in range(1, 11)] + \
             [f'mean_seed{self.seed}', f'total_seed{self.seed}']
 
-        self.recon_loss_logger.writerow(scalar_metric_header)
-        self.k_sim_loss_logger.writerow(scalar_metric_header)
-        self.discrim_acc_logger.writerow(scalar_metric_header)
-        self.total_corr_logger.writerow(scalar_metric_header)
+        if recon_loss_csv_fp.stat().st_size == 0:
+            self.recon_loss_logger.writerow(scalar_metric_header)
 
-        self.kl_div_logger.writerow(kl_div_header)
+        if kl_div_csv_fp.stat().st_size == 0:
+            self.kl_div_logger.writerow(kl_div_header)
+
+        if k_sim_loss_csv_fp.stat().st_size == 0:
+            self.k_sim_loss_logger.writerow(scalar_metric_header)
+
+        if discrim_acc_csv_fp.stat().st_size == 0:
+            self.discrim_acc_logger.writerow(scalar_metric_header)
+
+        if total_corr_csv_fp.stat().st_size == 0:
+            self.total_corr_logger.writerow(scalar_metric_header)
 
 
     
