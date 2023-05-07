@@ -11,6 +11,7 @@ import csv
 import visdom
 from tqdm import tqdm
 from pathlib import Path
+import pandas as pd
 
 import torch
 import torch.optim as optim
@@ -110,6 +111,8 @@ class Solver(object):
         self.ckpt_dir = os.path.join(args.ckpt_dir, args.name)
         self.ckpt_save_iter = args.ckpt_save_iter
         mkdirs(self.ckpt_dir)
+        self.init_graph_data_loggers()
+
         if args.ckpt_load:
             self.load_checkpoint(args.ckpt_load)
 
@@ -157,41 +160,40 @@ class Solver(object):
 
         self.graph_data_subdir_fp = self.graph_data_dir_fp / f'{self.name}'
         if not self.graph_data_subdir_fp.exists(): self.graph_data_subdir_fp.mkdir()
-        self.init_graph_data_loggers()
     
 
     def init_graph_data_loggers(self):
         # create and initialize the loggers
-        recon_loss_csv_fp = self.graph_data_subdir_fp / 'recon_loss.csv'
-        kl_div_csv_fp = self.graph_data_subdir_fp / 'kl_divs.csv'
-        k_sim_loss_csv_fp = self.graph_data_subdir_fp / 'k_sim_loss.csv'
-        discrim_acc_csv_fp = self.graph_data_subdir_fp / 'discrim_acc.csv'
-        total_corr_csv_fp = self.graph_data_subdir_fp / 'total_corr.csv'
+        self.recon_loss_csv_fp = self.graph_data_subdir_fp / 'recon_loss.csv'
+        self.kl_div_csv_fp = self.graph_data_subdir_fp / 'kl_divs.csv'
+        self.k_sim_loss_csv_fp = self.graph_data_subdir_fp / 'k_sim_loss.csv'
+        self.discrim_acc_csv_fp = self.graph_data_subdir_fp / 'discrim_acc.csv'
+        self.total_corr_csv_fp = self.graph_data_subdir_fp / 'total_corr.csv'
 
         # newline='' prevents a blank line between every row
-        self.recon_loss_logger = csv.writer(open(recon_loss_csv_fp, 'a', newline=''), delimiter=',')
-        self.kl_div_logger = csv.writer(open(kl_div_csv_fp, 'a', newline=''), delimiter=',')
-        self.k_sim_loss_logger = csv.writer(open(k_sim_loss_csv_fp, 'a', newline=''), delimiter=',')
-        self.discrim_acc_logger = csv.writer(open(discrim_acc_csv_fp, 'a', newline=''), delimiter=',')
-        self.total_corr_logger = csv.writer(open(total_corr_csv_fp, 'a', newline=''), delimiter=',')
+        self.recon_loss_logger = csv.writer(open(self.recon_loss_csv_fp, 'a', newline=''), delimiter=',')
+        self.kl_div_logger = csv.writer(open(self.kl_div_csv_fp, 'a', newline=''), delimiter=',')
+        self.k_sim_loss_logger = csv.writer(open(self.k_sim_loss_csv_fp, 'a', newline=''), delimiter=',')
+        self.discrim_acc_logger = csv.writer(open(self.discrim_acc_csv_fp, 'a', newline=''), delimiter=',')
+        self.total_corr_logger = csv.writer(open(self.total_corr_csv_fp, 'a', newline=''), delimiter=',')
 
         scalar_metric_header = ['iteration', f'seed{self.seed}']
         kl_div_header = ['iteration'] + [f'z{i}_seed{self.seed}' for i in range(1, 11)] + \
             [f'mean_seed{self.seed}', f'total_seed{self.seed}']
 
-        if recon_loss_csv_fp.stat().st_size == 0:
+        if self.recon_loss_csv_fp.stat().st_size == 0:
             self.recon_loss_logger.writerow(scalar_metric_header)
 
-        if kl_div_csv_fp.stat().st_size == 0:
+        if self.kl_div_csv_fp.stat().st_size == 0:
             self.kl_div_logger.writerow(kl_div_header)
 
-        if k_sim_loss_csv_fp.stat().st_size == 0:
+        if self.k_sim_loss_csv_fp.stat().st_size == 0:
             self.k_sim_loss_logger.writerow(scalar_metric_header)
 
-        if discrim_acc_csv_fp.stat().st_size == 0:
+        if self.discrim_acc_csv_fp.stat().st_size == 0:
             self.discrim_acc_logger.writerow(scalar_metric_header)
 
-        if total_corr_csv_fp.stat().st_size == 0:
+        if self.total_corr_csv_fp.stat().st_size == 0:
             self.total_corr_logger.writerow(scalar_metric_header)
 
 
@@ -645,10 +647,20 @@ class Solver(object):
         # save all the Visdom line window states
         win_states={win_id: getattr(self, self.win_id[win_id]) for win_id in self.win_id}
 
+        # save CSV files --> dataframes
+        train_log = [
+            pd.read_csv(self.recon_loss_csv_fp, index_col='iteration'),
+            pd.read_csv(self.kl_div_csv_fp, index_col='iteration'),
+            pd.read_csv(self.k_sim_loss_csv_fp, index_col='iteration'),
+            pd.read_csv(self.discrim_acc_csv_fp, index_col='iteration'),
+            pd.read_csv(self.total_corr_csv_fp, index_col='iteration')
+        ]
+
         states = {'iter':self.global_iter,
                   'model_states':model_states,
                   'optim_states':optim_states,
-                  'win_states':win_states}
+                  'win_states':win_states,
+                  'train_log':train_log}
 
         filepath = os.path.join(self.ckpt_dir, str(ckptname))
 
@@ -656,6 +668,7 @@ class Solver(object):
             torch.save(states, f)
         if verbose:
             self.pbar.write("=> saved checkpoint '{}' (iter {})".format(filepath, self.global_iter))
+
 
     def load_checkpoint(self, ckptname='last', verbose=True):
         if ckptname == 'last':
@@ -686,6 +699,13 @@ class Solver(object):
             # get all Visdom window states
             for win_id in checkpoint['win_states']:
                 setattr(self, f"win_{win_id}", checkpoint['win_states'][win_id])
+
+            train_log = checkpoint['train_log']
+            train_log[0].to_csv(self.recon_loss_csv_fp)
+            train_log[1].to_csv(self.kl_div_csv_fp)
+            train_log[2].to_csv(self.k_sim_loss_csv_fp)
+            train_log[3].to_csv(self.discrim_acc_csv_fp)
+            train_log[4].to_csv(self.total_corr_csv_fp)
         else:
             if verbose:
                 self.pbar.write("=> no checkpoint found at '{}'".format(filepath))
