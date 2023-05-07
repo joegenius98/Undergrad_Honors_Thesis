@@ -5,6 +5,8 @@ I will be likely be cleaning up code/scripts/documentation/READMEs in the coming
 
 This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated, notably kFactorVAE in the `kFactorVAE` folder, Beta-VAE from the `Disentangling` folder, and Beta-TCVAE from the `beta-tcvae` folder.
 
+It borrows from Professor Shao's [ControlVAE](https://github.com/shj1987/ControlVAE-ICML2020) GitHub repository. Note though that I do not use the `ControlVAE` model itself in `kFactorVAE`, although it is an open avenue!
+
 # Reproducing Results
 Head over to the [`thesis_dsprites_scripts`](./kFactorVAE/thesis_dsprites_scripts) directory's `README` file.
 
