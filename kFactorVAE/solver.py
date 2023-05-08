@@ -162,7 +162,7 @@ class Solver(object):
         self.output_dir = os.path.join(args.output_dir, args.name)
         self.output_save = args.output_save
         mkdirs(self.output_dir)
-
+    
     
 
     def init_graph_data_loggers(self):
@@ -173,12 +173,19 @@ class Solver(object):
         self.discrim_acc_csv_fp = self.graph_data_subdir_fp / 'discrim_acc.csv'
         self.total_corr_csv_fp = self.graph_data_subdir_fp / 'total_corr.csv'
 
+        # file objects from `open` method
+        self.recon_loss_csv_file = open(self.recon_loss_csv_fp, 'a', newline='')
+        self.kl_div_csv_file = open(self.kl_div_csv_fp, 'a', newline='')
+        self.k_sim_loss_csv_file = open(self.k_sim_loss_csv_fp, 'a', newline='')
+        self.discrim_acc_csv_file = open(self.discrim_acc_csv_fp, 'a', newline='')
+        self.total_corr_csv_file = open(self.total_corr_csv_fp, 'a', newline='')
+
         # newline='' prevents a blank line between every row
-        self.recon_loss_logger = csv.writer(open(self.recon_loss_csv_fp, 'a', newline=''), delimiter=',')
-        self.kl_div_logger = csv.writer(open(self.kl_div_csv_fp, 'a', newline=''), delimiter=',')
-        self.k_sim_loss_logger = csv.writer(open(self.k_sim_loss_csv_fp, 'a', newline=''), delimiter=',')
-        self.discrim_acc_logger = csv.writer(open(self.discrim_acc_csv_fp, 'a', newline=''), delimiter=',')
-        self.total_corr_logger = csv.writer(open(self.total_corr_csv_fp, 'a', newline=''), delimiter=',')
+        self.recon_loss_logger = csv.writer(self.recon_loss_csv_file, delimiter=',')
+        self.kl_div_logger = csv.writer(self.kl_div_csv_file, delimiter=',')
+        self.k_sim_loss_logger = csv.writer(self.k_sim_loss_csv_file, delimiter=',')
+        self.discrim_acc_logger = csv.writer(self.discrim_acc_csv_file, delimiter=',')
+        self.total_corr_logger = csv.writer(self.total_corr_csv_file, delimiter=',')
 
         scalar_metric_header = ['iteration', f'seed{self.seed}']
         kl_div_header = ['iteration'] + [f'z{i}_seed{self.seed}' for i in range(1, 11)] + \
@@ -198,6 +205,17 @@ class Solver(object):
 
         if self.total_corr_csv_fp.stat().st_size == 0:
             self.total_corr_logger.writerow(scalar_metric_header)
+        
+        self.graph_data_flush()
+
+    
+    def graph_data_flush(self):
+        """so that CSV files are updated without delay"""
+        self.recon_loss_csv_file.flush()
+        self.kl_div_csv_file.flush()
+        self.k_sim_loss_csv_file.flush()
+        self.discrim_acc_csv_file.flush()
+        self.total_corr_csv_file.flush()
 
 
     
@@ -219,6 +237,8 @@ class Solver(object):
         self.k_sim_loss_logger.writerow([f'{self.global_iter}', f'{round(k_sim_loss, 3)}'])
         self.discrim_acc_logger.writerow([f'{self.global_iter}', f'{round(discrim_acc, 3)}'])
         self.total_corr_logger.writerow([f'{self.global_iter}', f'{round(total_corr, 3)}'])
+
+        self.graph_data_flush()
 
 
 
