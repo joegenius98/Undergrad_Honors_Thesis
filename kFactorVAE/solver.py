@@ -111,7 +111,17 @@ class Solver(object):
         self.ckpt_dir = os.path.join(args.ckpt_dir, args.name)
         self.ckpt_save_iter = args.ckpt_save_iter
         mkdirs(self.ckpt_dir)
+
+        # graph data directory
+        self.graph_data_dir_fp = Path(__file__).parent / args.graph_data_dir
+        if not self.graph_data_dir_fp.exists():
+            self.graph_data_dir_fp.mkdir()
+
+        self.graph_data_subdir_fp = self.graph_data_dir_fp / f'{self.name}'
+        if not self.graph_data_subdir_fp.exists(): self.graph_data_subdir_fp.mkdir()
+
         self.init_graph_data_loggers()
+
 
         if args.ckpt_load:
             self.load_checkpoint(args.ckpt_load)
@@ -153,13 +163,6 @@ class Solver(object):
         self.output_save = args.output_save
         mkdirs(self.output_dir)
 
-        # graph data directory
-        self.graph_data_dir_fp = Path(__file__).parent / args.graph_data_dir
-        if not self.graph_data_dir_fp.exists():
-            self.graph_data_dir_fp.mkdir()
-
-        self.graph_data_subdir_fp = self.graph_data_dir_fp / f'{self.name}'
-        if not self.graph_data_subdir_fp.exists(): self.graph_data_subdir_fp.mkdir()
     
 
     def init_graph_data_loggers(self):
