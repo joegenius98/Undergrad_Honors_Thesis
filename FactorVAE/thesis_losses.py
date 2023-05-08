@@ -45,7 +45,7 @@ def k_factor_sim_loss_samples(latent_samples: torch.Tensor, k, idx_order=None):
 
     if idx_order is not None:
         image_reprs_k = latent_samples[::2, idx_order[:k]]
-        aug_reprs_k = latent_samples[::2, idx_order[:k]]
+        aug_reprs_k = latent_samples[1::2, idx_order[:k]]
     else:
         image_reprs_k = latent_samples[::2, :k]
         aug_reprs_k = latent_samples[1::2, :k]
