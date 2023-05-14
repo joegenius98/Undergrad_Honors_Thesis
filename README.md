@@ -1,4 +1,4 @@
-# Note: Work in Progress
+# Note: Documentation in Progress
 I will be likely be cleaning up code/scripts/documentation/READMEs in the coming weeks, so stay patient in the meantime. Nevertheless, all work done for this honors thesis is present in this repo.
 
 # kFactorVAE: Self-Supervised Regularization for Better A.I. Disentanglement
@@ -12,13 +12,46 @@ Beta-VAE from the [`Disentangling`](Disentangling) folder, and Beta-TCVAE from t
 
 It borrows from Professor Shao's [ControlVAE](https://github.com/shj1987/ControlVAE-ICML2020) GitHub repository. Note though that I do not use the `ControlVAE` model itself in `kFactorVAE`, although it is an open avenue!
 
-## Visdom Server Initialization
+
+## Dependencies
+I used a `conda` environment and the `YML` file for its `CUDA` dependencies can be found [here](requirements_CUDA_11.6.yml) and for its non-CUDA dependencies [here](requirements_no_CUDA.yml). 
+
+
+## Reproducing Thesis Paper Results
+
+### Hardware Setup
+If you are affiliated with William & Mary, 
+I recommend using the lab machines in McGlothlin-Street (McG) Hall. To remotely log onto
+these machines, if you do not possess a 
+CS account already and/or you are new to using the machines follow the guidance provided by
+Professor Timothy A. Davis [here](https://www.cs.wm.edu/~tadavis/remoteaccess.html#:~:text=To%20request%20a%20CS%20account%2C%20enter%20your%20information%20on%20the,24%20hours%20of%20a%20request.). 
+
+Otherwise, I recommend using a computer that has a NVIDIA GPU
+and is compatible with NVIDIA CUDA. The NVIDIA GPU models I used were:
+
+1. NVIDIA RTX A4000 (fastest at around 70 training iterations/second)
+2. NVIDIA A40 (middle at around 50-70 training iterations/second)
+3. NVIDIA RTX A5000 (slowest at around 30-40 training iterations/second)
+
+I made no typos. Surprisingly, yes, the A4000 is faster than the A5000 even though
+the specifications tell me otherwise. 
+
+And of course, all these models are available on the lab machines. GPU specifications for each machine may be found 
+[here](https://support.cs.wm.edu/index.php/specs). As years pass by,
+these computers will probably have significant upgrades in their GPUs. However, you can
+probably expect these GPUs to stick around if you are reading this in the year 2023
+or a few years afterwards. But maybe I will be proven wrong. 
+
+
+### Software Instructions
+
+### [Visdom](https://github.com/fossasia/visdom) Server Initialization
 
 You will need to perform this step if you want to see the training metric graphs, reconstructions, 
 and latent traversals when reproducing experimental results on a convenient website interface.
 All these results are also stored in directories. 
 
-1. Initialize the [Visdom](https://github.com/fossasia/visdom) server
+On a (Linux) shell, run:
 
 ```❯ chmod +x run_visdom_server.sh```
 
@@ -27,15 +60,16 @@ All these results are also stored in directories.
 You may replay as many log files as you want.
 Keep in mind you will get a `.out` file every time run [`run_visdom_server.sh`](run_visdom_server.sh).
 
-## Reproducing Thesis Paper Results
-Head over the [kFactorVAE README](kFactorVAE/README.md).
 
+Then, you may head over the [kFactorVAE README](kFactorVAE/README.md).
 
-## Useful Things Learned
+## Technical Support for McG Hall Computers
+If you have any issues/requests, please 
+reach out to Joseph Hause in the [W&M Computer Science Slack](https://join.slack.com/t/wm-cs/shared_invite/zt-1v4tjn703-1cTnS56msdQBzZwz7VlIqg). 
+
+## Useful Tidbits Learned
 
 This is just for personal memory's sake or for your own benefit too, in case you were curious as to the minor techniques I have acquired. 
-
-TODO: update this. 
 
 (1) How to make a forked repository private
 
@@ -81,6 +115,12 @@ Why I needed to learn this was to understand how Prof. Shao implemented the late
 3. `/\%V[your_search_string]` 
 
 (4) Shell scripting
+- conditionals to check directories
+- operations on directories
+- checking if a port is being used by a specific process
+- for loops 
+- variables
+- realizing that ChatGPT is solid in shell scripting :)
 
 (5) Literature Review
 - When bogged down by the technical details, making a slides presentation, where each paper gets only one slide, with abstracts, conclusions, advantages, and disadvantages can maintain engagement with the literature. The literature review and processing a new idea in light of it was by far the most challenging part. 

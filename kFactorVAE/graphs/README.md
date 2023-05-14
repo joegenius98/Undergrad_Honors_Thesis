@@ -1,12 +1,16 @@
 # About
 This directory contains the CSV files needed to plot training metrics, notably:
+
 1. Reconstruction loss
 
 2. KL divergences
+- minibatch average sum of all the latent dimension-wise KL divergences
+- minibatch average for each latent dimension
+- average across latent dimensions and minibatch (global average I suppose)
 
 3. k-Factor mean squared error similarity loss
 
-4. Total correlation estimate from discriminator
+4. Total correlation estimate from the discriminator
 
 5. Discriminator accuracy
 
@@ -18,10 +22,10 @@ You can automatically generate the plots with [`make_graphs.py`](./make_graphs.p
 
 <br><br><br><br>
 
-The below is a previous attempt I was doing with Google Sheets. It turned out to be a significant waste of time.
+The instructions below indicate a previous attempt I did with Google Sheets. It turned out to be a significant waste of time.
 # ~~How to Make Graphs from the Data~~
 
-~~1. Copy/paste the recon. loss data, discriminator accuracy, total corr. (VAE), and k-factor similarity loss window data from 5 seeds.~~
+~~1. Copy/paste the recon. loss data, discriminator accuracy, total corr. (VAE), and k-factor similarity loss Visdom window data from 5 seeds.~~
     - ~~I recommend putting all the data in Google Sheets.~~
     
 ~~2. Choose the median MIG-scored KL divergence graph~~

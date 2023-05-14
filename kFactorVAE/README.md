@@ -2,9 +2,6 @@
 kFactorVAE extends [FactorVAE](FactorVAE_README.md) with the k-Factor Similarity Loss
 mentioned in the honors thesis, and this model is what was used in the experimental results.
 
-## Dependencies
-I used a `conda` environment and the `YML` file for its `CUDA` dependencies can be found [here](../requirements_CUDA_11.6.yml) and for its non-CUDA dependencies [here](../requirements_no_CUDA.yml). 
-
 
 ## Datasets 
 Instructions for the installation of datasets may be found in the [FactorVAE README](FactorVAE_README.md). 
@@ -22,6 +19,7 @@ which is within the [`kFactorVAE`](./kFactorVAE/) directory.
 If you want more details on how these subdirectories get constructed within these three folders,
 carefully read through [`solver.py`](solver.py).
 
+
 ## Outputs of Results
 For each shell script run:
 
@@ -30,7 +28,8 @@ For each shell script run:
 2. The [`checkpoints`](./checkpoints/) directory will be populated with subdirectories, one per seed, of VAE model checkpoints.
 
 3. The [`graphs`](./graphs/) directory will be populated with subdirectories, one per seed, containing information 
-about training metrics of reconstruction error, KL divergence, k-factor similarity loss, discriminator accuracy, and the discriminator-estimated total correlation logged per certain amount of training iterations set by the coresponding user argument. 
+about training metrics of reconstruction error, KL divergence, k-factor similarity loss, discriminator accuracy, and the discriminator-estimated total correlation logged per certain amount of training iterations set by the corresponding user argument. You may make the [Matplotlib](https://matplotlib.org) plots of all these metrics
+by executing [`make_graphs.py`](graphs/make_graphs.py).
 
 4. The [`vis_logs`](./vis_logs/) directories will be populated with files that contain the data files needed
 to reproduce Visdom results, one per seed. 
