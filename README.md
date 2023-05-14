@@ -20,7 +20,7 @@ I used a `conda` environment and the `YML` file for its `CUDA` dependencies can 
 If you are affiliated with William & Mary, 
 I recommend using the lab machines in McGlothlin-Street (McG) Hall. To remotely log onto
 these machines, if you do not possess a 
-CS account already and/or you are new to using the machines follow the guidance provided by
+CS account already and/or you are new to using the machines, follow the guidance provided by
 Professor Timothy A. Davis [here](https://www.cs.wm.edu/~tadavis/remoteaccess.html#:~:text=To%20request%20a%20CS%20account%2C%20enter%20your%20information%20on%20the,24%20hours%20of%20a%20request.). 
 
 Otherwise, I recommend using a computer that has a NVIDIA GPU
@@ -93,12 +93,12 @@ rm -rf [folder to repo. fork]
 
 ```
 
-Why I needed to do this was that I wanted to make a private clone of Professor Shao's ControlVAE
-and work with that private clone to not risk my honors thesis work being shown publically.
+I needed to do this because I wanted to make a private clone of Professor Shao's ControlVAE
+and work with that private clone and finish the thesis before making it public. 
 
 
 
-(2) How the Transpose method works for higher dimensions
+(2) How the transpose operator works for higher dimensions
 
 - It's sill switching "rows" and "columns." aka $a_{ij} = a_{ji}$
 - But each element $a$ of the "matrix" you are transposing might something other than a singular number. An element could now be an entire matrix, an actual row/column, or a tensor. 
@@ -121,11 +121,11 @@ Why I needed to learn this was to understand how Prof. Shao implemented the late
 - realizing that ChatGPT is solid in shell scripting :)
 
 (5) Literature Review
-- When bogged down by the technical details, making a slides presentation, where each paper gets only one slide, with abstracts, conclusions, advantages, and disadvantages can maintain engagement with the literature. The literature review and processing a new idea in light of it was by far the most challenging part. 
+- When bogged down by the technical details, making a slides presentation, where each paper gets only one slide, with abstracts, conclusions, advantages, and disadvantages helped me maintain engagement with the literature. The literature review and processing a new idea in light of it was by far the most challenging part. 
 
 (6) Logging data for visualizations
 - Visdom, CSV filewriting
 
 (7) LaTeX
 - Side-by-side plots, images, adjacent text to images to label factors of variation
-- `\input` command to separate out what would otherwise be one giant LaTeX file
+- `\input` command to break down a `LaTeX` file into components
