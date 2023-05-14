@@ -1,136 +1,55 @@
-# FactorVAE
-Pytorch implementation of FactorVAE proposed in Disentangling by Factorising, Kim et al.([http://arxiv.org/abs/1802.05983])
-<br>
+# kFactorVAE
+kFactorVAE extends [FactorVAE](FactorVAE_README.md) with the k-Factor Similarity Loss
+mentioned in the honors thesis, and this model is what was used in the experimental results.
 
-### Dependencies
-```
-python 3.6.4
-pytorch 0.4.0 (or check pytorch-0.3.1 branch for pytorch 0.3.1)
-visdom
-tqdm
-```
-<br>
-
-### Datasets
-1. 2D Shapes(dsprites) Dataset
-```
-sh scripts/prepare_data.sh dsprites
-```
-2. 3D Chairs Dataset
-```
-sh scripts/prepare_data.sh 3DChairs
-```
-3. CelebA Dataset([download])
-```
-# first download img_align_celeba.zip and put in data directory like below
-└── data
-    └── img_align_celeba.zip
-
-# then run scrip file
-sh scripts/prepare_data.sh CelebA
-```
-
-then data directory structure will be like below<br>
-```
-.
-└── data
-    └── dsprites-dataset
-        └── dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz
-    ├── 3DChairs
-        └── images
-            ├── 1_xxx.png
-            ├── 2_xxx.png
-            ├── ...
-    ├── CelebA
-        └── img_align_celeba
-            ├── 000001.jpg
-            ├── 000002.jpg
-            ├── ...
-            └── 202599.jpg
-    └── ...
-```
-NOTE: I recommend to preprocess image files(e.g. resizing) BEFORE training and avoid preprocessing on-the-fly.
-<br>
-
-### Usage
-initialize visdom
-```
-python -m visdom.server
-```
-you can reproduce results below as follows
-```
-e.g.
-sh scripts/run_celeba.sh $RUN_NAME
-sh scripts/run_dsprites_gamma6p4.sh $RUN_NAME
-sh scripts/run_dsprites_gamma10.sh $RUN_NAME
-sh scripts/run_3dchairs.sh $RUN_NAME
-```
-or you can run your own experiments by setting parameters manually
-```
-e.g.
-python main.py --name run_celeba --dataset celeba --gamma 6.4 --lr_VAE 1e-4 --lr_D 5e-5 --z_dim 10 ...
-```
-check training process on the visdom server
-```
-localhost:8097
-```
-<br>
-
-### Results - 2D Shapes(dsprites) Dataset
-#### Reconstruction($\gamma$=6.4)
-<p align="center">
-<img src=misc/2DShapes_reconstruction_gamma6p4_700000.jpg>
-</p>
-
-#### Latent Space Traverse($\gamma$=6.4)
-<p align="center">
-<img src=misc/2DShapes_fixed_ellipse_gamma6p4_700000.gif>
-<img src=misc/2DShapes_fixed_square_gamma6p4_700000.gif>
-<img src=misc/2DShapes_fixed_heart_gamma6p4_700000.gif>
-<img src=misc/2DShapes_random_img_gamma6p4_700000.gif>
-</p>
-<br>
-
-#### Latent Space Traverse($\gamma$=10)
-<p align="center">
-<img src=misc/2DShapes_fixed_ellipse_gamma10_1000000.gif>
-<img src=misc/2DShapes_fixed_square_gamma10_1000000.gif>
-<img src=misc/2DShapes_fixed_heart_gamma10_1000000.gif>
-<img src=misc/2DShapes_random_img_gamma10_1000000.gif>
-</p>
-
-### Results - CelebA Dataset
-#### Reconstruction
-<p align="center">
-<img src=misc/CelebA_reconstruction_850000.jpg>
-</p>
-
-#### Latent Space Traverse
-<p align="center">
-<img src=misc/CelebA_traverse_850000.png>
-<img src=misc/CelebA_fixed_1_850000.gif>
-<img src=misc/CelebA_fixed_2_850000.gif>
-<img src=misc/CelebA_fixed_3_850000.gif>
-<img src=misc/CelebA_fixed_4_850000.gif>
-</p>
-<br>
+## Dependencies
+I used a `conda` environment and the `YML` file for its `CUDA` dependencies can be found [here](../requirements_CUDA_11.6.yml) and for its non-CUDA dependencies [here](../requirements_no_CUDA.yml). 
 
 
-### Results - 3D Chairs Dataset
-#### Reconstruction
-<p align="center">
-<img src=misc/3DChairs_reconstruction_1000000.jpg>
-</p>
-
-#### Latent Space Traverse
-<p align="center">
-<img src=misc/3DChairs_traverse_1000000.png>
-</p>
-<br>
-
-### Reference
-1. Disentangling by Factorising, Kim et al.([http://arxiv.org/abs/1802.05983])
+## Datasets 
+Instructions for the installation of datasets may be found in the [FactorVAE README](FactorVAE_README.md). 
 
 
-[http://arxiv.org/abs/1802.05983]: http://arxiv.org/abs/1802.05983
-[download]: http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+## Reproducing Results
+
+1. Make sure you have the Visdom server initialized. If you have not, you may refer 
+to the overall [README](../README.md). 
+
+2. Head over to the [`thesis_dsprites_scripts`](./kFactorVAE/thesis_dsprites_scripts) directory's `README` file,
+which is within the [`kFactorVAE`](./kFactorVAE/) directory.
+
+
+If you want more details on how these subdirectories get constructed within these three folders,
+carefully read through [`solver.py`](solver.py).
+
+## Outputs of Results
+For each shell script run:
+
+1. The [`outputs`](./outputs/) will be populated with subdirectories, one per seed, for reconstructions and latent traversals.
+
+2. The [`checkpoints`](./checkpoints/) directory will be populated with subdirectories, one per seed, of VAE model checkpoints.
+
+3. The [`graphs`](./graphs/) directory will be populated with subdirectories, one per seed, containing information 
+about training metrics of reconstruction error, KL divergence, k-factor similarity loss, discriminator accuracy, and the discriminator-estimated total correlation logged per certain amount of training iterations set by the coresponding user argument. 
+
+4. The [`vis_logs`](./vis_logs/) directories will be populated with files that contain the data files needed
+to reproduce Visdom results, one per seed. 
+
+If you want any of these outputs to be turned off, you may either have to change the corresponding user 
+argument or do it manually or create/modify a user argument to turn it off. Please refer to [`main.py`](main.py)
+or run `python main.py -h` or `python main.py --help` for more info. on the user arguments. 
+
+
+
+## Amount of Disk Space Required
+Each model checkpoint in [`kFactorVAE`](kFactorVAE) takes up around 51 or 52 MB. Each of my shell scripts in `thesis_dsprites_scripts` has 4 or 7 checkpoints per seed. That means each seed takes roughly between 204 to 364 MB
+of space. There are 5 seeds total per shell script, which means that the amount of total space required
+is roughly between **1.0 to 1.8 GB of checkpoints per shell script**. After the shell scripts run its 5 seeds, you will
+see 5 subdirectories within the [`checkpoints`](./kFactorVAE/checkpoints/) directory, each containing 
+either 4 or 7 checkpoints. The checkpoint frequency can be changed to tune the amount of space used.
+
+
+## Cleaning up Outputs
+If the [`outputs`](./outputs/), [`vis_logs`](./kFactorVAE/vis_logs), and/or the [`checkpoints`](./checkpoints/) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
+
+For the [`graphs`](./graphs/) directory, run the Python script `combine_seeds.py` instead.

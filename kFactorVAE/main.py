@@ -115,7 +115,8 @@ if __name__ == "__main__":
     parser.add_argument('--ckpt_save_iter', default=10000, type=int, help='checkpoint save iter')
 
     # output for reconstruction images and/or latent traversals
-    parser.add_argument('--output_dir', default='outputs', type=str, help='output directory')
+    parser.add_argument('--output_dir', default='outputs', type=str, help='output directory for storing \
+                        reconstructions and latent traversals')
     parser.add_argument('--output_save', default=True, type=str2bool, help='whether to save traverse results')
 
     # graph data

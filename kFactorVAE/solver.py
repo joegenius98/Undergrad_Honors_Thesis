@@ -1,7 +1,13 @@
 """
-solver.py
+Runs the training loop and produces reconstructions, latent traversals,
+checkpoints, and logging data to graph training metrics. It may also
+output reconstructions, latent traversals, and training metric graphs to the Visdom
+server if the visualization user argument setting is enabled. 
 
-To help you understand this code, I made many comments
+This script builds upon the original `solver.py` found in the 
+FactorVAE repo: https://github.com/1Konny/FactorVAE
+
+In case any part of this code is confusing, I made many comments
 on `solver_light.py` in the Disentangling folder of this GitHub repo.
 """
 

@@ -2,7 +2,7 @@
 
 
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <1. mandatory: port> <2. optional: log_dir>"
+    echo "Usage: $0 <1. mandatory: port> <2. optional: relative file path to Visdom log file>"
     exit 1
 fi
 

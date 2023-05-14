@@ -3,18 +3,32 @@ I will be likely be cleaning up code/scripts/documentation/READMEs in the coming
 
 # kFactorVAE: Self-Supervised Regularization for Better A.I. Disentanglement
 
-This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated, notably kFactorVAE in the `kFactorVAE` folder, Beta-VAE from the `Disentangling` folder, and Beta-TCVAE from the `beta-tcvae` folder.
+This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated adding my regularization term 
+into, notably kFactorVAE in the 
+[`kFactorVAE`](kFactorVAE) folder, 
+Beta-VAE from the [`Disentangling`](Disentangling) folder, and Beta-TCVAE from the 
+[`beta-tcvae`](beta-tcvae) folder.
+
 
 It borrows from Professor Shao's [ControlVAE](https://github.com/shj1987/ControlVAE-ICML2020) GitHub repository. Note though that I do not use the `ControlVAE` model itself in `kFactorVAE`, although it is an open avenue!
 
-# Reproducing Results
-Head over to the [`thesis_dsprites_scripts`](./kFactorVAE/thesis_dsprites_scripts) directory's `README` file.
+## Visdom Server Initialization
 
+You will need to perform this step if you want to see the training metric graphs, reconstructions, 
+and latent traversals when reproducing experimental results on a convenient website interface.
+All these results are also stored in directories. 
 
-# Cleaning up Outputs
-If the [`outputs`](./kFactorVAE/outputs), [`vis_logs`](./kFactorVAE/vis_logs), and/or the [`checkpoints`](./kFactorVAE/checkpoints) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
+1. Initialize the [Visdom](https://github.com/fossasia/visdom) server
 
-For the [`graphs`](./kFactorVAE/graphs) directory, run the Python script `combine_seeds.py` instead.
+```❯ chmod +x run_visdom_server.sh```
+
+```❯ run_visdom_server.sh [port number] [optional relative path to Visdom log file to replay]```
+
+You may replay as many log files as you want.
+Keep in mind you will get a `.out` file every time run [`run_visdom_server.sh`](run_visdom_server.sh).
+
+## Reproducing Thesis Paper Results
+Head over the [kFactorVAE README](kFactorVAE/README.md).
 
 
 ## Useful Things Learned
