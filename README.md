@@ -60,8 +60,9 @@ On a (Linux) shell, run:
 You may replay as many log files as you want.
 Keep in mind you will get a `.out` file every time run [`run_visdom_server.sh`](run_visdom_server.sh).
 
+### kFactorVAE Scripts Setup
 
-Then, you may head over the [kFactorVAE README](kFactorVAE/README.md).
+You may head over to the [kFactorVAE README](kFactorVAE/README.md).
 
 ## Technical Support for McG Hall Computers
 If you have any issues/requests, please 
