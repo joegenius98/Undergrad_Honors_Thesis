@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# assistance from ChatGPT
+
 
 for item in ./*; do
     if [ -f "$item" ]; then

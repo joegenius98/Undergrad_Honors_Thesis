@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# assistance from ChatGPT
+
+# This script checks if the given port by user input is being used for a Visdom server.
+# This script gets utilized by each shell script in the `thesis_dsprites_scripts` direcotry
+# within the kFactorVAE directory.
+
 # Check if the visualization port is provided as an argument
 if [ -z "$1" ]
 then

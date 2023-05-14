@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# assistance from ChatGPT
 
 for subdir in ./*; do
     if [ -d "$subdir" ]; then

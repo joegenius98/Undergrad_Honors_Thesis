@@ -5,6 +5,10 @@ from pathlib import Path
 import csv
 # load recon.loss, ..., data
 import sys 
+
+# assistance from the `plot_fig/Disentangle` folder
+
+# tells you what to input as user arguments
 assert len(sys.argv) == 3,\
 """
 Please input just a folder name and then a seed number for the KL div. plot.

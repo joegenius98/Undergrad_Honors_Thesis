@@ -2,6 +2,8 @@
 "...seed1", "...seed2", "...seed3", "...seed4", and "...seed5"
 
 Can accept one user argument: the substring before *seed* in the glob search
+
+assistance from ChatGPT
 """
 
 from pathlib import Path
