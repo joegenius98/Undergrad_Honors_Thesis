@@ -2,8 +2,9 @@
 a substring found in one of the files found in a directory with latent var. pictures, each
 containing a snapshot of all the latent dim
 
-Code is borrowed from `combine_gif.py` in `plot_fig/Disentangle"""
-"""Guidance: 
+Code is borrowed from `combine_gif.py` in `plot_fig/Disentangle
+
+Guidance: 
 `python get_latent_traversal.py [dir. with latent traversal snapshot imgs.] [substr. of files] [latent index] [latent index] ...
 each [latent index] must start from 1 INSTEAD OF starting from 0
 
