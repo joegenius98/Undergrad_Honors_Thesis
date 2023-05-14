@@ -1,4 +1,10 @@
-"""main.py"""
+"""
+This script processes the user arguments
+and runs the Solver instance's `train` method
+to run the training loop and produce experimental
+outputs. More details are in `solver.py`
+"""
+
 
 import argparse
 import numpy as np
