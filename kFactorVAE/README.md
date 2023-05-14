@@ -43,7 +43,7 @@ or run `python main.py -h` or `python main.py --help` for more info. on the user
 Each model checkpoint in takes up around 51 or 52 MB. Each of my shell scripts in `thesis_dsprites_scripts` has 4 or 7 checkpoints per seed. That means each seed takes roughly between 204 to 364 MB
 of space. There are 5 seeds total per shell script, which means that the amount of total space required
 is roughly between **1.0 to 1.8 GB of checkpoints per shell script**. After the shell scripts run its 5 seeds, you will
-see 5 subdirectories within the [`checkpoints`](/checkpoints/) directory, each containing 
+see 5 subdirectories within the [`checkpoints`](./checkpoints/) directory, each containing 
 either 4 or 7 checkpoints. The checkpoint frequency can be changed to tune the amount of space used.
 
 
