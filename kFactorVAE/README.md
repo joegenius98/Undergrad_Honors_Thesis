@@ -12,8 +12,7 @@ Instructions for the installation of datasets may be found in the [FactorVAE REA
 1. Make sure you have the Visdom server initialized. If you have not, you may refer 
 to the overall [README](../README.md). 
 
-2. Head over to the [`thesis_dsprites_scripts`](./kFactorVAE/thesis_dsprites_scripts) directory's `README` file,
-which is within the [`kFactorVAE`](./kFactorVAE/) directory.
+2. Head over to the [`thesis_dsprites_scripts`](./thesis_dsprites_scripts) directory's `README` file.
 
 
 If you want more details on how these subdirectories get constructed within these three folders,
@@ -41,14 +40,14 @@ or run `python main.py -h` or `python main.py --help` for more info. on the user
 
 
 ## Amount of Disk Space Required
-Each model checkpoint in [`kFactorVAE`](kFactorVAE) takes up around 51 or 52 MB. Each of my shell scripts in `thesis_dsprites_scripts` has 4 or 7 checkpoints per seed. That means each seed takes roughly between 204 to 364 MB
+Each model checkpoint in takes up around 51 or 52 MB. Each of my shell scripts in `thesis_dsprites_scripts` has 4 or 7 checkpoints per seed. That means each seed takes roughly between 204 to 364 MB
 of space. There are 5 seeds total per shell script, which means that the amount of total space required
 is roughly between **1.0 to 1.8 GB of checkpoints per shell script**. After the shell scripts run its 5 seeds, you will
-see 5 subdirectories within the [`checkpoints`](./kFactorVAE/checkpoints/) directory, each containing 
+see 5 subdirectories within the [`checkpoints`](/checkpoints/) directory, each containing 
 either 4 or 7 checkpoints. The checkpoint frequency can be changed to tune the amount of space used.
 
 
 ## Cleaning up Outputs
-If the [`outputs`](./outputs/), [`vis_logs`](./kFactorVAE/vis_logs), and/or the [`checkpoints`](./checkpoints/) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
+If the [`outputs`](./outputs/), [`vis_logs`](./vis_logs), and/or the [`checkpoints`](./checkpoints/) directories ever grow too large, you may run the `group_seeds.sh` script inside one of those directories. 
 
 For the [`graphs`](./graphs/) directory, run the Python script `combine_seeds.py` instead.
