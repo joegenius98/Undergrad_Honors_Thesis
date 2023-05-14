@@ -1,6 +1,3 @@
-# Note: Documentation in Progress
-I will be likely be cleaning up code/scripts/documentation/READMEs in the coming weeks, so stay patient in the meantime. Nevertheless, all work done for this honors thesis is present in this repo.
-
 # kFactorVAE: Self-Supervised Regularization for Better A.I. Disentanglement
 
 This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated adding my regularization term 
