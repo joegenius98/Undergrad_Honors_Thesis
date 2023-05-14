@@ -128,4 +128,5 @@ Why I needed to learn this was to understand how Prof. Shao implemented the late
 
 (7) LaTeX
 - Side-by-side plots, images, adjacent text to images to label factors of variation
-- `\input` command to break down a `LaTeX` file into components
+- `\input` command to break down a `LaTeX` file into subfiles
+- inserting PDFs
