@@ -1,5 +1,7 @@
 # kFactorVAE: Self-Supervised Regularization for Better A.I. Disentanglement
 
+https://scholarworks.wm.edu/honorstheses/2040/
+
 This repo. contains all work conducted for my honors thesis project at William & Mary. It contains a few subdirectories for different VAE-based models I investigated adding my regularization term 
 into, notably kFactorVAE in the 
 [`kFactorVAE`](kFactorVAE) folder, 
